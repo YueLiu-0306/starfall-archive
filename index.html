@@ -5529,6 +5529,7 @@ window.SF = window.SF || {};
 
   var U = SF.ui, S = SF.store, R = SF.router;
   var el = U.el, icon = U.icon, esc = U.esc, escLines = U.escLines;
+  var meArchAnimated = false; // 仅首次进入播放"我的档案"入场动画，避免循环重播
 
   /* 访客档案审核状态变化（pending→public/private）时给出提示 */
   function checkReviewNotices() {
@@ -5555,7 +5556,7 @@ window.SF = window.SF || {};
     var w = S.world(), me = S.currentUser() || {}, admin = S.isAdmin();
     if (!me.id) return;
     // 拉取云端访客档案，确保「我的档案」包含跨设备提交的内容
-    S.loadArchives().then(function () { checkReviewNotices(); R.resolve(); }).catch(function () {});
+    S.loadArchives().then(function () { checkReviewNotices(); paintMyArchives(); }).catch(function () {});
 
     /* ---- 资料卡 ---- */
     var org = me.faction ? SF.factionOf(me.faction) : null;
@@ -5583,19 +5584,23 @@ window.SF = window.SF || {};
     ]));
 
     /* ---- 我的档案 ---- */
-    var myArchives = (w.archives || []).filter(function (a) { return a.author === me.id; });
-    mount.appendChild(el('div', { class: 'section-head mt28' }, [
-      el('div', {}, [
-        el('h2', { html: icon('folder', 19) + '<span>我的档案</span>' }),
-        el('div', { class: 'sub', text: '你创建的角色档案 · 共 ' + myArchives.length + ' 份' })
-      ]),
-      el('a', { class: 'btn btn-ghost btn-sm', href: '#/archives', html: '<span>档案馆</span>' + icon('chevR', 14) })
-    ]));
-
-    if (!myArchives.length) {
-      mount.appendChild(el('div', { class: 'empty empty-sm', html: '<p>还没有档案。<a href="#/archives?new=1">立即创建一份 →</a></p>' }));
-    } else {
-      var ag = el('div', { class: 'col g10 stagger' });
+    var myArchWrap = el('div', { class: 'mt28' });
+    mount.appendChild(myArchWrap);
+    function paintMyArchives() {
+      var myArchives = S.allArchives().filter(function (a) { return a.author === me.id; });
+      myArchWrap.innerHTML = '';
+      myArchWrap.appendChild(el('div', { class: 'section-head' }, [
+        el('div', {}, [
+          el('h2', { html: icon('folder', 19) + '<span>我的档案</span>' }),
+          el('div', { class: 'sub', text: myArchives.length ? ('你创建的角色档案 · 共 ' + myArchives.length + ' 份') : '你创建的角色档案' })
+        ]),
+        el('a', { class: 'btn btn-ghost btn-sm', href: '#/archives', html: '<span>档案馆</span>' + icon('chevR', 14) })
+      ]));
+      if (!myArchives.length) {
+        myArchWrap.appendChild(el('div', { class: 'empty empty-sm', html: '<p>还没有档案。<a href="#/archives?new=1">立即创建一份 →</a></p>' }));
+        return;
+      }
+      var ag = el('div', { class: 'col g10' + (meArchAnimated ? '' : ' stagger') });
       myArchives.slice().reverse().forEach(function (a) {
         var o = a.faction ? SF.factionOf(a.faction) : null;
         var status = a.status === 'public' ? { t: '公开', c: 'var(--ok)', bg: 'var(--ok-bg)' }
@@ -5617,8 +5622,10 @@ window.SF = window.SF || {};
           ])
         ]));
       });
-      mount.appendChild(ag);
+      myArchWrap.appendChild(ag);
+      meArchAnimated = true;
     }
+    paintMyArchives();
 
     /* ---- 试炼历史 ---- */
     var hist = (S.state.local.quizHistory || []).slice(0, 5);
