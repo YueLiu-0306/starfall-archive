@@ -2285,6 +2285,12 @@ window.SF = window.SF || {};
     return store.mode === 'admin';
   }
 
+  /* 真正的「云端管理员账号」：已登录且 profile.role === 'admin'。
+     本地管理员模式（store.mode==='admin' 但没登录云端）不算。 */
+  function isCloudAdmin() {
+    return !!(isCloud() && SF.cloud.profile && SF.cloud.profile.role === 'admin');
+  }
+
   function setLocalUser(u) {
     store.user = u ? Object.assign({ source: 'local', role: 'member' }, u) : null;
     jset(LS_USER, store.user);
@@ -2325,7 +2331,7 @@ window.SF = window.SF || {};
 
   async function push() {
     if (!isCloud()) throw new Error('未配置云端');
-    if (!isAdmin()) throw new Error('仅管理员可发布');
+    if (!isCloudAdmin()) throw new Error('发布需以云端管理员账号登录（请先登录云端管理员账号）');
     await SF.cloud.pushWorld(store.world);
     store.meta = { syncedAt: nowISO(), dirty: false, source: 'cloud' };
     jset(LS_META, store.meta);
@@ -2401,7 +2407,7 @@ window.SF = window.SF || {};
   SF.store = {
     init, world, save, clone, uid, nowISO, hash,
     list, find, add, update, remove, reorder,
-    currentUser, isAdmin, setLocalUser, setMode, isCloud, cloudUser,
+    currentUser, isAdmin, isCloudAdmin, setLocalUser, setMode, isCloud, cloudUser,
     verifyAdminKey, setAdminKey,
     pull, push, exportWorld, importWorld, resetWorld,
     toggleLike, liked, pushQuizResult, saveLocal,
@@ -4624,17 +4630,20 @@ window.SF = window.SF || {};
             el('span', { class: 'dot dot-ok' }), el('span', { class: 'small', text: '已连接云端（Supabase）' })
           ]),
           kv('最后同步', S.state.meta && S.state.meta.syncedAt ? U.fmtDate(S.state.meta.syncedAt) : '从未'),
-          kv('本地是否有改动', S.state.meta && S.state.meta.dirty ? '有未发布改动' : '已是最新')
-        ])
+          kv('本地是否有改动', S.state.meta && S.state.meta.dirty ? '有未发布改动' : '已是最新'),
+          (S.isAdmin() && !S.isCloudAdmin()) ? el('div', { class: 'notice warn', style: { marginTop: '4px' },
+            html: icon('lock', 15) + '<div>当前是<b>本地管理员模式</b>（未登录云端账号），无法发布到云端。请先通过「登录 / 注册账号」用<b>云端管理员账号</b>登录。</div>' }) : null
+        ].filter(Boolean))
       : el('div', { class: 'col g10' }, [
           el('div', { class: 'row g8', style: { alignItems: 'center' } }, [
             el('span', { class: 'dot dot-warn' }), el('span', { class: 'small', text: '尚未配置云端' })
           ]),
           el('div', { class: 'small muted', text: '配置后访客可注册账号、跨设备同步，并支持一键发布。' })
         ]);
+    var canPublish = cloudOn && S.isCloudAdmin();
     var cloudActions = el('div', { class: 'row g8 wrap' }, [
       el('button', { class: 'btn btn-line btn-sm', html: icon('cloud', 15) + '<span>配置</span>', onclick: cloudCfg }),
-      cloudOn ? el('button', { class: 'btn btn-primary btn-sm', html: icon('upload', 15) + '<span>发布到云端</span>', onclick: publish }) : null,
+      canPublish ? el('button', { class: 'btn btn-primary btn-sm', html: icon('upload', 15) + '<span>发布到云端</span>', onclick: publish }) : null,
       cloudOn ? el('button', { class: 'btn btn-ghost btn-sm', html: icon('download', 15) + '<span>拉取最新</span>', onclick: pull }) : null
     ].filter(Boolean));
     var cloudCard = panel('云端同步', icon('cloud', 16), '账号体系与跨设备内容同步。', cloudBody, cloudActions);
@@ -4785,6 +4794,10 @@ window.SF = window.SF || {};
 
   async function publish() {
     if (!S.isCloud()) { U.toast('请先在云端配置中填写 Supabase 信息', 'err'); return; }
+    if (!S.isCloudAdmin()) {
+      U.toast('发布需要云端管理员账号：请先通过「登录 / 注册账号」以管理员身份登录', 'err');
+      return;
+    }
     try { await S.push(); U.toast('已发布到云端', 'ok'); R.resolve(); }
     catch (e) { U.toast(e.message || '发布失败', 'err'); }
   }
@@ -4959,7 +4972,7 @@ window.SF = window.SF || {};
     card.appendChild(el('div', { class: 'divider' }));
     card.appendChild(el('p', { class: 'muted', style: { fontSize: '11.5px', textAlign: 'center', lineHeight: '1.7' },
       html: cloudOn
-        ? '账号数据保存在云端，可跨设备同步。<br>访客身份仅保存在本机浏览器中。'
+        ? '账号数据保存在云端，可跨设备同步。<br>「管理员模式」是用<b>本机密码</b>离线编辑，<b>发布到云端需通过「登录 / 注册账号」用云端管理员账号登录</b>。'
         : '当前为本地模式，数据保存在本机浏览器中。<br>管理员可在管理台配置云端同步。' }));
   }
 
@@ -5223,15 +5236,30 @@ window.SF = window.SF || {};
 
   function syncBtn() {
     if (!S.isCloud()) return el('span');
-    var b = el('button', { class: 'btn btn-ghost btn-sm', html: icon('refresh', 15) + '<span>同步</span>',
-      onclick: async function () {
+    var b = el('button', { class: 'btn btn-ghost btn-sm' });
+    if (S.isCloudAdmin()) {
+      b.innerHTML = icon('upload', 15) + '<span>发布</span>';
+      b.title = '以云端管理员身份发布到 Supabase';
+      b.onclick = async function () {
         b.disabled = true;
-        try {
-          if (S.isAdmin()) { await S.push(); U.toast('已发布到云端', 'ok'); }
-          else { await S.pull({ force: true }); U.toast('已获取最新内容', 'ok'); R.resolve(); }
-        } catch (e) { U.toast(e.message || '同步失败', 'err'); }
+        try { await S.push(); U.toast('已发布到云端', 'ok'); }
+        catch (e) { U.toast(e.message || '同步失败', 'err'); }
         b.disabled = false;
-      } });
+      };
+    } else if (S.isAdmin()) {
+      // 本地管理员模式（未登录云端账号）→ 不能发布，明确提示
+      b.innerHTML = icon('lock', 15) + '<span>需云端管理员登录</span>';
+      b.title = '当前是本地管理员模式，发布到云端需先以云端管理员账号登录';
+      b.onclick = function () { U.toast('请先通过「登录 / 注册账号」用云端管理员账号登录，再发布', 'info'); };
+    } else {
+      b.innerHTML = icon('refresh', 15) + '<span>同步</span>';
+      b.onclick = async function () {
+        b.disabled = true;
+        try { await S.pull({ force: true }); U.toast('已获取最新内容', 'ok'); R.resolve(); }
+        catch (e) { U.toast(e.message || '同步失败', 'err'); }
+        b.disabled = false;
+      };
+    }
     return b;
   }
 
