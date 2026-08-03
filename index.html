@@ -4900,6 +4900,10 @@ window.SF = window.SF || {};
     try {
       S.init();
 
+      // 加载内置/已保存的云端配置（含打包时注入的 window.SF_CLOUD_DEFAULT）。
+      // 必须最先调用，否则 isCloud() 永远为 false，云端入口不会出现。
+      SF.cloud.loadCfg();
+
       // 云端：恢复会话
       if (S.isCloud()) {
         try {
