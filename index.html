@@ -1561,7 +1561,14 @@ window.SF = window.SF || {};
       'apikey': cloud.cfg.anonKey,
       'Content-Type': 'application/json'
     };
-    const tok = (auth !== false && cloud.session && cloud.session.access_token) || cloud.cfg.anonKey;
+    let tok;
+    if (auth === false) {
+      tok = cloud.cfg.anonKey;
+    } else if (cloud.session && cloud.session.access_token) {
+      tok = cloud.session.access_token;
+    } else {
+      throw new Error('未登录');
+    }
     h['Authorization'] = 'Bearer ' + tok;
     return h;
   }
@@ -4884,7 +4891,11 @@ window.SF = window.SF || {};
       if (S.isCloud()) {
         try {
           SF.cloud.loadSession();
-          if (SF.cloud.auth.me()) await SF.cloud.loadProfile();
+          const user = await SF.cloud.auth.me();
+          if (user) {
+            await SF.cloud.loadProfile();
+            S.setMode(SF.cloud.isAdmin() ? 'admin' : 'guest');
+          }
         } catch (e) { console.warn('session restore', e); }
         // 后台拉取最新世界数据（不打断用户）
         S.pull().catch(function () { /* 静默 */ });
