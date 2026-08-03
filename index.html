@@ -1134,6 +1134,227 @@ h4 { font-size: 15px; }
   .card, .dossier-hero { box-shadow: none; break-inside: avoid; }
 }
 
+/* === styles/extras.css === */
+/* ============================================================
+   extras.css — 新功能样式聚合（搜索 / 通知 / 图片 / 照片墙 / 头像裁剪）
+   ============================================================ */
+
+/* ---------- 顶栏搜索框 ---------- */
+.top-search-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.top-search-wrap .ts-ico {
+  position: absolute;
+  left: 10px;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+.top-search-input {
+  padding-left: 32px !important;
+  height: 36px;
+}
+.top-search-wrap .input { background: var(--surface-2); }
+
+/* ---------- 搜索页 ---------- */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 6px 14px;
+  position: relative;
+}
+.search-bar .search-ico {
+  color: var(--ink-3);
+  flex-shrink: 0;
+}
+.search-bar .search-input {
+  border: none;
+  background: transparent;
+  padding-left: 6px;
+  font-size: 15px;
+}
+.search-bar .search-input:focus { outline: none; box-shadow: none; }
+
+.search-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  margin-bottom: 10px;
+  text-decoration: none;
+  color: inherit;
+  background: var(--surface-1);
+  transition: border-color .15s, transform .15s;
+}
+.search-item:hover { border-color: var(--primary); transform: translateY(-1px); }
+.si-type {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--primary);
+  background: var(--primary-bg);
+  border-radius: 999px;
+  padding: 3px 10px;
+  height: fit-content;
+  margin-top: 2px;
+}
+.si-body { min-width: 0; }
+.si-title { font-weight: 600; font-size: 15px; }
+.si-sub {
+  color: var(--ink-3);
+  font-size: 13px;
+  margin-top: 3px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ---------- 通知铃铛 ---------- */
+.bell-wrap { position: relative; }
+.bell-badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  min-width: 16px; height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--danger, #e24b4a);
+  color: #fff;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  font-weight: 700;
+}
+.notice-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  margin-bottom: 10px;
+  background: var(--surface-1);
+  text-decoration: none;
+  color: inherit;
+}
+.notice-item.unread { border-color: var(--primary); background: var(--primary-bg); }
+.notice-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--primary); margin-top: 6px; flex-shrink: 0;
+}
+.notice-item.read .notice-dot { background: transparent; }
+.ni-title { font-size: 14px; }
+.ni-time { font-size: 12px; color: var(--ink-3); margin-top: 3px; }
+
+/* ---------- 图片上传 / 网格 ---------- */
+.img-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.img-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.img-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.img-cell .img-del {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,.55);
+  color: #fff;
+  font-size: 13px;
+  line-height: 22px;
+  cursor: pointer;
+}
+.img-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  aspect-ratio: 1 / 1;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--r-md);
+  color: var(--ink-3);
+  cursor: pointer;
+  font-size: 12px;
+}
+.img-add:hover { border-color: var(--primary); color: var(--primary); }
+
+/* 留言 / 广场配图 */
+.post-imgs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.post-imgs img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+
+/* ---------- 档案照片墙 ---------- */
+.photo-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.photo-wall img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+
+/* ---------- 头像裁剪模态 ---------- */
+.cropper {
+  position: relative;
+  width: 280px; height: 280px;
+  margin: 0 auto;
+  background: #111;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+}
+.cropper img {
+  position: absolute;
+  left: 0; top: 0;
+  max-width: none;
+  transform-origin: top left;
+  will-change: transform;
+}
+.cropper .crop-ring {
+  position: absolute;
+  left: 40px; top: 40px;
+  width: 200px; height: 200px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,.45);
+  pointer-events: none;
+}
+.crop-tools { display: flex; align-items: center; gap: 12px; justify-content: center; margin-top: 12px; }
+.crop-tools input[type=range] { width: 180px; }
+
 </style>
 </head>
 <body>
@@ -1855,12 +2076,72 @@ window.SF = window.SF || {};
     return await db.rpc('claim_admin', { p_key: key });
   }
 
+  /* ---------- storage (Supabase Storage) ---------- */
+  async function storageUpload(file, bucket, path) {
+    await ensureFresh();
+    if (!cloud.session || !cloud.session.access_token) throw new Error('未登录');
+    const url = cloud.cfg.url + '/storage/v1/object/' + bucket + '/' + path;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + cloud.session.access_token,
+        'apikey': cloud.cfg.anonKey,
+        'Content-Type': file.type || 'image/jpeg',
+        'x-upsert': 'true'
+      },
+      body: file
+    });
+    const text = await res.text();
+    let data = null; try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
+    if (!res.ok) {
+      const msg = (data && (data.message || data.error || data.hint)) || ('HTTP ' + res.status);
+      throw new Error(msg);
+    }
+    const key = (data && data.Key) || path;
+    return cloud.cfg.url + '/storage/v1/object/public/' + bucket + '/' + key;
+  }
+  async function storageRemove(bucket, path) {
+    await ensureFresh();
+    if (!cloud.session) throw new Error('未登录');
+    await req('/storage/v1/object/' + bucket + '/' + path, { method: 'DELETE' });
+    return true;
+  }
+
+  /* ---------- notifications (通知中心) ---------- */
+  async function listNotifications() {
+    const me = auth.uid(); if (!me) return [];
+    const rows = await db.select('sf_notifications', { user_id: 'eq.' + me, order: 'created_at.desc', limit: 100 });
+    return rows || [];
+  }
+  async function unreadCount() {
+    const me = auth.uid(); if (!me) return 0;
+    try {
+      const rows = await db.select('sf_unread_count', { user_id: 'eq.' + me, limit: 1 });
+      return (rows && rows[0] && rows[0].n) || 0;
+    } catch (e) { return 0; }
+  }
+  async function markAllRead() {
+    const me = auth.uid(); if (!me) return;
+    await db.update('sf_notifications', { user_id: 'eq.' + me, read: 'eq.false' }, { read: true });
+  }
+  async function notify(payload) {
+    if (!payload || !payload.user_id) return;
+    const row = Object.assign({
+      from_user: auth.uid(),
+      from_name: (cloud.profile && cloud.profile.name) || ''
+    }, payload);
+    try { await db.insert('sf_notifications', row); }
+    catch (e) { /* 通知失败不应阻断主流程 */ }
+  }
+
   SF.cloud = Object.assign(cloud, {
     loadCfg, saveCfg, configured, loadSession, saveSession,
     auth, db, ping, loadProfile, upsertProfile, isAdmin, claimAdmin,
     fetchWorld, pushWorld, WORLD_ID,
     listPosts, addPost, updatePost, removePost, likePost,
-    listArchives, addArchive, updateArchive, removeArchive, setArchiveStatus
+    listArchives, addArchive, updateArchive, removeArchive, setArchiveStatus,
+    storageUpload, storageRemove,
+    listNotifications, unreadCount, markAllRead, notify
   });
 })(window.SF);
 
@@ -2492,6 +2773,8 @@ window.SF = window.SF || {};
     return posts().filter(function (p) { return p.parent_id === id; })
       .sort(function (a, b) { return String(a.createdAt || a.created_at || '').localeCompare(String(b.createdAt || b.created_at || '')); });
   }
+  function clip(s, n) { s = (s || '').trim(); n = n || 30; return s.length > n ? s.slice(0, n) + '…' : s; }
+
   async function addPost(data) {
     var me = currentUser() || {};
     var authorId = (isCloud() && SF.cloud.auth.uid) ? SF.cloud.auth.uid() : null;
@@ -2502,12 +2785,20 @@ window.SF = window.SF || {};
       author_name: me.name || '匿名',
       faction: data.faction || '',
       text: data.text,
+      images: data.images || [],
       likes: 0, pinned: false,
       created_at: nowISO()
     };
     if (isCloud()) {
       var out = await SF.cloud.addPost(row);
       row = (out && out[0]) || row;
+      if (data.parentId && row.author_id) {
+        var parent = postById(data.parentId);
+        if (parent && parent.author_id && parent.author_id !== row.author_id) {
+          SF.cloud.notify({ user_id: parent.author_id, type: 'reply', ref_type: 'post', ref_id: data.parentId,
+            text: (me.name || '有人') + ' 回复了你的留言：' + clip(row.text) });
+        }
+      }
       postsCache = postsCache || [];
       postsCache.unshift(row);
       emit('posts', { reason: 'add' });
@@ -2541,6 +2832,11 @@ window.SF = window.SF || {};
       try {
         var n = await SF.cloud.likePost(id, on ? 1 : -1);
         p.likes = (typeof n === 'number') ? n : Math.max(0, (p.likes || 0) + (on ? 1 : -1));
+        if (on && p.author_id && p.author_id !== SF.cloud.auth.uid()) {
+          var me = currentUser() || {};
+          SF.cloud.notify({ user_id: p.author_id, type: 'like', ref_type: 'post', ref_id: id,
+            text: (me.name || '有人') + ' 赞了你的留言' });
+        }
       } catch (e) { p.likes = Math.max(0, (p.likes || 0) + (on ? 1 : -1)); }
     } else {
       p.likes = Math.max(0, (p.likes || 0) + (on ? 1 : -1));
@@ -2610,7 +2906,7 @@ window.SF = window.SF || {};
     // 已有云端档案（含管理员审核时编辑）一律走云端
     if (isCloud() && (a.__src === 'cloud' || (!admin && isNew))) {
       if (!isNew) {
-        var patch = { name: a.name, code: a.code || '', faction: a.faction || '', cover: a.cover || '', fields: a.fields || {} };
+        var patch = { name: a.name, code: a.code || '', faction: a.faction || '', cover: a.cover || '', fields: a.fields || {}, images: a.images || [] };
         if (admin) patch.status = a.status;
         var u = await SF.cloud.updateArchive(a.id, patch);
         if (u) refreshCloudArchive(u);
@@ -2622,7 +2918,7 @@ window.SF = window.SF || {};
         author_name: me.name || '匿名',
         status: a.status || 'pending',
         name: a.name, code: a.code || '', faction: a.faction || '',
-        cover: a.cover || '', fields: a.fields || {}
+        cover: a.cover || '', fields: a.fields || {}, images: a.images || []
       };
       var out = await SF.cloud.addArchive(row);
       var saved = (out && out[0]) || row;
@@ -2646,7 +2942,18 @@ window.SF = window.SF || {};
   async function reviewArchive(id, status, note) {
     if (!isCloudAdmin()) throw new Error('需以云端管理员账号审核');
     var r = await SF.cloud.setArchiveStatus(id, status, note);
-    if (r) refreshCloudArchive(r);
+    if (r) {
+      refreshCloudArchive(r);
+      if (r.author_id && r.author_id !== SF.cloud.auth.uid()) {
+        var a = findArchive(id);
+        var name = (a && a.name) || r.name || '你的档案';
+        var txt = status === 'public'
+          ? ('你的档案《' + name + '》已通过审核并公开')
+          : ('你的档案《' + name + '》未通过审核' + (note ? '：' + note : ''));
+        SF.cloud.notify({ user_id: r.author_id, type: status === 'public' ? 'published' : 'review',
+          ref_type: 'archive', ref_id: id, text: txt });
+      }
+    }
     emit('archives', { reason: 'review' });
     return r;
   }
@@ -3656,6 +3963,7 @@ window.SF = window.SF || {};
 
   var U = SF.ui, S = SF.store, R = SF.router;
   var el = U.el, icon = U.icon, esc = U.esc, escLines = U.escLines;
+  var archAnimated = false; // 仅首次进入列表播放入场动画，避免审核/删除后重播导致频闪
 
   var state = { f: '', q: '', mine: false };
 
@@ -3744,9 +4052,10 @@ window.SF = window.SF || {};
         ]));
         return;
       }
-      var grid = el('div', { class: 'grid grid-auto stagger' });
+      var grid = el('div', { class: 'grid grid-auto' + (!archAnimated ? ' stagger' : '') });
       rows.forEach(function (a) { grid.appendChild(card(a, admin, me)); });
       host.appendChild(grid);
+      archAnimated = true;
     }
     draw();
   }
@@ -3908,6 +4217,16 @@ window.SF = window.SF || {};
       ])
     ]));
 
+    /* 照片墙 */
+    if (a.images && a.images.length) {
+      mount.appendChild(el('section', { class: 'dsec' }, [
+        el('div', { class: 'h', html: icon('image', 16) + '<span>照片墙</span>' }),
+        el('div', { class: 'photo-wall' }, a.images.map(function (src) {
+          return el('img', { src: src, onclick: function () { bigImage(src); } });
+        }))
+      ]));
+    }
+
     /* 能量强度条 */
     if (f.f_mlv) {
       var lv = Math.max(1, Math.min(50, parseInt(f.f_mlv, 10) || 1));
@@ -3971,6 +4290,84 @@ window.SF = window.SF || {};
   }
 
   /* ============================================================
+     图片辅助（上传 / 选择 / 预览，逻辑与 square.js 对齐）
+     ============================================================ */
+  function rid() { return Math.random().toString(36).slice(2, 9); }
+  function blobToDataURL(blob) {
+    return new Promise(function (res, rej) {
+      var r = new FileReader();
+      r.onload = function () { res(r.result); };
+      r.onerror = rej;
+      r.readAsDataURL(blob);
+    });
+  }
+  function fileToBlob(file, max) {
+    return new Promise(function (res, rej) {
+      var r = new FileReader();
+      r.onload = function () {
+        var img = new Image();
+        img.onload = function () {
+          var scale = Math.min(1, max / Math.max(img.width, img.height));
+          var w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+          var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+          cv.getContext('2d').drawImage(img, 0, 0, w, h);
+          cv.toBlob(function (b) { b ? res(b) : rej(new Error('压缩失败')); }, 'image/jpeg', 0.82);
+        };
+        img.onerror = rej;
+        img.src = r.result;
+      };
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+  }
+  function openImagePicker(multi, cb) {
+    var inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*';
+    if (multi) inp.multiple = true;
+    inp.onchange = function () { cb(Array.prototype.slice.call(inp.files || [])); };
+    inp.click();
+  }
+  async function uploadOne(file, folder) {
+    var cloud = S.isCloud() && SF.cloud.auth.uid();
+    var blob = await fileToBlob(file, cloud ? 1280 : 900);
+    if (cloud) {
+      var ext = (file.type === 'image/png') ? 'png' : 'jpg';
+      var path = (folder || 'archives') + '/' + SF.cloud.auth.uid() + '/' + Date.now() + '_' + rid() + '.' + ext;
+      return await SF.cloud.storageUpload(blob, 'sf-media', path);
+    }
+    return await blobToDataURL(blob);
+  }
+  function bigImage(src) {
+    U.modal({ title: '图片', body: el('img', { src: src, style: { width: '100%', borderRadius: '10px' } }),
+      buttons: [{ text: '关闭', class: 'btn-line', onclick: function (c) { c(); } }] });
+  }
+  function imageSection(initial, folder) {
+    var images = (initial || []).slice();
+    var grid = el('div', { class: 'img-grid' });
+    function paint() {
+      grid.innerHTML = '';
+      images.forEach(function (src, i) {
+        grid.appendChild(el('div', { class: 'img-cell' }, [
+          el('img', { src: src, onclick: function () { bigImage(src); } }),
+          el('button', { class: 'img-del', text: '×', onclick: function (e) { e.stopPropagation(); images.splice(i, 1); paint(); } })
+        ]));
+      });
+      if (images.length < 6) {
+        grid.appendChild(el('div', { class: 'img-add', onclick: function () {
+          openImagePicker(true, function (files) {
+            (files || []).forEach(function (f) {
+              if (images.length >= 6) return;
+              uploadOne(f, folder).then(function (url) { images.push(url); paint(); }).catch(function () { U.toast('图片上传失败', 'err'); });
+            });
+          });
+        } }, [el('span', { html: icon('plus', 18) }), el('span', { text: '添加图片' })]));
+      }
+    }
+    paint();
+    return { el: el('div', { class: 'field' }, [el('label', { text: '图片（最多 6 张）' }), grid]), get: function () { return images.slice(); } };
+  }
+
+  /* ============================================================
      新建 / 编辑
      ============================================================ */
   function editArchive(a) {
@@ -4024,6 +4421,9 @@ window.SF = window.SF || {};
       fld('档案名称', nameI, true), fld('代号', codeI)
     ]));
 
+    var imgS = imageSection(d.images, 'archives');
+    body.appendChild(imgS.el);
+
     /* 动态字段 */
     var ctrls = {};
     var groups = {};
@@ -4070,7 +4470,7 @@ window.SF = window.SF || {};
           if (status === 'draft') status = 'private';
 
           var patch = {
-            name: name, code: codeI.value.trim(), cover: d.cover,
+            name: name, code: codeI.value.trim(), cover: d.cover, images: imgS.get(),
             faction: out.f_org || '', fields: out, status: status,
             author: d.author || me.id, authorName: d.authorName || me.name
           };
@@ -4638,6 +5038,82 @@ window.SF = window.SF || {};
 
   var U = SF.ui, S = SF.store, R = SF.router;
   var el = U.el, icon = U.icon, esc = U.esc, escLines = U.escLines;
+  var feedAnimated = false; // 仅首次进入广场播放入场动画，避免每次点赞/回复都重播导致频闪
+
+  function rid() { return Math.random().toString(36).slice(2, 9); }
+  function blobToDataURL(blob) {
+    return new Promise(function (res, rej) {
+      var r = new FileReader();
+      r.onload = function () { res(r.result); };
+      r.onerror = rej;
+      r.readAsDataURL(blob);
+    });
+  }
+  function fileToBlob(file, max) {
+    return new Promise(function (res, rej) {
+      var r = new FileReader();
+      r.onload = function () {
+        var img = new Image();
+        img.onload = function () {
+          var scale = Math.min(1, max / Math.max(img.width, img.height));
+          var w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+          var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+          cv.getContext('2d').drawImage(img, 0, 0, w, h);
+          cv.toBlob(function (b) { b ? res(b) : rej(new Error('压缩失败')); }, 'image/jpeg', 0.82);
+        };
+        img.onerror = rej;
+        img.src = r.result;
+      };
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+  }
+  function openImagePicker(multi, cb) {
+    var inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*';
+    if (multi) inp.multiple = true;
+    inp.onchange = function () { cb(Array.prototype.slice.call(inp.files || [])); };
+    inp.click();
+  }
+  async function uploadOne(file) {
+    var cloud = S.isCloud() && SF.cloud.auth.uid();
+    var blob = await fileToBlob(file, cloud ? 1280 : 900);
+    if (cloud) {
+      var ext = (file.type === 'image/png') ? 'png' : 'jpg';
+      var path = 'posts/' + SF.cloud.auth.uid() + '/' + Date.now() + '_' + rid() + '.' + ext;
+      return await SF.cloud.storageUpload(blob, 'sf-media', path);
+    }
+    return await blobToDataURL(blob);
+  }
+  function bigImage(src) {
+    U.modal({ title: '图片', body: el('img', { src: src, style: { width: '100%', borderRadius: '10px' } }),
+      buttons: [{ text: '关闭', class: 'btn-line', onclick: function (c) { c(); } }] });
+  }
+  function imageSection(initial) {
+    var images = (initial || []).slice();
+    var grid = el('div', { class: 'img-grid' });
+    function paint() {
+      grid.innerHTML = '';
+      images.forEach(function (src, i) {
+        grid.appendChild(el('div', { class: 'img-cell' }, [
+          el('img', { src: src, onclick: function () { bigImage(src); } }),
+          el('button', { class: 'img-del', text: '×', onclick: function (e) { e.stopPropagation(); images.splice(i, 1); paint(); } })
+        ]));
+      });
+      if (images.length < 6) {
+        grid.appendChild(el('div', { class: 'img-add', onclick: function () {
+          openImagePicker(true, function (files) {
+            (files || []).forEach(function (f) {
+              if (images.length >= 6) return;
+              uploadOne(f).then(function (url) { images.push(url); paint(); }).catch(function () { U.toast('图片上传失败', 'err'); });
+            });
+          });
+        } }, [el('span', { html: icon('plus', 18) }), el('span', { text: '添加图片' })]));
+      }
+    }
+    paint();
+    return { el: el('div', { class: 'field' }, [el('label', { text: '图片（最多 6 张）' }), grid]), get: function () { return images.slice(); } };
+  }
 
   function face(p, size) {
     var s = size || 38;
@@ -4663,12 +5139,9 @@ window.SF = window.SF || {};
         '<div>当前站点未开放广场留言权限，仅可浏览已有内容。</div>' }));
     }
 
-    var listEl = el('div', { class: 'col g12 stagger' });
+    var animate = !feedAnimated;
+    var listEl = el('div', { class: 'col g12' + (animate ? ' stagger' : '') });
     mount.appendChild(listEl);
-    listEl.appendChild(el('div', { class: 'empty' }, [
-      el('div', { class: 'ico', html: icon('msg', 26) }),
-      el('h4', { text: '正在加载广场…' })
-    ]));
 
     function draw() {
       var tops = S.topPosts();
@@ -4679,12 +5152,18 @@ window.SF = window.SF || {};
           el('h4', { text: '广场还很安静' }),
           el('p', { text: canPost ? '点击右上角「发布留言」开始交流吧。' : '暂时还没有人留言。' })
         ]));
-        return;
+        feedAnimated = true; return;
       }
       tops.forEach(function (p) { listEl.appendChild(card(p, canPost)); });
+      feedAnimated = true;
     }
 
-    // 拉取云端留言并渲染（未配云端时回退本地）
+    // 有缓存先用缓存渲染，避免每次操作都闪一下骨架屏；再后台拉取最新
+    if (S.topPosts().length) draw();
+    else listEl.appendChild(el('div', { class: 'empty' }, [
+      el('div', { class: 'ico', html: icon('msg', 26) }),
+      el('h4', { text: '正在加载广场…' })
+    ]));
     S.loadPosts().then(draw).catch(function () { draw(); });
   }
 
@@ -4707,6 +5186,9 @@ window.SF = window.SF || {};
     ]);
 
     var textNode = el('p', { class: 'pre dim', style: { marginTop: '10px', lineHeight: '1.85', fontSize: '14px', whiteSpace: 'pre-wrap' }, text: p.text });
+    var imgGrid = (p.images && p.images.length) ? el('div', { class: 'post-imgs' }, p.images.map(function (src) {
+      return el('img', { src: src, onclick: function () { bigImage(src); } });
+    })) : null;
 
     var actions = el('div', { class: 'row g8 mt12', style: { alignItems: 'center' } }, [
       el('button', { class: 'btn btn-ghost btn-sm' + (liked ? ' liked' : ''),
@@ -4738,7 +5220,7 @@ window.SF = window.SF || {};
       actions.appendChild(el('span', { class: 'grow' }));
     }
 
-    var col = el('div', { class: 'card card-pad card-hover post' }, [head, textNode, actions]);
+    var col = el('div', { class: 'card card-pad card-hover post' }, [head, textNode, imgGrid, actions].filter(Boolean));
 
     var replies = S.repliesOf(p.id);
     if (replies.length) {
@@ -4796,10 +5278,12 @@ window.SF = window.SF || {};
     var facSel = el('select', { class: 'select' });
     facSel.appendChild(el('option', { value: '', text: '不标注阵营' }));
     (w.orgs || []).forEach(function (o) { facSel.appendChild(el('option', { value: o.key, text: o.name + '（' + o.abbr + '）' })); });
+    var imgS = imageSection([]);
 
     var body = el('div', { class: 'col g14' }, [
       el('div', { class: 'notice', html: icon('info', 15) + '<div>将以 <b>' + esc(me.name || '匿名') + '</b> 的身份发布' + (S.isCloud() ? '，所有人都能看到。' : '（未连接云端，仅本机可见）。') + '</div>' }),
       el('div', { class: 'field' }, [el('label', { text: '内容' }), ta]),
+      imgS.el,
       el('div', { class: 'field' }, [el('label', { text: '阵营' }), facSel])
     ]);
 
@@ -4807,8 +5291,8 @@ window.SF = window.SF || {};
       { text: '取消', class: 'btn-line' },
       { text: '发布', class: 'btn-primary', onclick: function (close) {
         var text = ta.value.trim();
-        if (!text) { U.toast('留言不能为空', 'err'); return; }
-        S.addPost({ parentId: parentId, faction: facSel.value, text: text })
+        if (!text && !imgS.get().length) { U.toast('内容不能为空', 'err'); return; }
+        S.addPost({ parentId: parentId, faction: facSel.value, text: text, images: imgS.get() })
           .then(function () { U.toast('已发布', 'ok'); close(); R.resolve(); })
           .catch(function (e) { U.toast(e.message || '发布失败', 'err'); });
       } }
@@ -4817,15 +5301,17 @@ window.SF = window.SF || {};
 
   function editPost(p) {
     var ta = el('textarea', { class: 'textarea', rows: 4, maxlength: '280', value: p.text || '' });
+    var imgS = imageSection(p.images);
     var body = el('div', { class: 'col g14' }, [
-      el('div', { class: 'field' }, [el('label', { text: '内容' }), ta])
+      el('div', { class: 'field' }, [el('label', { text: '内容' }), ta]),
+      imgS.el
     ]);
     U.modal({ title: '编辑留言', body: body, buttons: [
       { text: '取消', class: 'btn-line' },
       { text: '保存', class: 'btn-primary', onclick: function (close) {
         var text = ta.value.trim();
         if (!text) { U.toast('留言不能为空', 'err'); return; }
-        S.updatePost(p.id, { text: text })
+        S.updatePost(p.id, { text: text, images: imgS.get() })
           .then(function () { U.toast('已更新', 'ok'); close(); R.resolve(); })
           .catch(function (e) { U.toast(e.message || '更新失败', 'err'); });
       } }
@@ -4833,6 +5319,204 @@ window.SF = window.SF || {};
   }
 
   SF.pages.square = { render: render };
+})(window.SF);
+
+/* === js/pages/search.js === */
+/* ============================================================
+   pages/search.js — 全站搜索（组织/时间轴/设定集/档案/广场）
+   ============================================================ */
+(function (SF) {
+  'use strict';
+  SF.pages = SF.pages || {};
+
+  var U = SF.ui, S = SF.store, R = SF.router;
+  var el = U.el, icon = U.icon, esc = U.esc;
+
+  function buildIndex() {
+    var w = S.world() || {};
+    var idx = [];
+
+    (w.orgs || []).forEach(function (o) {
+      idx.push({
+        type: '组织', title: o.name,
+        sub: [o.en, o.slogan, (o.tags || []).join(' ')].filter(Boolean).join(' · '),
+        route: '#/orgs/' + o.id,
+        hay: [o.name, o.en, o.slogan, o.desc, (o.tags || []).join(' ')].join(' ')
+      });
+    });
+
+    (w.timeline || []).forEach(function (t) {
+      idx.push({
+        type: '时间轴', title: t.title,
+        sub: t.tag || '',
+        route: '#/timeline/' + t.id,
+        hay: [t.title, t.desc, t.tag, t.era].join(' ')
+      });
+    });
+
+    (w.codex || []).forEach(function (c) {
+      idx.push({
+        type: '设定集', title: c.title,
+        sub: (c.tags || []).join(' '),
+        route: '#/codex/' + c.id,
+        hay: [c.title, c.body, (c.tags || []).join(' ')].join(' ')
+      });
+    });
+
+    (w.archives || []).forEach(function (a) {
+      if (a.status === 'pending') return;
+      idx.push({
+        type: '档案', title: a.name,
+        sub: a.bio || '',
+        route: '#/archives/' + a.id,
+        hay: [a.name, a.bio, a.faction].join(' ')
+      });
+    });
+
+    (S.posts() || []).forEach(function (p) {
+      idx.push({
+        type: '广场', title: '',
+        sub: p.text || '',
+        route: '#/square',
+        hay: p.text || ''
+      });
+    });
+
+    return idx;
+  }
+
+  function match(idx, q) {
+    q = (q || '').trim().toLowerCase();
+    if (!q) return [];
+    return idx.filter(function (it) { return (it.hay || '').toLowerCase().indexOf(q) >= 0; });
+  }
+
+  function render(mount, ctx) {
+    var q = (ctx.query && ctx.query.q) || '';
+    var idx = buildIndex();
+
+    var input = el('input', { class: 'input search-input', type: 'search',
+      placeholder: '搜索组织、时间轴、设定、档案、广场留言…', value: q });
+    var results = el('div', { class: 'mt16' });
+
+    function paint(list) {
+      results.innerHTML = '';
+      if (!q.trim()) {
+        results.appendChild(el('div', { class: 'muted center', style: { padding: '48px 0' }, text: '输入关键词开始搜索' }));
+        return;
+      }
+      if (!list.length) {
+        results.appendChild(el('div', { class: 'muted center', style: { padding: '48px 0' }, text: '没有找到与「' + q + '」相关的内容' }));
+        return;
+      }
+      var groups = {};
+      list.forEach(function (it) { (groups[it.type] = groups[it.type] || []).push(it); });
+      Object.keys(groups).forEach(function (type) {
+        results.appendChild(el('div', { class: 'section-head', style: { marginTop: '10px' } },
+          [el('h3', { text: type + ' · ' + groups[type].length })]));
+        groups[type].forEach(function (it) {
+          results.appendChild(el('a', { class: 'search-item', href: it.route }, [
+            el('div', { class: 'si-type', text: type }),
+            el('div', { class: 'si-body' }, [
+              it.title ? el('div', { class: 'si-title', text: it.title }) : null,
+              it.sub ? el('div', { class: 'si-sub', text: it.sub }) : null
+            ].filter(Boolean))
+          ]));
+        });
+      });
+    }
+
+    input.addEventListener('input', function () {
+      q = input.value;
+      try { history.replaceState(null, '', R.url('/search', { q: q })); } catch (e) {}
+      paint(match(idx, q));
+    });
+
+    mount.appendChild(el('div', { class: 'search-bar' }, [
+      el('span', { class: 'search-ico', html: icon('search', 18) }),
+      input
+    ]));
+    mount.appendChild(results);
+    paint(match(idx, q));
+    setTimeout(function () { try { input.focus(); } catch (e) {} }, 50);
+  }
+
+  SF.pages.search = { render: render };
+})(window.SF);
+
+/* === js/pages/notices.js === */
+/* ============================================================
+   pages/notices.js — 通知中心（回复 / 点赞 / 审核）
+   ============================================================ */
+(function (SF) {
+  'use strict';
+  SF.pages = SF.pages || {};
+
+  var U = SF.ui, S = SF.store, R = SF.router;
+  var el = U.el, icon = U.icon, esc = U.esc;
+
+  function timeAgo(t) {
+    if (!t) return '';
+    var d = new Date(t), s = (Date.now() - d.getTime()) / 1000;
+    if (isNaN(s)) return '';
+    if (s < 60) return '刚刚';
+    if (s < 3600) return Math.floor(s / 60) + ' 分钟前';
+    if (s < 86400) return Math.floor(s / 3600) + ' 小时前';
+    if (s < 86400 * 7) return Math.floor(s / 86400) + ' 天前';
+    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  }
+
+  function emptyState(title, sub) {
+    return el('div', { class: 'empty empty-sm' }, [
+      el('div', { class: 'i', html: icon('bell', 26) }),
+      el('p', { text: title }),
+      sub ? el('div', { class: 'sub', text: sub }) : null
+    ].filter(Boolean));
+  }
+
+  function target(n) {
+    if (n.ref_type === 'post') return '#/square';
+    if (n.ref_type === 'archive') return '#/archives/' + n.ref_id;
+    return '#/home';
+  }
+
+  function render(mount) {
+    SF.app.setTitle('通知');
+    var box = el('div', {});
+    mount.appendChild(box);
+    load();
+
+    function load() {
+      box.innerHTML = '';
+      if (!S.isCloud()) {
+        box.appendChild(emptyState('未登录云端', '登录后可接收回复、点赞与审核通知'));
+        return;
+      }
+      SF.cloud.listNotifications().then(function (list) {
+        if (!list || !list.length) {
+          box.appendChild(emptyState('暂时没有通知'));
+          SF.cloud.markAllRead().catch(function () {});
+          if (SF.app.refreshBell) SF.app.refreshBell();
+          return;
+        }
+        list.forEach(function (n) {
+          box.appendChild(el('a', { class: 'notice-item ' + (n.read ? 'read' : 'unread'), href: target(n) }, [
+            el('div', { class: 'notice-dot' }),
+            el('div', { class: 'grow' }, [
+              el('div', { class: 'ni-title', html: esc(n.text || '') }),
+              el('div', { class: 'ni-time', text: timeAgo(n.created_at) })
+            ])
+          ]));
+        });
+        SF.cloud.markAllRead().catch(function () {});
+        if (SF.app.refreshBell) SF.app.refreshBell();
+      }).catch(function (e) {
+        box.appendChild(emptyState('加载失败', e.message || ''));
+      });
+    }
+  }
+
+  SF.pages.notices = { render: render };
 })(window.SF);
 
 /* === js/pages/me.js === */
@@ -4998,6 +5682,62 @@ window.SF = window.SF || {};
     ]);
   }
 
+  /* 头像裁剪：选图后弹方形取景框，可拖动 + 缩放，输出头像 URL（云端上传 Storage，本地用 blob） */
+  function openCropper(file, cb) {
+    var img = new Image();
+    img.onload = function () { buildCropperUI(img, cb); };
+    img.onerror = function () { U.toast('图片读取失败', 'err'); };
+    img.src = URL.createObjectURL(file);
+  }
+
+  function buildCropperUI(img, cb) {
+    var SIZE = 280, RING = 200, OFF = 40, OUT = 240;
+    var scale = Math.max(RING / img.width, RING / img.height) * 1.15;
+    var tx = (SIZE - img.width * scale) / 2;
+    var ty = (SIZE - img.height * scale) / 2;
+    var elImg = el('img', { src: img.src, draggable: false });
+    function apply() { elImg.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')'; }
+    apply();
+
+    var cropper = el('div', { class: 'cropper' }, [elImg, el('div', { class: 'crop-ring' })]);
+    var dragging = false, lx = 0, ly = 0;
+    cropper.addEventListener('pointerdown', function (e) { dragging = true; lx = e.clientX; ly = e.clientY; try { cropper.setPointerCapture(e.pointerId); } catch (x) {} });
+    cropper.addEventListener('pointermove', function (e) { if (!dragging) return; tx += e.clientX - lx; ty += e.clientY - ly; lx = e.clientX; ly = e.clientY; apply(); });
+    cropper.addEventListener('pointerup', function () { dragging = false; });
+    cropper.addEventListener('pointercancel', function () { dragging = false; });
+
+    var range = el('input', { type: 'range', min: '0.5', max: '4', step: '0.01', value: String(scale) });
+    range.addEventListener('input', function () { scale = parseFloat(range.value); apply(); });
+
+    function commit() {
+      var cv = document.createElement('canvas'); cv.width = OUT; cv.height = OUT;
+      var c = cv.getContext('2d');
+      var sx = (OFF - tx) / scale, sy = (OFF - ty) / scale, sw = RING / scale;
+      c.drawImage(img, sx, sy, sw, sw, 0, 0, OUT, OUT);
+      cv.toBlob(function (blob) {
+        if (!blob) { U.toast('裁剪失败', 'err'); return; }
+        if (S.isCloud() && SF.cloud.auth.uid()) {
+          var path = 'avatars/' + SF.cloud.auth.uid() + '/' + Date.now() + '.jpg';
+          SF.cloud.storageUpload(blob, 'sf-media', path)
+            .then(function (url) { cb(url); })
+            .catch(function () { cb(URL.createObjectURL(blob)); });
+        } else {
+          cb(URL.createObjectURL(blob));
+        }
+      }, 'image/jpeg', 0.85);
+    }
+
+    var body = el('div', {}, [
+      cropper,
+      el('div', { class: 'crop-tools' }, [el('span', { class: 'small', text: '缩放' }), range]),
+      el('div', { class: 'tiny muted center', style: { marginTop: '8px' }, text: '拖动调整位置，圆框内即为头像' })
+    ]);
+    U.modal({ title: '裁剪头像', body: body, buttons: [
+      { text: '取消', class: 'btn-ghost', onclick: function (close) { close(); } },
+      { text: '确定', class: 'btn-primary', onclick: function (close) { commit(); close(); } }
+    ] });
+  }
+
   function editProfile() {
     var me = S.currentUser() || {};
     var w = S.world();
@@ -5022,14 +5762,13 @@ window.SF = window.SF || {};
         facePrev,
         el('div', { class: 'grow col g8' }, [
           el('div', { class: 'small', style: { fontWeight: '650' }, text: '头像' }),
-          el('div', { class: 'tiny muted', text: '建议使用方形图片，会自动压缩到 160px 存储。' }),
+          el('div', { class: 'tiny muted', text: '选图后可拖动缩放裁剪，圆形区域即头像。' }),
           el('div', { class: 'row g8 wrap' }, [
-            el('button', { class: 'btn btn-line btn-sm', html: icon('image', 14) + '<span>上传图片</span>',
+            el('button', { class: 'btn btn-line btn-sm', html: icon('image', 14) + '<span>上传并裁剪</span>',
               onclick: async function () {
                 var file = await U.pickFile('image/*');
                 if (!file) return;
-                try { d.avatar = await SF.pages.archives.shrink(file, 160); paintFace(); }
-                catch (e) { U.toast('图片读取失败', 'err'); }
+                openCropper(file, function (url) { d.avatar = url; paintFace(); });
               } }),
             el('button', { class: 'btn btn-ghost btn-sm', text: '移除', onclick: function () { d.avatar = ''; paintFace(); } })
           ])
@@ -5347,6 +6086,7 @@ window.SF = window.SF || {};
       { name: 'square',   label: '广场',   icon: 'msg' }
     ]},
     { group: '个人', items: [
+      { name: 'notices', label: '通知',   icon: 'bell' },
       { name: 'me',    label: '我的',   icon: 'user' },
       { name: 'admin', label: '管理台', icon: 'settings', adminOnly: true }
     ]}
@@ -5363,12 +6103,34 @@ window.SF = window.SF || {};
   var TITLES = {
     home: '首页', orgs: '组织', timeline: '时间轴', codex: '设定集',
     archives: '档案馆', trial: '莫比乌斯试炼', square: '广场',
-    me: '我的', admin: '管理台'
+    me: '我的', admin: '管理台', search: '搜索', notices: '通知'
   };
 
   /* ============================================================
      入口
      ============================================================ */
+  /* 通知铃铛 */
+  var bellBtns = [];
+  function bellBtn() {
+    var badge = el('span', { class: 'bell-badge', style: { display: 'none' }, text: '' });
+    var btn = el('button', { class: 'btn btn-ghost btn-icon btn-sm bell-wrap', title: '通知', html: icon('bell', 18) });
+    btn.appendChild(badge);
+    btn._badge = badge;
+    btn.onclick = function () { R.go('/notices'); };
+    bellBtns.push(btn);
+    return btn;
+  }
+  async function refreshBell() {
+    if (!S.isCloud() || !SF.cloud.auth.uid()) { bellBtns.forEach(function (b) { b._badge.style.display = 'none'; }); return; }
+    try {
+      var n = await SF.cloud.unreadCount();
+      bellBtns.forEach(function (b) {
+        if (n > 0) { b._badge.style.display = ''; b._badge.textContent = n > 99 ? '99+' : String(n); }
+        else b._badge.style.display = 'none';
+      });
+    } catch (e) {}
+  }
+
   var booted = false;
   async function boot() {
     if (booted) return;
@@ -5389,8 +6151,9 @@ window.SF = window.SF || {};
           SF.cloud.loadSession();
           const user = await SF.cloud.auth.me();
           if (user) {
-            await SF.cloud.loadProfile();
-            S.hydrateFromCloud(); // 拉取云端试炼历史等个人数据
+          await SF.cloud.loadProfile();
+          refreshBell().catch(function () {});
+          S.hydrateFromCloud(); // 拉取云端试炼历史等个人数据
             S.setMode(SF.cloud.isAdmin() ? 'admin' : 'guest');
             await tryClaimAdmin().catch(function () {}); // 注册时存了密钥则自动提权
           }
@@ -5690,9 +6453,19 @@ window.SF = window.SF || {};
     topTitle = el('h1', { text: '首页' });
     topCrumb = el('div', { class: 'crumb' });
     modePill = el('div', { class: 'mode-pill' });
+    function topSearch() {
+      var inp = el('input', { class: 'input top-search-input', type: 'search', placeholder: '搜索…', style: { width: '190px' } });
+      inp.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { var v = inp.value.trim(); if (v) R.go(R.url('/search', { q: v })); }
+      });
+      return el('div', { class: 'top-search-wrap' }, [
+        el('span', { class: 'ts-ico', html: icon('search', 16) }), inp
+      ]);
+    }
+
     var top = el('header', { class: 'topbar' }, [
       el('div', {}, [topTitle, topCrumb]),
-      el('div', { style: { marginLeft: 'auto' }, class: 'row g8' }, [modePill, syncBtn(), themeBtn()])
+      el('div', { style: { marginLeft: 'auto' }, class: 'row g8' }, [topSearch(), bellBtn(), modePill, syncBtn(), themeBtn()])
     ]);
 
     var mtop = el('header', { class: 'mtop' }, [
@@ -5700,6 +6473,8 @@ window.SF = window.SF || {};
         html: '<svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M12 2l2.6 6.4L21 11l-6.4 2.6L12 20l-2.6-6.4L3 11l6.4-2.6z"/></svg>' }),
       el('div', { style: { fontSize: '15px', fontWeight: '700' }, id: 'mTitle', text: w.site.title }),
       el('div', { style: { marginLeft: 'auto' }, class: 'row g6' }, [
+        el('button', { class: 'btn btn-ghost btn-icon btn-sm', title: '搜索', html: icon('search', 18), onclick: function () { R.go('/search'); } }),
+        bellBtn(),
         el('button', { class: 'btn btn-ghost btn-icon btn-sm', html: icon('grip', 18), onclick: openDrawer })
       ])
     ]);
@@ -5864,7 +6639,7 @@ window.SF = window.SF || {};
      路由
      ============================================================ */
   function registerRoutes() {
-    ['home', 'orgs', 'timeline', 'codex', 'archives', 'trial', 'square', 'me', 'admin'].forEach(function (n) {
+    ['home', 'orgs', 'timeline', 'codex', 'archives', 'trial', 'square', 'search', 'notices', 'me', 'admin'].forEach(function (n) {
       R.on(n, function (ctx) {
         if (n === 'admin' && !S.isAdmin()) { U.toast('需要管理员权限', 'err'); R.go('/home', true); return; }
         var page = SF.pages && SF.pages[n];
@@ -5900,7 +6675,7 @@ window.SF = window.SF || {};
   /* 供各模块调用的共享方法 */
   SF.app = {
     renderShell, renderGate, setCrumb, setTitle, avatarEl, field,
-    toggleMode, boot,
+    toggleMode, boot, refreshBell,
     logout: async function () {
       var ok = await U.confirm({ title: '退出登录', message: '确定要退出当前身份吗？本机数据不会被删除。', danger: true, okText: '退出' });
       if (!ok) return;
