@@ -637,6 +637,25 @@ h4 { font-size: 15px; }
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
   .grid-auto { grid-template-columns: 1fr; }
   .grid-auto-sm { grid-template-columns: repeat(2, minmax(0,1fr)); }
+
+  /* 触摸优化：按钮最小点击高度，避免误触 */
+  .btn { min-height: 42px; }
+  .btn-sm { min-height: 38px; }
+  .nav-item { height: 44px; }
+
+  /* 防止内容横向溢出导致整页可横滑 */
+  .main, .page, .card, .gate-card, .modal-box { max-width: 100%; overflow-x: hidden; }
+
+  /* 移动顶栏更紧凑、标题不挤压 */
+  .mtop { padding: 10px 14px; }
+  .mtop #mTitle { font-size: 15px; font-weight: 700; }
+
+  /* 广场留言在窄屏更贴边 */
+  .post { margin: 0 -2px; }
+  .replies { margin-left: 2px; }
+
+  /* 去掉移动端点击高亮闪 */
+  * { -webkit-tap-highlight-color: transparent; }
 }
 
 /* ---------- Boot / gate screens ---------- */
@@ -1056,6 +1075,21 @@ h4 { font-size: 15px; }
   transition: all .16s var(--ease);
 }
 .fsel button.on { background: var(--fbg); color: var(--fc); border-color: var(--fbr); }
+
+/* 互动广场：留言与回复 */
+.post { padding: 16px 18px; }
+.replies {
+  margin-top: 12px; padding-left: 14px;
+  border-left: 2px solid var(--border);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.reply { padding: 10px 12px; background: var(--surface-2); border-radius: var(--r-md); }
+.btn.liked { color: var(--danger) !important; }
+.btn.liked svg { fill: var(--danger); }
+@media (max-width: 560px) {
+  .post { padding: 14px 14px; }
+  .replies { padding-left: 10px; margin-left: 2px; }
+}
 
 /* print / export card */
 @media print {
@@ -1730,10 +1764,33 @@ window.SF = window.SF || {};
     return (out && out[0]) || row;
   }
 
+  /* ---------- posts (广场留言，云端共享) ---------- */
+  async function listPosts() {
+    const rows = await db.select('sf_posts', { order: 'created_at.desc', limit: 500 });
+    return rows || [];
+  }
+  async function addPost(row) {
+    const out = await db.insert('sf_posts', row);
+    return (out && out[0]) || row;
+  }
+  async function updatePost(id, patch) {
+    const out = await db.update('sf_posts', { id: 'eq.' + id }, patch);
+    return (out && out[0]) || null;
+  }
+  async function removePost(id) {
+    await db.remove('sf_posts', { id: 'eq.' + id });
+    return true;
+  }
+  async function likePost(id, delta) {
+    const fn = delta > 0 ? 'inc_post_like' : 'dec_post_like';
+    return await db.rpc(fn, { p_id: id });
+  }
+
   SF.cloud = Object.assign(cloud, {
     loadCfg, saveCfg, configured, loadSession, saveSession,
     auth, db, ping, loadProfile, upsertProfile, isAdmin,
-    fetchWorld, pushWorld, WORLD_ID
+    fetchWorld, pushWorld, WORLD_ID,
+    listPosts, addPost, updatePost, removePost, likePost
   });
 })(window.SF);
 
@@ -2339,6 +2396,89 @@ window.SF = window.SF || {};
     return store.meta;
   }
 
+  /* ---------------- 广场留言（云端共享，支持嵌套回复） ---------------- */
+  var postsCache = null;
+  async function loadPosts() {
+    if (isCloud()) {
+      try { postsCache = (await SF.cloud.listPosts()) || []; }
+      catch (e) { postsCache = postsCache || []; }
+    } else {
+      postsCache = (store.world.posts || []).slice();
+    }
+    emit('posts', { reason: 'load' });
+    return postsCache;
+  }
+  function posts() { return postsCache || (store.world.posts || []); }
+  function postById(id) { return posts().find(function (p) { return p.id === id; }) || null; }
+  function topPosts() {
+    return posts().filter(function (p) { return !p.parent_id; })
+      .sort(function (a, b) {
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
+        return String(b.createdAt || b.created_at || '').localeCompare(String(a.createdAt || a.created_at || ''));
+      });
+  }
+  function repliesOf(id) {
+    return posts().filter(function (p) { return p.parent_id === id; })
+      .sort(function (a, b) { return String(a.createdAt || a.created_at || '').localeCompare(String(b.createdAt || b.created_at || '')); });
+  }
+  async function addPost(data) {
+    var me = currentUser() || {};
+    var authorId = (isCloud() && SF.cloud.auth.uid) ? SF.cloud.auth.uid() : null;
+    var row = {
+      id: uid('pst'),
+      parent_id: data.parentId || null,
+      author_id: authorId,
+      author_name: me.name || '匿名',
+      faction: data.faction || '',
+      text: data.text,
+      likes: 0, pinned: false,
+      created_at: nowISO()
+    };
+    if (isCloud()) {
+      var out = await SF.cloud.addPost(row);
+      row = (out && out[0]) || row;
+      postsCache = postsCache || [];
+      postsCache.unshift(row);
+      emit('posts', { reason: 'add' });
+      return row;
+    }
+    S.add('posts', row, true);
+    postsCache = (store.world.posts || []).slice();
+    return row;
+  }
+  async function removePost(id) {
+    if (isCloud()) {
+      try { await SF.cloud.removePost(id); } catch (e) {}
+      (postsCache || []).filter(function (p) { return p.parent_id === id; })
+        .forEach(function (r) { try { SF.cloud.removePost(r.id); } catch (e) {} });
+      postsCache = (postsCache || []).filter(function (p) { return p.id !== id && p.parent_id !== id; });
+    } else {
+      (store.world.posts || []).slice().forEach(function (p) { if (p.id === id || p.parent_id === id) S.remove('posts', p.id); });
+      postsCache = (store.world.posts || []).slice();
+    }
+    emit('posts', { reason: 'remove' });
+  }
+  async function pinPost(id, pinned) {
+    if (isCloud()) { try { await SF.cloud.updatePost(id, { pinned: pinned }); } catch (e) {} }
+    else { S.update('posts', id, { pinned: pinned }); }
+    var p = postById(id); if (p) p.pinned = pinned;
+    emit('posts', { reason: 'pin' });
+  }
+  async function likePost(id, on) {
+    var p = postById(id); if (!p) return;
+    if (isCloud()) {
+      try {
+        var n = await SF.cloud.likePost(id, on ? 1 : -1);
+        p.likes = (typeof n === 'number') ? n : Math.max(0, (p.likes || 0) + (on ? 1 : -1));
+      } catch (e) { p.likes = Math.max(0, (p.likes || 0) + (on ? 1 : -1)); }
+    } else {
+      p.likes = Math.max(0, (p.likes || 0) + (on ? 1 : -1));
+      save('like');
+    }
+    emit('posts', { reason: 'like' });
+  }
+
   /* ---------------- 导入导出 ---------------- */
   function exportWorld() {
     return JSON.stringify({
@@ -2384,6 +2524,7 @@ window.SF = window.SF || {};
     return store.local.likes[postId];
   }
   function liked(postId) { return !!store.local.likes[postId]; }
+  function setLiked(postId, on) { store.local.likes[postId] = !!on; saveLocal(); }
   function pushQuizResult(r) {
     store.local.quizHistory.unshift(Object.assign({ at: nowISO() }, r));
     store.local.quizHistory = store.local.quizHistory.slice(0, 30);
@@ -2410,7 +2551,8 @@ window.SF = window.SF || {};
     currentUser, isAdmin, isCloudAdmin, setLocalUser, setMode, isCloud, cloudUser,
     verifyAdminKey, setAdminKey,
     pull, push, exportWorld, importWorld, resetWorld,
-    toggleLike, liked, pushQuizResult, saveLocal,
+    loadPosts, posts, postById, topPosts, repliesOf, addPost, removePost, pinPost, likePost,
+    toggleLike, liked, setLiked, pushQuizResult, saveLocal,
     stats, on, off, emit,
     get state() { return store; }
   };
@@ -4284,7 +4426,8 @@ window.SF = window.SF || {};
 
 /* === js/pages/square.js === */
 /* ============================================================
-   pages/square.js — 互动广场（留言 / 点赞 / 互动）
+   pages/square.js — 互动广场（留言 / 点赞 / 回复，云端共享）
+   留言存于 Supabase sf_posts：匿名/已登录均可发，所有人可见，支持一层回复。
    ============================================================ */
 (function (SF) {
   'use strict';
@@ -4293,13 +4436,23 @@ window.SF = window.SF || {};
   var U = SF.ui, S = SF.store, R = SF.router;
   var el = U.el, icon = U.icon, esc = U.esc, escLines = U.escLines;
 
+  function face(p, size) {
+    var s = size || 38;
+    if (p.author_avatar) return el('img', { class: 'avatar', src: p.author_avatar, style: { width: s + 'px', height: s + 'px' } });
+    var org = p.faction ? SF.factionOf(p.faction) : null;
+    return el('div', { class: 'avatar', text: (p.author_name || '?').charAt(0),
+      style: { width: s + 'px', height: s + 'px', fontSize: Math.round(s * .42) + 'px',
+        background: org ? org.color + '1f' : 'var(--primary-bg)',
+        color: org ? org.color : 'var(--primary-ink)' } });
+  }
+
   function render(mount) {
     var w = S.world(), me = S.currentUser() || {}, admin = S.isAdmin();
     var canPost = admin || w.site.allowGuestPost;
 
     mount.appendChild(el('div', { class: 'row g8 mb16 wrap' }, [
       el('div', { class: 'grow' }),
-      canPost ? el('button', { class: 'btn btn-primary btn-sm', html: icon('msg', 15) + '<span>发布留言</span>', onclick: compose }) : null
+      canPost ? el('button', { class: 'btn btn-primary btn-sm', html: icon('msg', 15) + '<span>发布留言</span>', onclick: function () { compose(null); } }) : null
     ].filter(Boolean)));
 
     if (!canPost) {
@@ -4309,15 +4462,15 @@ window.SF = window.SF || {};
 
     var listEl = el('div', { class: 'col g12 stagger' });
     mount.appendChild(listEl);
+    listEl.appendChild(el('div', { class: 'empty' }, [
+      el('div', { class: 'ico', html: icon('msg', 26) }),
+      el('h4', { text: '正在加载广场…' })
+    ]));
 
     function draw() {
-      var posts = (S.world().posts || []).slice().sort(function (a, b) {
-        if (a.pinned && !b.pinned) return -1;
-        if (!a.pinned && b.pinned) return 1;
-        return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
-      });
+      var tops = S.topPosts();
       listEl.innerHTML = '';
-      if (!posts.length) {
+      if (!tops.length) {
         listEl.appendChild(el('div', { class: 'empty' }, [
           el('div', { class: 'ico', html: icon('msg', 26) }),
           el('h4', { text: '广场还很安静' }),
@@ -4325,33 +4478,28 @@ window.SF = window.SF || {};
         ]));
         return;
       }
-      posts.forEach(function (p) { listEl.appendChild(card(p, draw, canPost)); });
+      tops.forEach(function (p) { listEl.appendChild(card(p, canPost)); });
     }
-    draw();
+
+    // 拉取云端留言并渲染（未配云端时回退本地）
+    S.loadPosts().then(draw).catch(function () { draw(); });
   }
 
-  function card(p, redraw, canPost) {
+  function card(p, canPost) {
     var me = S.currentUser() || {}, admin = S.isAdmin();
     var org = p.faction ? SF.factionOf(p.faction) : null;
-    var mine = p.authorId && me.id && p.authorId === me.id;
+    var mine = p.author_id && me.id && p.author_id === me.id;
     var liked = S.liked(p.id);
 
-    var face;
-    if (p.cover) face = el('img', { class: 'avatar', src: p.cover, style: { width: '38px', height: '38px' } });
-    else face = el('div', { class: 'avatar', text: (p.authorName || '?').charAt(0),
-      style: { width: '38px', height: '38px',
-        background: org ? org.color + '1f' : 'var(--primary-bg)',
-        color: org ? org.color : 'var(--primary-ink)' } });
-
     var head = el('div', { class: 'row g10', style: { alignItems: 'center' } }, [
-      face,
+      face(p, 38),
       el('div', { class: 'grow', style: { minWidth: 0 } }, [
-        el('div', { class: 'row g8' }, [
-          el('span', { class: 'clamp-1', style: { fontWeight: '650', fontSize: '14px' }, text: p.authorName || '匿名' }),
+        el('div', { class: 'row g8 wrap' }, [
+          el('span', { class: 'clamp-1', style: { fontWeight: '650', fontSize: '14px' }, text: p.author_name || '匿名' }),
           p.pinned ? el('span', { class: 'chip chip-sm', style: { background: 'var(--accent-bg)', color: 'var(--accent)' }, html: icon('flag', 12) + '<span>置顶</span>' }) : null,
           org ? el('span', { class: 'chip chip-sm', style: { background: org.color + '14', color: org.color }, text: org.name }) : null
         ].filter(Boolean)),
-        el('div', { class: 'tiny muted', text: U.ago(p.createdAt) })
+        el('div', { class: 'tiny muted', text: U.ago(p.createdAt || p.created_at) })
       ])
     ]);
 
@@ -4360,48 +4508,102 @@ window.SF = window.SF || {};
     var actions = el('div', { class: 'row g8 mt12', style: { alignItems: 'center' } }, [
       el('button', { class: 'btn btn-ghost btn-sm' + (liked ? ' liked' : ''),
         html: icon('heart', 15) + '<span>' + (p.likes || 0) + '</span>',
-        onclick: function () { S.toggleLike(p.id); redraw(); } })
-    ]);
+        onclick: function () {
+          var on = !S.liked(p.id);
+          S.setLiked(p.id, on);
+          S.likePost(p.id, on).then(R.resolve).catch(R.resolve);
+        } }),
+      canPost ? el('button', { class: 'btn btn-ghost btn-sm', html: icon('reply', 15) + '<span>回复</span>',
+        onclick: function () { compose(p.id); } }) : null
+    ].filter(Boolean));
 
     if (admin) {
       actions.appendChild(el('button', { class: 'btn btn-ghost btn-sm', html: icon('flag', 15) + '<span>' + (p.pinned ? '取消置顶' : '置顶') + '</span>',
-        onclick: function () { S.update('posts', p.id, { pinned: !p.pinned }); U.toast(p.pinned ? '已取消置顶' : '已置顶', 'ok'); redraw(); } }));
+        onclick: function () { S.pinPost(p.id, !p.pinned).then(R.resolve).catch(R.resolve); } }));
     }
     if (admin || mine) {
       actions.appendChild(el('button', { class: 'btn btn-ghost btn-sm', style: { color: 'var(--danger)', marginLeft: 'auto' }, html: icon('trash', 15) + '<span>删除</span>',
         onclick: async function () {
           var ok = await U.confirm({ title: '删除留言', message: '确定要删除这条留言吗？', danger: true, okText: '删除' });
           if (!ok) return;
-          S.remove('posts', p.id); U.toast('已删除', 'ok'); redraw();
+          await S.removePost(p.id);
+          U.toast('已删除', 'ok'); R.resolve();
         } }));
     } else {
       actions.appendChild(el('span', { class: 'grow' }));
     }
 
-    return el('div', { class: 'card card-pad card-hover' }, [head, textNode, actions]);
+    var col = el('div', { class: 'card card-pad card-hover post' }, [head, textNode, actions]);
+
+    var replies = S.repliesOf(p.id);
+    if (replies.length) {
+      var rWrap = el('div', { class: 'replies' });
+      replies.forEach(function (r) { rWrap.appendChild(replyCard(r)); });
+      col.appendChild(rWrap);
+    }
+    return col;
   }
 
-  function compose() {
+  function replyCard(r) {
+    var me = S.currentUser() || {}, admin = S.isAdmin();
+    var org = r.faction ? SF.factionOf(r.faction) : null;
+    var mine = r.author_id && me.id && r.author_id === me.id;
+    var liked = S.liked(r.id);
+
+    var head = el('div', { class: 'row g8', style: { alignItems: 'center' } }, [
+      face(r, 30),
+      el('div', { class: 'grow', style: { minWidth: 0 } }, [
+        el('div', { class: 'row g6 wrap' }, [
+          el('span', { class: 'clamp-1', style: { fontWeight: '600', fontSize: '13px' }, text: r.author_name || '匿名' }),
+          org ? el('span', { class: 'chip chip-sm', style: { background: org.color + '14', color: org.color, fontSize: '10px' }, text: org.name }) : null
+        ].filter(Boolean)),
+        el('div', { class: 'tiny muted', text: U.ago(r.createdAt || r.created_at) })
+      ])
+    ]);
+
+    var actions = el('div', { class: 'row g6 mt8', style: { alignItems: 'center' } }, [
+      el('button', { class: 'btn btn-ghost btn-sm' + (liked ? ' liked' : ''), style: { height: '28px' },
+        html: icon('heart', 14) + '<span style="font-size:12px">' + (r.likes || 0) + '</span>',
+        onclick: function () {
+          var on = !S.liked(r.id);
+          S.setLiked(r.id, on);
+          S.likePost(r.id, on).then(R.resolve).catch(R.resolve);
+        } })
+    ]);
+    if (admin || mine) {
+      actions.appendChild(el('button', { class: 'btn btn-ghost btn-sm', style: { color: 'var(--danger)', height: '28px' }, html: icon('trash', 14),
+        onclick: async function () {
+          var ok = await U.confirm({ title: '删除回复', message: '确定删除这条回复吗？', danger: true, okText: '删除' });
+          if (!ok) return;
+          await S.removePost(r.id);
+          U.toast('已删除', 'ok'); R.resolve();
+        } }));
+    }
+
+    return el('div', { class: 'reply' }, [head, el('p', { class: 'pre dim', style: { marginTop: '6px', fontSize: '13.5px', lineHeight: '1.8', whiteSpace: 'pre-wrap' }, text: r.text }), actions]);
+  }
+
+  function compose(parentId) {
     var w = S.world(), me = S.currentUser() || {};
-    var ta = el('textarea', { class: 'textarea', rows: 4, placeholder: '说点什么…（最多 280 字）', maxlength: '280' });
+    var ta = el('textarea', { class: 'textarea', rows: 4, placeholder: parentId ? '回复这条留言…（最多 280 字）' : '说点什么…（最多 280 字）', maxlength: '280' });
     var facSel = el('select', { class: 'select' });
     facSel.appendChild(el('option', { value: '', text: '不标注阵营' }));
     (w.orgs || []).forEach(function (o) { facSel.appendChild(el('option', { value: o.key, text: o.name + '（' + o.abbr + '）' })); });
 
     var body = el('div', { class: 'col g14' }, [
-      el('div', { class: 'notice', html: icon('info', 15) + '<div>将以 <b>' + esc(me.name || '匿名') + '</b> 的身份发布。</div>' }),
+      el('div', { class: 'notice', html: icon('info', 15) + '<div>将以 <b>' + esc(me.name || '匿名') + '</b> 的身份发布' + (S.isCloud() ? '，所有人都能看到。' : '（未连接云端，仅本机可见）。') + '</div>' }),
       el('div', { class: 'field' }, [el('label', { text: '内容' }), ta]),
       el('div', { class: 'field' }, [el('label', { text: '阵营' }), facSel])
     ]);
 
-    U.modal({ title: '发布留言', body: body, buttons: [
+    U.modal({ title: parentId ? '回复留言' : '发布留言', body: body, buttons: [
       { text: '取消', class: 'btn-line' },
       { text: '发布', class: 'btn-primary', onclick: function (close) {
         var text = ta.value.trim();
         if (!text) { U.toast('留言不能为空', 'err'); return; }
-        S.add('posts', { id: S.uid('pst'), authorName: me.name || '匿名', authorId: me.id || 'anon',
-          faction: facSel.value, text: text, likes: 0, pinned: false, createdAt: S.nowISO() }, true);
-        U.toast('已发布', 'ok'); close(); R.resolve();
+        S.addPost({ parentId: parentId, faction: facSel.value, text: text })
+          .then(function () { U.toast('已发布', 'ok'); close(); R.resolve(); })
+          .catch(function (e) { U.toast(e.message || '发布失败', 'err'); });
       } }
     ] });
   }
