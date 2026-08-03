@@ -86,6 +86,40 @@
   --font-d: "Noto Serif SC", Georgia, "Songti SC", serif;
 }
 
+/* ============ 深色模式 ============ */
+[data-theme="dark"] {
+  --bg:          #15140F;
+  --bg-tint:     #1C1B16;
+  --surface:     #211F1B;
+  --surface-2:   #2A2823;
+  --border:      #322F29;
+  --border-str:  #3E3A33;
+
+  --ink:         #F3F0EA;
+  --ink-2:       #C9C3B9;
+  --ink-3:       #8E8880;
+  --ink-4:       #6B665E;
+
+  --primary:     #8B7DF5;
+  --primary-ink: #B9AEFB;
+  --primary-bg:  #2A2550;
+  --primary-br:  #3A3470;
+
+  --accent:      #FF9B72;
+  --accent-bg:   #3A2A20;
+
+  --ok:          #3FD0B0;
+  --ok-bg:       #163A34;
+  --warn:        #F2B45A;
+  --warn-bg:     #3A2E18;
+  --danger:      #F47B8F;
+  --danger-bg:   #3A2128;
+
+  --sh-1: 0 1px 2px rgba(0, 0, 0, .25);
+  --sh-2: 0 2px 4px rgba(0, 0, 0, .3), 0 8px 20px rgba(0, 0, 0, .35);
+  --sh-3: 0 4px 8px rgba(0, 0, 0, .35), 0 18px 44px rgba(0, 0, 0, .5);
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 html { -webkit-text-size-adjust: 100%; }
@@ -1816,10 +1850,14 @@ window.SF = window.SF || {};
   async function setArchiveStatus(id, status, note) {
     return await db.rpc('set_archive_status', { p_id: id, p_status: status, p_note: note || null });
   }
+  /* 注册时用正确密钥自动提权为管理员：仅当前登录用户本人、且密钥与站点 regKey 匹配时生效 */
+  async function claimAdmin(key) {
+    return await db.rpc('claim_admin', { p_key: key });
+  }
 
   SF.cloud = Object.assign(cloud, {
     loadCfg, saveCfg, configured, loadSession, saveSession,
-    auth, db, ping, loadProfile, upsertProfile, isAdmin,
+    auth, db, ping, loadProfile, upsertProfile, isAdmin, claimAdmin,
     fetchWorld, pushWorld, WORLD_ID,
     listPosts, addPost, updatePost, removePost, likePost,
     listArchives, addArchive, updateArchive, removeArchive, setArchiveStatus
@@ -4687,6 +4725,8 @@ window.SF = window.SF || {};
         onclick: function () { S.pinPost(p.id, !p.pinned).then(R.resolve).catch(R.resolve); } }));
     }
     if (admin || mine) {
+      actions.appendChild(el('button', { class: 'btn btn-ghost btn-sm', html: icon('edit', 15) + '<span>编辑</span>',
+        onclick: function () { editPost(p); } }));
       actions.appendChild(el('button', { class: 'btn btn-ghost btn-sm', style: { color: 'var(--danger)', marginLeft: 'auto' }, html: icon('trash', 15) + '<span>删除</span>',
         onclick: async function () {
           var ok = await U.confirm({ title: '删除留言', message: '确定要删除这条留言吗？', danger: true, okText: '删除' });
@@ -4736,6 +4776,8 @@ window.SF = window.SF || {};
         } })
     ]);
     if (admin || mine) {
+      actions.appendChild(el('button', { class: 'btn btn-ghost btn-sm', style: { height: '28px' }, html: icon('edit', 14),
+        onclick: function () { editPost(r); } }));
       actions.appendChild(el('button', { class: 'btn btn-ghost btn-sm', style: { color: 'var(--danger)', height: '28px' }, html: icon('trash', 14),
         onclick: async function () {
           var ok = await U.confirm({ title: '删除回复', message: '确定删除这条回复吗？', danger: true, okText: '删除' });
@@ -4773,6 +4815,23 @@ window.SF = window.SF || {};
     ] });
   }
 
+  function editPost(p) {
+    var ta = el('textarea', { class: 'textarea', rows: 4, maxlength: '280', value: p.text || '' });
+    var body = el('div', { class: 'col g14' }, [
+      el('div', { class: 'field' }, [el('label', { text: '内容' }), ta])
+    ]);
+    U.modal({ title: '编辑留言', body: body, buttons: [
+      { text: '取消', class: 'btn-line' },
+      { text: '保存', class: 'btn-primary', onclick: function (close) {
+        var text = ta.value.trim();
+        if (!text) { U.toast('留言不能为空', 'err'); return; }
+        S.updatePost(p.id, { text: text })
+          .then(function () { U.toast('已更新', 'ok'); close(); R.resolve(); })
+          .catch(function (e) { U.toast(e.message || '更新失败', 'err'); });
+      } }
+    ] });
+  }
+
   SF.pages.square = { render: render };
 })(window.SF);
 
@@ -4787,11 +4846,32 @@ window.SF = window.SF || {};
   var U = SF.ui, S = SF.store, R = SF.router;
   var el = U.el, icon = U.icon, esc = U.esc, escLines = U.escLines;
 
+  /* 访客档案审核状态变化（pending→public/private）时给出提示 */
+  function checkReviewNotices() {
+    try {
+      var me = S.currentUser() || {};
+      var seen = {};
+      try { seen = JSON.parse(localStorage.getItem('_sf_arc_seen') || '{}'); } catch (e) {}
+      var changed = [];
+      S.allArchives().forEach(function (a) {
+        if (a.author !== me.id) return;
+        var prev = seen[a.id];
+        if ((a.status === 'public' || a.status === 'private') && prev === 'pending') {
+          changed.push(a.status === 'public' ? ('档案「' + a.name + '」已通过审核并公开') : ('档案「' + a.name + '」未通过审核，已被退回'));
+        }
+        seen[a.id] = a.status;
+      });
+      localStorage.setItem('_sf_arc_seen', JSON.stringify(seen));
+      if (changed.length === 1) U.toast(changed[0], 'ok');
+      else if (changed.length > 1) U.toast('有 ' + changed.length + ' 份档案的审核状态已更新', 'ok');
+    } catch (e) { /* 忽略 */ }
+  }
+
   function render(mount) {
     var w = S.world(), me = S.currentUser() || {}, admin = S.isAdmin();
     if (!me.id) return;
     // 拉取云端访客档案，确保「我的档案」包含跨设备提交的内容
-    S.loadArchives().then(function () { R.resolve(); }).catch(function () {});
+    S.loadArchives().then(function () { checkReviewNotices(); R.resolve(); }).catch(function () {});
 
     /* ---- 资料卡 ---- */
     var org = me.faction ? SF.factionOf(me.faction) : null;
@@ -5294,6 +5374,9 @@ window.SF = window.SF || {};
     if (booted) return;
     booted = true;
     try {
+      // 应用深色模式偏好（尽早，避免闪烁）
+      try { if (localStorage.getItem('_sf_theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) {}
+
       S.init();
 
       // 加载内置/已保存的云端配置（含打包时注入的 window.SF_CLOUD_DEFAULT）。
@@ -5309,14 +5392,15 @@ window.SF = window.SF || {};
             await SF.cloud.loadProfile();
             S.hydrateFromCloud(); // 拉取云端试炼历史等个人数据
             S.setMode(SF.cloud.isAdmin() ? 'admin' : 'guest');
+            await tryClaimAdmin().catch(function () {}); // 注册时存了密钥则自动提权
           }
         } catch (e) { console.warn('session restore', e); }
         // 后台拉取最新世界数据（不打断用户）
         S.pull().catch(function () { /* 静默 */ });
       }
 
-      if (!S.currentUser()) { renderGate(); return; }
-      renderShell();
+      if (!S.currentUser()) { renderGate(); maybeOnboard(); return; }
+      renderShell(); maybeOnboard();
     } catch (err) {
       console.error('boot failed', err);
       var errEl = document.getElementById('gate-error');
@@ -5447,6 +5531,40 @@ window.SF = window.SF || {};
     key.addEventListener('keydown', function (e) { if (e.key === 'Enter') (key2 || go).focus ? (key2 ? key2.focus() : go.click()) : go.click(); });
   }
 
+  /* 注册时若提供了正确密钥，登录成功后自动提权为管理员 */
+  async function tryClaimAdmin() {
+    var key = localStorage.getItem('_sf_pending_admin');
+    if (!key) return;
+    try {
+      await S.pull({ force: true }).catch(function () {});
+      var curKey = (S.world().site.regKey || '').trim();
+      if (curKey && key === curKey && SF.cloud.auth.uid()) {
+        await SF.cloud.claimAdmin(key);
+        await SF.cloud.loadProfile();
+        S.setMode('admin');
+        U.toast('已自动获得管理员权限', 'ok');
+      }
+    } catch (e) { /* 忽略，下次登录再试 */ }
+    localStorage.removeItem('_sf_pending_admin');
+  }
+
+  /* 首次启动引导：讲清本地模式 vs 云端账号，看完打标不再弹 */
+  function maybeOnboard() {
+    try { if (localStorage.getItem('_sf_onboarded') === '1') return; } catch (e) {}
+    var body = el('div', { class: 'col g14' }, [
+      el('p', { class: 'muted', text: '这是一个世界观资料站：你可以查阅设定、建立自己的角色档案，也能在广场留言互动。' }),
+      el('div', { class: 'notice', html: icon('info', 16) + '<div><b>本地模式</b>：不登录也能浏览设定、在本机建立档案。数据只存在这一台设备。</div>' }),
+      el('div', { class: 'notice', html: icon('cloud', 16) + '<div><b>云端账号</b>：注册并登录后，档案、留言、试炼记录会在多设备间同步，也能被其他人看到与互动。</div>' }),
+      el('p', { class: 'muted', text: '想开始？点底部「我的」建立第一份档案；想跨设备同步，就点「登录 / 注册账号」。' })
+    ]);
+    U.modal({ title: '欢迎来到星落城', body: body, buttons: [
+      { text: '开始探索', class: 'btn-primary', onclick: function (close) {
+        try { localStorage.setItem('_sf_onboarded', '1'); } catch (e) {}
+        close();
+      } }
+    ] });
+  }
+
   function gateCloud(card) {
     var mode = { v: 'in' };
     var body = el('div');
@@ -5489,6 +5607,8 @@ window.SF = window.SF || {};
                   return;
                 }
               }
+              if (regKeyI && regKeyI.value.trim() && (S.world().site.regKey || '').trim() === regKeyI.value.trim())
+                localStorage.setItem('_sf_pending_admin', regKeyI.value.trim());
               await SF.cloud.auth.signUp(e, p);
               if (!SF.cloud.auth.me()) { U.toast('注册成功，请查收邮件完成验证后登录', 'ok'); mode.v = 'in'; draw(); return; }
               await SF.cloud.upsertProfile({ name: (nick && nick.value.trim()) || e.split('@')[0], role: 'member' });
@@ -5499,6 +5619,7 @@ window.SF = window.SF || {};
             }
             S.setMode(SF.cloud.isAdmin() ? 'admin' : 'guest');
             await S.pull({ force: true }).catch(function () {});
+            await tryClaimAdmin().catch(function () {});
             U.toast('欢迎回来', 'ok');
             renderShell();
           } catch (err) {
@@ -5530,6 +5651,22 @@ window.SF = window.SF || {};
      ============================================================ */
   var mount, topTitle, topCrumb, modePill;
 
+  var ICON_SUN = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5 5l1.6 1.6M17.4 17.4 19 19M5 19l1.6-1.6M17.4 6.6 19 5"/></svg>';
+  var ICON_MOON = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+
+  function themeBtn() {
+    var b = el('button', { class: 'btn btn-ghost btn-icon btn-sm', title: '切换深色 / 浅色模式',
+      html: document.documentElement.getAttribute('data-theme') === 'dark' ? ICON_SUN : ICON_MOON,
+      onclick: function () {
+        var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('_sf_theme', next); } catch (e) {}
+        b.innerHTML = next === 'dark' ? ICON_SUN : ICON_MOON;
+      }
+    });
+    return b;
+  }
+
   function renderShell() {
     var w = S.world();
     APP.innerHTML = '';
@@ -5555,7 +5692,7 @@ window.SF = window.SF || {};
     modePill = el('div', { class: 'mode-pill' });
     var top = el('header', { class: 'topbar' }, [
       el('div', {}, [topTitle, topCrumb]),
-      el('div', { style: { marginLeft: 'auto' }, class: 'row g8' }, [modePill, syncBtn()])
+      el('div', { style: { marginLeft: 'auto' }, class: 'row g8' }, [modePill, syncBtn(), themeBtn()])
     ]);
 
     var mtop = el('header', { class: 'mtop' }, [
