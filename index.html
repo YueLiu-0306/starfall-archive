@@ -1786,11 +1786,43 @@ window.SF = window.SF || {};
     return await db.rpc(fn, { p_id: id });
   }
 
+  /* ---------- archives (访客档案，云端共享 + 审核) ---------- */
+  async function listArchives() {
+    const me = auth.uid();
+    const admin = cloud.profile && cloud.profile.role === 'admin';
+    const params = { order: 'updated_at.desc', limit: 1000 };
+    if (admin) {
+      // 管理员可见全部
+    } else if (me) {
+      params['or'] = '(status.eq.public,author_id.eq.' + me + ')';
+    } else {
+      params['status'] = 'eq.public';
+    }
+    const rows = await db.select('sf_archives', params);
+    return rows || [];
+  }
+  async function addArchive(row) {
+    const out = await db.insert('sf_archives', row);
+    return (out && out[0]) || row;
+  }
+  async function updateArchive(id, patch) {
+    const out = await db.update('sf_archives', { id: 'eq.' + id }, patch);
+    return (out && out[0]) || null;
+  }
+  async function removeArchive(id) {
+    await db.remove('sf_archives', { id: 'eq.' + id });
+    return true;
+  }
+  async function setArchiveStatus(id, status, note) {
+    return await db.rpc('set_archive_status', { p_id: id, p_status: status, p_note: note || null });
+  }
+
   SF.cloud = Object.assign(cloud, {
     loadCfg, saveCfg, configured, loadSession, saveSession,
     auth, db, ping, loadProfile, upsertProfile, isAdmin,
     fetchWorld, pushWorld, WORLD_ID,
-    listPosts, addPost, updatePost, removePost, likePost
+    listPosts, addPost, updatePost, removePost, likePost,
+    listArchives, addArchive, updateArchive, removeArchive, setArchiveStatus
   });
 })(window.SF);
 
@@ -2479,6 +2511,108 @@ window.SF = window.SF || {};
     emit('posts', { reason: 'like' });
   }
 
+  /* ---------------- 档案(archives) 云端化 ----------------
+     管理员发布的档案仍在 store.world.archives（随 world 发布）；
+     访客提交的档案走独立云端表 sf_archives，管理员审核通过后公开。
+     列表/详情合并两者；写操作按来源路由（__src==='cloud' 走云端）。 */
+  var archivesCache = null; // sf_archives 行（访客提交）
+
+  function cloudArchiveToLocal(r) {
+    return {
+      id: r.id,
+      name: r.name, code: r.code || '', faction: r.faction || '',
+      cover: r.cover || '',
+      status: r.status,
+      author: r.author_id,                 // 归一化，复用 a.author===me.id 判断
+      authorName: r.author_name,
+      fields: r.fields || {},
+      likes: r.likes || 0,
+      reviewNote: r.review_note || '',
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+      __src: 'cloud'
+    };
+  }
+  function refreshCloudArchive(r) {
+    if (!archivesCache) archivesCache = [];
+    var i = archivesCache.findIndex(function (x) { return x.id === r.id; });
+    if (i >= 0) archivesCache[i] = r; else archivesCache.push(r);
+  }
+  async function loadArchives() {
+    if (isCloud()) {
+      try { archivesCache = (await SF.cloud.listArchives()) || null; }
+      catch (e) { archivesCache = archivesCache || null; }
+    } else {
+      archivesCache = null;
+    }
+    emit('archives', { reason: 'load' });
+    return allArchives();
+  }
+  function worldArchives() { return (store.world.archives || []).slice(); }
+  function allArchives() {
+    var list = worldArchives().map(function (a) { return Object.assign({}, a); });
+    if (archivesCache) {
+      archivesCache.forEach(function (r) { list.push(cloudArchiveToLocal(r)); });
+    }
+    return list;
+  }
+  function findArchive(id) {
+    var w = (store.world.archives || []).find(function (x) { return x.id === id; });
+    if (w) return w;
+    if (archivesCache) {
+      var c = archivesCache.find(function (r) { return r.id === id; });
+      if (c) return cloudArchiveToLocal(c);
+    }
+    return null;
+  }
+  async function saveArchive(a, isNew) {
+    var me = currentUser() || {};
+    var cloudUid = (isCloud() && SF.cloud.auth.uid) ? SF.cloud.auth.uid() : null;
+    var admin = S.isAdmin();
+    // 已有云端档案（含管理员审核时编辑）一律走云端
+    if (isCloud() && (a.__src === 'cloud' || (!admin && isNew))) {
+      if (!isNew) {
+        var patch = { name: a.name, code: a.code || '', faction: a.faction || '', cover: a.cover || '', fields: a.fields || {} };
+        if (admin) patch.status = a.status;
+        var u = await SF.cloud.updateArchive(a.id, patch);
+        if (u) refreshCloudArchive(u);
+        return u ? cloudArchiveToLocal(u) : a;
+      }
+      var row = {
+        id: uid('ga'),
+        author_id: cloudUid,
+        author_name: me.name || '匿名',
+        status: a.status || 'pending',
+        name: a.name, code: a.code || '', faction: a.faction || '',
+        cover: a.cover || '', fields: a.fields || {}
+      };
+      var out = await SF.cloud.addArchive(row);
+      var saved = (out && out[0]) || row;
+      refreshCloudArchive(saved);
+      return cloudArchiveToLocal(saved);
+    }
+    // 管理员新档案 / 本地环境：写入 world.archives
+    if (isNew) S.add('archives', a, true); else S.update('archives', a.id, a);
+    return a;
+  }
+  async function deleteArchive(id) {
+    var a = findArchive(id);
+    if (a && a.__src === 'cloud') {
+      try { await SF.cloud.removeArchive(id); } catch (e) {}
+      if (archivesCache) archivesCache = archivesCache.filter(function (x) { return x.id !== id; });
+    } else {
+      S.remove('archives', id);
+    }
+    emit('archives', { reason: 'remove' });
+  }
+  async function reviewArchive(id, status, note) {
+    if (!isCloudAdmin()) throw new Error('需以云端管理员账号审核');
+    var r = await SF.cloud.setArchiveStatus(id, status, note);
+    if (r) refreshCloudArchive(r);
+    emit('archives', { reason: 'review' });
+    return r;
+  }
+
   /* ---------------- 导入导出 ---------------- */
   function exportWorld() {
     return JSON.stringify({
@@ -2529,6 +2663,23 @@ window.SF = window.SF || {};
     store.local.quizHistory.unshift(Object.assign({ at: nowISO() }, r));
     store.local.quizHistory = store.local.quizHistory.slice(0, 30);
     saveLocal();
+    // 云端账号：把试炼历史同步到个人档案，跨设备保留
+    if (isCloud() && SF.cloud.profile) {
+      try {
+        var hist = Array.isArray(SF.cloud.profile.quiz_history) ? SF.cloud.profile.quiz_history.slice() : [];
+        hist.unshift(Object.assign({ at: nowISO() }, r));
+        hist = hist.slice(0, 30);
+        SF.cloud.upsertProfile({ quiz_history: hist });
+      } catch (e) {}
+    }
+    emit('quiz', store.local.quizHistory);
+  }
+  function hydrateFromCloud() {
+    if (isCloud() && SF.cloud.profile && Array.isArray(SF.cloud.profile.quiz_history)) {
+      store.local.quizHistory = SF.cloud.profile.quiz_history.slice(0, 30);
+      saveLocal();
+      emit('quiz', store.local.quizHistory);
+    }
   }
 
   /* ---------------- 统计 ---------------- */
@@ -2552,7 +2703,8 @@ window.SF = window.SF || {};
     verifyAdminKey, setAdminKey,
     pull, push, exportWorld, importWorld, resetWorld,
     loadPosts, posts, postById, topPosts, repliesOf, addPost, removePost, pinPost, likePost,
-    toggleLike, liked, setLiked, pushQuizResult, saveLocal,
+    loadArchives, allArchives, findArchive, saveArchive, deleteArchive, reviewArchive,
+    toggleLike, liked, setLiked, pushQuizResult, hydrateFromCloud, saveLocal,
     stats, on, off, emit,
     get state() { return store; }
   };
@@ -3479,9 +3631,10 @@ window.SF = window.SF || {};
   /* ============================================================
      列表
      ============================================================ */
-  function list(mount) {
+  async function list(mount) {
     var w = S.world(), admin = S.isAdmin(), me = S.currentUser() || {};
-    var all = (w.archives || []).slice().reverse();
+    await S.loadArchives(); // 拉取云端访客档案（合并进列表）
+    var all = S.allArchives().slice().reverse();
 
     mount.appendChild(el('div', { class: 'section-head' }, [
       el('div', {}, [
@@ -3610,7 +3763,7 @@ window.SF = window.SF || {};
           onclick: async function (e) {
             e.preventDefault(); e.stopPropagation();
             var ok = await U.confirm({ title: '删除档案', message: '确定删除「' + a.name + '」？此操作不可撤销。', danger: true, okText: '删除' });
-            if (ok) { S.remove('archives', a.id); U.toast('已删除', 'ok'); R.resolve(); }
+            if (ok) { await S.deleteArchive(a.id); U.toast('已删除', 'ok'); R.resolve(); }
           } })
       ]) : null
     ].filter(Boolean)));
@@ -3623,7 +3776,7 @@ window.SF = window.SF || {};
      详情
      ============================================================ */
   function detail(mount, id) {
-    var a = S.find('archives', id);
+    var a = S.findArchive(id);
     var w = S.world(), admin = S.isAdmin(), me = S.currentUser() || {};
     if (!a) {
       mount.appendChild(el('div', { class: 'empty' }, [
@@ -3664,14 +3817,23 @@ window.SF = window.SF || {};
         el('div', { class: 'grow', text: '这份档案正在等待审核。' }),
         el('div', { class: 'row g6' }, [
           el('button', { class: 'btn btn-primary btn-sm', html: icon('check', 14) + '<span>通过</span>',
-            onclick: function () { S.update('archives', a.id, { status: 'public' }); U.toast('已通过审核', 'ok'); R.resolve(); } }),
+            onclick: async function () {
+              try {
+                if (a.__src === 'cloud') await S.reviewArchive(a.id, 'public');
+                else S.update('archives', a.id, { status: 'public' });
+                U.toast('已通过审核', 'ok'); R.resolve();
+              } catch (e) { U.toast(e.message || '审核失败', 'err'); }
+            } }),
           el('button', { class: 'btn btn-line btn-sm', text: '退回',
             onclick: async function () {
               var r = await U.formModal({ title: '退回档案', okText: '退回',
                 fields: [{ name: 'reason', label: '退回原因', type: 'textarea', placeholder: '例：神迹强度超标，请调整持续与冷却' }] });
               if (!r) return;
-              S.update('archives', a.id, { status: 'private', reviewNote: r.reason });
-              U.toast('已退回', 'ok'); R.resolve();
+              try {
+                if (a.__src === 'cloud') await S.reviewArchive(a.id, 'rejected', r.reason);
+                else S.update('archives', a.id, { status: 'private', reviewNote: r.reason });
+                U.toast('已退回', 'ok'); R.resolve();
+              } catch (e) { U.toast(e.message || '退回失败', 'err'); }
             } })
         ])
       ]));
@@ -3855,7 +4017,7 @@ window.SF = window.SF || {};
       title: isNew ? '创建档案' : '编辑 · ' + (a.name || '档案'), wide: true, body: body,
       buttons: [
         { text: '取消', class: 'btn-line' },
-        { text: '保存', class: 'btn-primary', onclick: function (close) {
+        { text: '保存', class: 'btn-primary', onclick: async function (close) {
           var name = nameI.value.trim();
           if (!name) { U.toast('请填写档案名称', 'err'); return; }
           var out = {};
@@ -3874,7 +4036,10 @@ window.SF = window.SF || {};
             faction: out.f_org || '', fields: out, status: status,
             author: d.author || me.id, authorName: d.authorName || me.name
           };
-          if (isNew) S.add('archives', patch, true); else S.update('archives', a.id, patch);
+          if (a) patch.__src = a.__src; // 保留来源，写操作路由到云端/本地
+          try {
+            await S.saveArchive(patch, isNew);
+          } catch (e) { U.toast('保存失败：' + (e.message || ''), 'err'); return; }
           U.toast(status === 'pending' ? '已提交，等待管理员审核' : '已保存', 'ok');
           close(); R.resolve();
         } }
@@ -4625,6 +4790,8 @@ window.SF = window.SF || {};
   function render(mount) {
     var w = S.world(), me = S.currentUser() || {}, admin = S.isAdmin();
     if (!me.id) return;
+    // 拉取云端访客档案，确保「我的档案」包含跨设备提交的内容
+    S.loadArchives().then(function () { R.resolve(); }).catch(function () {});
 
     /* ---- 资料卡 ---- */
     var org = me.faction ? SF.factionOf(me.faction) : null;
@@ -4754,13 +4921,40 @@ window.SF = window.SF || {};
   function editProfile() {
     var me = S.currentUser() || {};
     var w = S.world();
+    var d = { avatar: me.avatar || '' };
     var nameI = el('input', { class: 'input', value: me.name || '', placeholder: '你的称呼', maxlength: '20' });
     var facSel = el('select', { class: 'select' });
     facSel.appendChild(el('option', { value: '', text: '暂不选择组织' }));
     (w.orgs || []).forEach(function (o) { facSel.appendChild(el('option', { value: o.key, text: o.name + '（' + o.abbr + '）', selected: me.faction === o.key })); });
     var bioI = el('textarea', { class: 'textarea', rows: 2, value: me.bio || '', placeholder: '一句话介绍自己（可选）', maxlength: '60' });
 
+    /* 头像 */
+    var facePrev = el('div', { class: 'avatar avatar-xl', style: { flexShrink: 0 } });
+    function paintFace() {
+      facePrev.innerHTML = '';
+      if (d.avatar) facePrev.appendChild(el('img', { src: d.avatar, style: { width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' } }));
+      else facePrev.textContent = (me.name || '?').charAt(0) || '?';
+    }
+    paintFace();
+
     var body = el('div', { class: 'col g14' }, [
+      el('div', { class: 'card card-flat card-pad row g16 wrap' }, [
+        facePrev,
+        el('div', { class: 'grow col g8' }, [
+          el('div', { class: 'small', style: { fontWeight: '650' }, text: '头像' }),
+          el('div', { class: 'tiny muted', text: '建议使用方形图片，会自动压缩到 160px 存储。' }),
+          el('div', { class: 'row g8 wrap' }, [
+            el('button', { class: 'btn btn-line btn-sm', html: icon('image', 14) + '<span>上传图片</span>',
+              onclick: async function () {
+                var file = await U.pickFile('image/*');
+                if (!file) return;
+                try { d.avatar = await SF.pages.archives.shrink(file, 160); paintFace(); }
+                catch (e) { U.toast('图片读取失败', 'err'); }
+              } }),
+            el('button', { class: 'btn btn-ghost btn-sm', text: '移除', onclick: function () { d.avatar = ''; paintFace(); } })
+          ])
+        ])
+      ]),
       el('div', { class: 'field' }, [el('label', { text: '称呼' }), nameI]),
       el('div', { class: 'field' }, [el('label', { text: '倾向组织' }), facSel]),
       el('div', { class: 'field' }, [el('label', { text: '简介' }), bioI])
@@ -4771,7 +4965,7 @@ window.SF = window.SF || {};
       { text: '保存', class: 'btn-primary', onclick: async function (close) {
         var n = nameI.value.trim();
         if (!n) { U.toast('请填写称呼', 'err'); return; }
-        var patch = { name: n, faction: facSel.value, bio: bioI.value.trim() };
+        var patch = { name: n, faction: facSel.value, bio: bioI.value.trim(), avatar: d.avatar };
         if (S.isCloud() && SF.cloud.profile) {
           try { await SF.cloud.upsertProfile(patch); await SF.cloud.loadProfile(); U.toast('已保存到云端', 'ok'); }
           catch (e) { U.toast('云端保存失败：' + (e.message || ''), 'err'); return; }
@@ -5113,6 +5307,7 @@ window.SF = window.SF || {};
           const user = await SF.cloud.auth.me();
           if (user) {
             await SF.cloud.loadProfile();
+            S.hydrateFromCloud(); // 拉取云端试炼历史等个人数据
             S.setMode(SF.cloud.isAdmin() ? 'admin' : 'guest');
           }
         } catch (e) { console.warn('session restore', e); }
