@@ -1102,6 +1102,14 @@ h4 { font-size: 15px; }
 </script>
 
 <script>
+/* 云端默认配置（Supabase）。anon/public 钥匙可安全内置；
+   也可在「管理台 → 云端配置」中覆盖。不暴露任何私密 key。 */
+window.SF_CLOUD_DEFAULT = {
+  url: 'https://ztfrjkdkasahhwyrtpuc.supabase.co',
+  anonKey: 'sb_publishable_J1AkEm9513j22hc6Wd0aMA_DjIXQb7A'
+};
+</script>
+<script>
 
 /* === js/core/ui.js === */
 /* ============================================================
@@ -2049,7 +2057,8 @@ window.SF = window.SF || {};
       adminHash: null,          // 首次进入管理员模式时设置口令
       allowGuestArchive: true,  // 访客可创建自己的档案
       allowGuestPost: true,     // 访客可在广场留言
-      reviewArchive: true       // 访客档案需管理员审核后公开
+      reviewArchive: true,      // 访客档案需管理员审核后公开
+      regKey: ''                // 云端注册密钥（留空则开放注册；填写后注册须匹配）
     },
     orgs: ORGS,
     timeline: TIMELINE,
@@ -2194,7 +2203,7 @@ window.SF = window.SF || {};
       if (w[k] === undefined) w[k] = clone(seed[k]);
     });
     if (!w.site) w.site = clone(seed.site);
-    ['title', 'subtitle', 'notice', 'allowGuestArchive', 'allowGuestPost', 'reviewArchive'].forEach(function (k) {
+    ['title', 'subtitle', 'notice', 'allowGuestArchive', 'allowGuestPost', 'reviewArchive', 'regKey'].forEach(function (k) {
       if (w.site[k] === undefined) w.site[k] = seed.site[k];
     });
     if (!Array.isArray(w.posts)) w.posts = [];
@@ -4591,6 +4600,7 @@ window.SF = window.SF || {};
         kv('站点标题', s.title),
         kv('英文副标题', s.subtitle),
         kv('公告', s.notice || '（无）'),
+        kv('注册密钥', s.regKey ? ('已启用（' + String(s.regKey).length + ' 位）') : '未设置（开放注册）'),
         el('div', { class: 'row g8 wrap' }, [
           chip('访客创建档案', s.allowGuestArchive),
           chip('访客广场留言', s.allowGuestPost),
@@ -4705,6 +4715,7 @@ window.SF = window.SF || {};
     var titleI = el('input', { class: 'input', value: s.title || '' });
     var subI   = el('input', { class: 'input', value: s.subtitle || '' });
     var noticeI = el('textarea', { class: 'textarea', rows: 2, value: s.notice || '' });
+    var regKeyI = el('input', { class: 'input', type: 'password', value: s.regKey || '', placeholder: '留空则开放注册；填写后注册须匹配' });
 
     function tog(label, val, key) {
       var cb = el('input', { type: 'checkbox', checked: !!val });
@@ -4722,6 +4733,7 @@ window.SF = window.SF || {};
         el('div', { class: 'field' }, [el('label', { text: '英文副标题' }), subI])
       ]),
       el('div', { class: 'field' }, [el('label', { text: '公告' }), noticeI]),
+      el('div', { class: 'field' }, [el('label', { text: '云端注册密钥' }), regKeyI]),
       el('div', { class: 'divider' }),
       el('div', { class: 'small', style: { fontWeight: '650' }, text: '访问权限' }),
       t1, t2, t3
@@ -4731,6 +4743,7 @@ window.SF = window.SF || {};
       { text: '取消', class: 'btn-line' },
       { text: '保存', class: 'btn-primary', onclick: function (close) {
         s.title = titleI.value.trim(); s.subtitle = subI.value.trim(); s.notice = noticeI.value.trim();
+        s.regKey = regKeyI.value.trim();
         t1._get(); t2._get(); t3._get();
         S.world().site = s; S.save('site');
         U.toast('已保存', 'ok'); close(); R.resolve();
@@ -5025,9 +5038,11 @@ window.SF = window.SF || {};
       var email = el('input', { class: 'input', type: 'email', placeholder: 'you@example.com', autocomplete: 'email' });
       var pass  = el('input', { class: 'input', type: 'password', placeholder: '密码（至少 6 位）', autocomplete: 'current-password' });
       var nick  = mode.v === 'up' ? el('input', { class: 'input', placeholder: '你的称呼', maxlength: '20' }) : null;
+      var regKeyI = mode.v === 'up' ? el('input', { class: 'input', type: 'password', placeholder: '注册密钥（向管理员索取）' }) : null;
 
       var f = el('div', { class: 'col g14' }, [field('邮箱', email), field('密码', pass)]);
       if (nick) f.appendChild(field('称呼', nick));
+      if (regKeyI) f.appendChild(field('注册密钥', regKeyI));
       body.appendChild(f);
 
       var go = el('button', { class: 'btn btn-primary btn-lg btn-block', style: { marginTop: '20px' },
@@ -5038,6 +5053,17 @@ window.SF = window.SF || {};
           go.disabled = true; go.innerHTML = '<span class="spin"></span>处理中';
           try {
             if (mode.v === 'up') {
+              /* 注册密钥校验：若站点设置了 regKey，则必须匹配（先拉取最新世界数据确保拿到密钥） */
+              var wantKey = (S.world().site.regKey || '').trim();
+              if (wantKey) {
+                try { await S.pull({ force: true }); } catch (e2) { /* 拉取失败则用本地值 */ }
+                var curKey = (S.world().site.regKey || '').trim();
+                if (!regKeyI || regKeyI.value.trim() !== curKey) {
+                  U.toast('注册密钥不正确', 'err');
+                  go.disabled = false; go.textContent = '注册并进入';
+                  return;
+                }
+              }
               await SF.cloud.auth.signUp(e, p);
               if (!SF.cloud.auth.me()) { U.toast('注册成功，请查收邮件完成验证后登录', 'ok'); mode.v = 'in'; draw(); return; }
               await SF.cloud.upsertProfile({ name: (nick && nick.value.trim()) || e.split('@')[0], role: 'member' });
