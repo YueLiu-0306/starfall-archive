@@ -1,0 +1,27 @@
+{
+  "name": "星落城 · 资料站",
+  "short_name": "星落城",
+  "description": "陨星岛世界观、组织介绍、时间轴、角色档案与莫比乌斯试炼的公开资料站。",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FBFAF8",
+  "theme_color": "#FBFAF8",
+  "categories": ["entertainment", "education", "reference"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
