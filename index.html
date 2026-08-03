@@ -2097,7 +2097,9 @@ window.SF = window.SF || {};
       const msg = (data && (data.message || data.error || data.hint)) || ('HTTP ' + res.status);
       throw new Error(msg);
     }
-    const key = (data && data.Key) || path;
+    // Supabase returns Key as "bucket/path", so strip the bucket prefix to avoid double bucket in public URL.
+    let key = (data && data.Key) || path;
+    if (key.indexOf(bucket + '/') === 0) key = key.slice(bucket.length + 1);
     return cloud.cfg.url + '/storage/v1/object/public/' + bucket + '/' + key;
   }
   async function storageRemove(bucket, path) {
