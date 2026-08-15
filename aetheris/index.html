@@ -1466,6 +1466,7 @@ window.AE = window.AE || {};
   async function initCloud() {
     if (sfInitDone) return;
     sfInitDone = true;
+    if (!AE.cloud) { forceLocal = true; return; }
     AE.cloud.loadCfg();
     AE.cloud.loadSession();
     if (AE.cloud.configured()) {
@@ -1646,6 +1647,7 @@ window.AE = window.AE || {};
   function showAuth() {
     $('authScreen').style.display = '';
     $('dashboard').style.display = 'none';
+    var box = $('authBox'); if (box) box.style.display = '';
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
   }
   function enterApp() {
@@ -2349,27 +2351,72 @@ window.AE = window.AE || {};
 
   /* ─── 启动 ─── */
   async function boot() {
-    await initCloud();
-    // 恢复会话
-    if (isCloud()) {
-      try {
-        await AE.cloud.auth.me();
-        if (AE.cloud.auth.uid()) {
-          await AE.cloud.loadProfile();
-          var pf = AE.cloud.profile;
-          if (pf) {
-            currentUser = { id: AE.cloud.auth.uid(), email: AE.cloud.email(), username: pf.username, room: pf.room, isAdmin: AE.cloud.isAdmin(), avatar: pf.avatar };
-            LS.set('ae.user', currentUser);
-            enterApp();
-            return;
+    try {
+      // 先播放 boot 打字机动画（无论后续走哪条路，先让用户看到东西）
+      runBootAnim();
+      await initCloud();
+      // 恢复会话
+      if (isCloud()) {
+        try {
+          await AE.cloud.auth.me();
+          if (AE.cloud.auth.uid()) {
+            await AE.cloud.loadProfile();
+            var pf = AE.cloud.profile;
+            if (pf) {
+              currentUser = { id: AE.cloud.auth.uid(), email: AE.cloud.email(), username: pf.username, room: pf.room, isAdmin: AE.cloud.isAdmin(), avatar: pf.avatar };
+              LS.set('ae.user', currentUser);
+              enterApp();
+              return;
+            }
           }
-        }
-      } catch (e) { /* fall to auth screen */ }
-    } else {
-      var saved = LS.get('ae.user', null);
-      if (saved) { currentUser = saved; enterApp(); return; }
+        } catch (e) { /* fall to auth screen */ }
+      } else {
+        var saved = LS.get('ae.user', null);
+        if (saved) { currentUser = saved; enterApp(); return; }
+      }
+      showAuth();
+    } catch (err) {
+      console.error('[Aetheris] boot failed:', err);
+      // 保底：强制显示认证页，避免黑屏
+      forceLocal = true;
+      try { showAuth(); } catch (e2) {}
+      var authErr = $('authError');
+      if (authErr) authErr.textContent = '启动异常: ' + (err && err.message ? err.message : String(err)) + '。请刷新重试。';
     }
-    showAuth();
+  }
+
+  function runBootAnim() {
+    var el = $('bootText');
+    var box = $('authBox');
+    if (!el) return;
+    var lines = [
+      '> PDA-7 维度锚定系统 v3.2.1',
+      '> 正在校准维度坐标...',
+      '> 检测到 11 层空间结构',
+      '> 在册房客: 9',
+      '> 虚空稳定度: 68%',
+      '> 警告: 0号房间信号异常',
+      '> 连接建立。'
+    ];
+    var i = 0, line = 0;
+    function next() {
+      if (line >= lines.length) {
+        if (box) box.style.display = '';
+        return;
+      }
+      var txt = lines[line];
+      var pos = 0;
+      var iv = setInterval(function () {
+        pos++;
+        el.textContent = lines.slice(0, line).join('\n') + (line > 0 ? '\n' : '') + txt.slice(0, pos) + '█';
+        if (pos >= txt.length) {
+          clearInterval(iv);
+          line++;
+          setTimeout(next, 120);
+        }
+      }, 30);
+    }
+    next();
   }
 
   /* ─── 事件绑定 ─── */
