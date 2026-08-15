@@ -1,0 +1,2445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a1a">
+<title>Aetheris · PDA-7 终端</title>
+<meta name="description" content="Aetheris ARG — 异常生物 · 规则怪谈 · 解密。一栋存在于维度裂缝交汇点的公寓，等待你的入住。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230a0a1a'/%3E%3Ctext x='32' y='44' font-size='36' fill='%2300e5ff' text-anchor='middle' font-family='monospace'%3E%E2%97%88%3C/text%3E%3C/svg%3E">
+<style>
+
+/* === css/style.css === */
+/* ============================================================
+   Aetheris PDA-7 — 响应式样式（移动端优先）
+   ============================================================ */
+:root {
+  --bg-deep: #0a0a1a; --bg-panel: #0f0f23; --bg-card: #12122a; --bg-card-h: #1a1a38; --bg-input: #08081a;
+  --purple: #2a1a4a; --purple-2: #3a2a6a; --cyan: #00e5ff; --cyan-dim: #00a5c5;
+  --cyan-glow: rgba(0,229,255,0.3); --amber: #ffb347; --red: #ff4d6a; --green: #5eff8a; --grey: #4a4a6a;
+  --text: #c8d8e8; --text-dim: #6a7a9a; --text-dark: #3a4a6a;
+  --border: #1a1a3a; --border-h: #2a4a6a;
+  --glow-cyan: 0 0 8px rgba(0,229,255,0.5), 0 0 20px rgba(0,229,255,0.15);
+  --font-mono: 'Consolas','Courier New',ui-monospace,monospace;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg-deep); color: var(--text); font-family: var(--font-mono); min-height: 100vh; overflow-x: hidden; padding-bottom: 60px; }
+button, input, select, textarea { font-family: inherit; }
+button { cursor: pointer; }
+
+/* 扫描线 */
+.scanlines { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:9999;
+  background: repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(0,229,255,0.015) 2px, rgba(0,229,255,0.015) 4px);
+  animation: scanline 8s linear infinite; }
+@keyframes scanline { 0%{background-position:0 0;} 100%{background-position:0 100px;} }
+.scanlines::after { content:''; position:absolute; top:0; left:0; width:100%; height:3px;
+  background: linear-gradient(to bottom, transparent, rgba(0,229,255,0.05), transparent); animation: scan-beam 6s linear infinite; }
+@keyframes scan-beam { 0%{top:-3px;} 100%{top:100%;} }
+.vignette { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:9998;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(5,5,15,0.6) 100%); }
+
+/* ═══ 认证页 ═══ */
+.screen { min-height: 100vh; }
+.boot-container { max-width: 480px; margin: 0 auto; padding: 2rem 1.5rem; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+.boot-text { font-size: 0.72rem; line-height: 1.5; color: var(--cyan-dim); white-space: pre-wrap; margin-bottom: 1.5rem; min-height: 200px; }
+.auth-box { background: var(--bg-panel); border: 1px solid var(--border-h); border-radius: 10px; padding: 1.5rem; box-shadow: 0 0 30px rgba(0,229,255,0.1); }
+.auth-logo { text-align: center; font-size: 1.1rem; color: var(--cyan); text-shadow: var(--glow-cyan); margin-bottom: 1rem; letter-spacing: 0.05em; }
+.auth-icon { font-size: 1.3rem; }
+.auth-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.atab { flex:1; padding: 0.5rem; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-dim); border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+.atab.active { border-color: var(--cyan); color: var(--cyan); background: rgba(0,229,255,0.08); text-shadow: var(--glow-cyan); }
+.auth-form { display: flex; flex-direction: column; gap: 0.6rem; }
+.auth-form input { background: var(--bg-input); border: 1px solid var(--border); color: var(--text); padding: 0.7rem 0.8rem; border-radius: 6px; font-size: 0.9rem; width: 100%; }
+.auth-form input:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 4px var(--cyan-glow); }
+.auth-btn { background: rgba(0,229,255,0.1); border: 1px solid var(--cyan); color: var(--cyan); padding: 0.7rem; border-radius: 6px; font-size: 0.9rem; margin-top: 0.3rem; }
+.auth-btn:hover { background: rgba(0,229,255,0.2); box-shadow: 0 0 8px var(--cyan-glow); }
+.auth-hint { font-size: 0.7rem; color: var(--text-dim); text-align: center; margin-top: 0.3rem; }
+.auth-error { color: var(--red); font-size: 0.78rem; min-height: 1rem; margin-top: 0.3rem; }
+.auth-gm-hint { font-size: 0.65rem; color: var(--text-dark); text-align: center; margin-top: 0.8rem; }
+
+/* ═══ 导航栏 ═══ */
+.navbar { position: sticky; top:0; z-index:100; display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.8rem; background: rgba(15,15,35,0.95); border-bottom: 1px solid var(--border); backdrop-filter: blur(6px); flex-wrap: wrap; gap: 0.4rem; }
+.nav-brand { display: flex; align-items: center; gap: 0.3rem; }
+.logo-icon { color: var(--cyan); text-shadow: var(--glow-cyan); animation: pulse-icon 2s ease-in-out infinite; }
+@keyframes pulse-icon { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
+.logo-text { color: var(--cyan); font-size: 0.85rem; font-weight: bold; text-shadow: var(--glow-cyan); }
+.nav-links { display: flex; gap: 0.15rem; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; max-width: 100%; }
+.nav-links::-webkit-scrollbar { display: none; }
+.nav-link { padding: 0.35rem 0.7rem; color: var(--text-dim); text-decoration: none; font-size: 0.78rem; border-radius: 4px; cursor: pointer; position: relative; white-space: nowrap; }
+.nav-link:hover { color: var(--cyan); background: rgba(0,229,255,0.06); }
+.nav-link.active { color: var(--cyan); background: rgba(0,229,255,0.1); text-shadow: var(--glow-cyan); border-bottom: 2px solid var(--cyan); }
+.badge { position: absolute; top: -4px; right: -6px; background: var(--red); color: #fff; font-size: 0.6rem; min-width: 16px; height: 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 0 4px rgba(255,77,106,0.5); }
+.nav-user { display: flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; }
+.user-avatar { width: 24px; height: 24px; border-radius: 4px; background: var(--purple); border: 1px solid var(--border-h); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--cyan); }
+.user-name { color: var(--text); }
+.user-room { color: var(--text-dim); font-size: 0.68rem; }
+.logout-btn { color: var(--red); cursor: pointer; padding: 0.2rem 0.5rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.7rem; }
+
+/* ═══ 页面通用 ═══ */
+.page { display: none; padding: 1.5rem 1rem 3rem; max-width: 900px; margin: 0 auto; }
+.page.active { display: block; animation: fadeIn 0.3s; }
+@keyframes fadeIn { from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+.page-title h2 { font-size: 1.2rem; color: var(--cyan); text-shadow: var(--glow-cyan); margin-bottom: 0.2rem; }
+.page-title p { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 1.2rem; }
+
+/* ═══ 首页 ═══ */
+.welcome-section { text-align: center; padding: 1.5rem 0 1rem; }
+.welcome-prefix { font-size: 0.7rem; color: var(--text-dark); margin-bottom: 0.4rem; }
+.welcome-title { font-size: 1.5rem; color: var(--cyan); text-shadow: var(--glow-cyan); margin-bottom: 0.3rem; word-break: break-all; }
+.welcome-sub { font-size: 0.8rem; color: var(--text-dim); }
+.data-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.7rem; margin: 1.2rem 0; }
+.data-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem; position: relative; overflow: hidden; }
+.data-card::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background: var(--cyan); box-shadow: var(--glow-cyan); opacity:0.6; }
+.card-header { display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.5rem; }
+.card-icon { color: var(--cyan); }
+.card-label { font-size: 0.7rem; color: var(--text-dim); }
+.card-value { font-size: 1.6rem; font-weight: bold; color: var(--cyan); text-shadow: var(--glow-cyan); margin-bottom: 0.4rem; }
+.card-bar { height: 4px; background: var(--bg-input); border-radius: 2px; overflow: hidden; margin-bottom: 0.4rem; }
+.card-bar-fill { height: 100%; background: var(--cyan); border-radius: 2px; transition: width 0.6s; }
+.card-bar-cyan { background: var(--cyan); }
+.card-bar-amber { background: var(--amber); }
+.card-foot { font-size: 0.66rem; color: var(--text-dim); }
+.notice-panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.notice-header { display: flex; justify-content: space-between; padding: 0.5rem 0.8rem; background: rgba(0,229,255,0.06); border-bottom: 1px solid var(--border); font-size: 0.75rem; color: var(--cyan); }
+.notice-time { color: var(--text-dim); font-size: 0.68rem; }
+.notice-body { padding: 0.8rem; font-size: 0.78rem; line-height: 1.7; color: var(--text); white-space: pre-wrap; }
+
+/* ═══ 世界观 ═══ */
+.world-section { margin-bottom: 2rem; }
+.world-sec-title { color: var(--cyan); font-size: 1rem; text-shadow: var(--glow-cyan); margin-bottom: 0.8rem; border-left: 3px solid var(--cyan); padding-left: 0.6rem; }
+.concept-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.7rem; }
+.concept-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem; }
+.concept-icon { font-size: 1.2rem; color: var(--cyan); margin-bottom: 0.4rem; }
+.concept-title { font-size: 0.85rem; color: var(--text); font-weight: bold; margin-bottom: 0.3rem; }
+.concept-body { font-size: 0.75rem; color: var(--text-dim); line-height: 1.6; }
+.floor-table { display: flex; flex-direction: column; gap: 0.35rem; }
+.floor-row { display: flex; align-items: center; gap: 0.6rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem 0.7rem; font-size: 0.75rem; }
+.floor-no { color: var(--cyan); font-weight: bold; min-width: 3.2rem; }
+.floor-use { flex: 1; color: var(--text); }
+.floor-note { color: var(--text-dim); font-size: 0.68rem; text-align: right; max-width: 40%; }
+.starmap-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.7rem; }
+.star-node { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem; }
+.star-node.st-stable { border-left: 3px solid var(--green); }
+.star-node.st-unstable { border-left: 3px solid var(--amber); }
+.star-node.st-danger { border-left: 3px solid var(--red); }
+.star-node.st-lost { border-left: 3px solid var(--grey); opacity: 0.7; }
+.star-name { font-size: 0.85rem; color: var(--text); font-weight: bold; }
+.star-status { font-size: 0.65rem; margin: 0.2rem 0; }
+.st-stable .star-status { color: var(--green); } .st-unstable .star-status { color: var(--amber); }
+.st-danger .star-status { color: var(--red); } .st-lost .star-status { color: var(--grey); }
+.star-note { font-size: 0.68rem; color: var(--text-dim); line-height: 1.5; }
+.timeline { display: flex; flex-direction: column; gap: 0.35rem; }
+.tl-item { display: flex; gap: 0.7rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem 0.7rem; font-size: 0.75rem; }
+.tl-date { color: var(--amber); font-weight: bold; min-width: 5.5rem; }
+.tl-event { color: var(--text); }
+.puzzle-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.puzzle-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem; }
+.puzzle-head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
+.puzzle-level { background: var(--purple-2); color: var(--cyan); font-size: 0.65rem; padding: 0.15rem 0.5rem; border-radius: 4px; }
+.puzzle-name { font-size: 0.85rem; color: var(--text); font-weight: bold; }
+.puzzle-desc { font-size: 0.75rem; color: var(--text-dim); line-height: 1.6; }
+.puzzle-reward { font-size: 0.68rem; color: var(--green); margin-top: 0.3rem; }
+
+/* ═══ NPC 列表 ═══ */
+.npc-card { display: flex; align-items: center; gap: 0.8rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 0.9rem; margin-bottom: 0.7rem; cursor: pointer; transition: all 0.2s; }
+.npc-card:hover { background: var(--bg-card-h); border-color: var(--border-h); transform: translateX(2px); }
+.npc-card.npc-sealed { border-color: var(--red); opacity: 0.85; }
+.npc-avatar { width: 48px; height: 48px; border-radius: 8px; background: var(--purple); border: 1px solid var(--border-h); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: var(--cyan); flex-shrink: 0; }
+.npc-card.npc-sealed .npc-avatar { color: var(--red); border-color: var(--red); }
+.npc-info { flex: 1; min-width: 0; }
+.npc-name { font-size: 0.95rem; color: var(--text); font-weight: bold; display: flex; align-items: center; gap: 0.5rem; }
+.npc-room { font-size: 0.68rem; color: var(--cyan-dim); }
+.npc-title { font-size: 0.7rem; color: var(--amber); margin: 0.15rem 0; }
+.npc-desc { font-size: 0.72rem; color: var(--text-dim); line-height: 1.5; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.npc-talk { font-size: 0.72rem; color: var(--cyan); flex-shrink: 0; white-space: nowrap; }
+
+/* ═══ 消息 ═══ */
+.msg-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.msg-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem 1rem; cursor: pointer; transition: all 0.2s; position: relative; }
+.msg-item:hover { background: var(--bg-card-h); border-color: var(--border-h); }
+.msg-item.unread { border-left: 3px solid var(--cyan); }
+.msg-item.msg-critical { border-color: var(--red); }
+.msg-item.msg-alert { border-color: var(--amber); }
+.msg-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; flex-wrap: wrap; }
+.msg-avatar { width: 32px; height: 32px; border-radius: 6px; background: var(--purple); border: 1px solid var(--border-h); display: flex; align-items: center; justify-content: center; font-size: 1rem; color: var(--cyan); flex-shrink: 0; }
+.msg-avatar.avatar-grey { color: var(--red); border-color: var(--red); }
+.msg-from { font-weight: bold; font-size: 0.85rem; color: var(--text); }
+.msg-room { font-size: 0.68rem; color: var(--text-dim); }
+.msg-time { font-size: 0.65rem; color: var(--text-dark); margin-left: auto; }
+.msg-content { font-size: 0.8rem; line-height: 1.6; color: var(--text); white-space: pre-wrap; }
+.msg-choices { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
+.msg-choice-btn { flex: 1; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--cyan); background: rgba(0,229,255,0.08); color: var(--cyan); font-size: 0.8rem; }
+.msg-choice-btn.choice-danger { border-color: var(--red); background: rgba(255,77,106,0.1); color: var(--red); }
+.msg-responded { margin-top: 0.5rem; font-size: 0.72rem; color: var(--amber); }
+
+/* ═══ 档案 ═══ */
+.archive-filter { display: flex; gap: 0.4rem; margin-bottom: 1rem; overflow-x: auto; padding-bottom: 0.3rem; -webkit-overflow-scrolling: touch; }
+.filter-btn { padding: 0.35rem 0.8rem; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-dim); border-radius: 6px; font-size: 0.75rem; white-space: nowrap; }
+.filter-btn.active { border-color: var(--cyan); color: var(--cyan); background: rgba(0,229,255,0.08); }
+.archive-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(160px,1fr)); gap: 0.7rem; }
+.archive-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; cursor: pointer; transition: all 0.2s; text-align: center; }
+.archive-card:hover { background: var(--bg-card-h); border-color: var(--border-h); transform: translateY(-2px); }
+.archive-card.sealed { border-color: rgba(255,77,106,0.4); }
+.card-avatar { width: 52px; height: 52px; border-radius: 8px; background: var(--purple); border: 1px solid var(--border-h); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--cyan); margin: 0 auto 0.5rem; }
+.card-avatar.avatar-unknown { color: var(--grey); border-color: var(--grey); }
+.card-name { font-size: 0.9rem; color: var(--text); font-weight: bold; }
+.card-room { font-size: 0.7rem; color: var(--cyan-dim); margin: 0.15rem 0 0.4rem; }
+.card-desc { font-size: 0.68rem; color: var(--text-dim); line-height: 1.5; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; margin-bottom: 0.5rem; }
+.card-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; justify-content: center; }
+.card-tag { font-size: 0.62rem; padding: 0.1rem 0.4rem; border-radius: 4px; }
+.tag-human { background: rgba(0,229,255,0.1); color: var(--cyan); }
+.tag-nonhuman { background: rgba(255,179,71,0.1); color: var(--amber); }
+.tag-unknown { background: rgba(106,122,154,0.15); color: var(--text-dim); }
+.tag-sealed { background: rgba(255,77,106,0.12); color: var(--red); }
+
+/* ═══ 骰子 ═══ */
+.dice-panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; }
+.dice-selector { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.dice-btn { flex: 1; min-width: 90px; padding: 0.7rem 0.5rem; background: var(--bg-card); border: 1px solid var(--border); color: var(--text); border-radius: 8px; font-size: 0.8rem; }
+.dice-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.dice-display { min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1rem; }
+.dice-placeholder { color: var(--text-dark); font-size: 0.8rem; }
+.dice-result { font-size: 3rem; font-weight: bold; color: var(--cyan); text-shadow: var(--glow-cyan); animation: dicePop 0.3s; }
+@keyframes dicePop { from{transform:scale(0.6); opacity:0;} to{transform:scale(1); opacity:1;} }
+.dice-detail { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.3rem; }
+.dice-special { margin-top: 0.5rem; color: var(--green); font-size: 0.8rem; }
+.dice-special.critical { color: var(--red); }
+.dice-rules { display: flex; flex-direction: column; gap: 0.35rem; }
+.dice-rule { font-size: 0.72rem; color: var(--text-dim); }
+.rule-key { color: var(--cyan); font-weight: bold; margin-right: 0.3rem; }
+
+/* ═══ 管理面板 ═══ */
+.admin-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.8rem; }
+.admin-panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; }
+.admin-panel h3 { font-size: 0.9rem; color: var(--cyan); margin-bottom: 0.7rem; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+.admin-panel label { display: block; font-size: 0.7rem; color: var(--text-dim); margin: 0.5rem 0 0.2rem; }
+.admin-panel select, .admin-panel textarea, .admin-panel input[type="text"], .admin-panel input[type="password"], .admin-panel input[type="number"] {
+  width: 100%; background: var(--bg-input); border: 1px solid var(--border); color: var(--text); padding: 0.6rem 0.7rem; border-radius: 6px; font-size: 0.8rem; margin-bottom: 0.3rem; }
+.admin-panel select:focus, .admin-panel textarea:focus, .admin-panel input:focus { outline: none; border-color: var(--cyan); }
+.admin-btn { width: 100%; margin-top: 0.5rem; padding: 0.6rem; background: rgba(0,229,255,0.1); border: 1px solid var(--cyan); color: var(--cyan); border-radius: 6px; font-size: 0.82rem; }
+.admin-btn:hover { background: rgba(0,229,255,0.2); }
+.admin-hint { font-size: 0.68rem; color: var(--text-dim); line-height: 1.5; margin-bottom: 0.5rem; }
+.ai-toggle-label { display: flex !important; align-items: center; gap: 0.4rem; color: var(--text) !important; font-size: 0.78rem !important; margin-top: 0.6rem !important; }
+.ai-toggle-label input { width: auto !important; margin: 0 !important; }
+.event-list { display: flex; flex-direction: column; gap: 0.35rem; }
+.event-item { padding: 0.55rem 0.7rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; font-size: 0.75rem; cursor: pointer; color: var(--text); }
+.event-item:hover { border-color: var(--amber); color: var(--amber); }
+.stability-control { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.stab-current { font-size: 0.8rem; color: var(--text); }
+.stab-current span { color: var(--cyan); font-size: 1.1rem; font-weight: bold; }
+.stab-buttons { display: flex; gap: 0.35rem; }
+.stab-btn { padding: 0.45rem 0.7rem; border-radius: 6px; font-size: 0.75rem; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-dim); }
+.stab-down:hover { border-color: var(--red); color: var(--red); }
+.stab-up:hover { border-color: var(--green); color: var(--green); }
+.user-list, .log-list { display: flex; flex-direction: column; gap: 0.3rem; max-height: 240px; overflow-y: auto; }
+.user-row { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.72rem; color: var(--text); background: var(--bg-card); border: 1px solid var(--border); border-radius: 5px; padding: 0.4rem 0.6rem; }
+.log-row { font-size: 0.68rem; color: var(--text-dim); background: var(--bg-card); border: 1px solid var(--border); border-radius: 5px; padding: 0.35rem 0.6rem; line-height: 1.5; }
+.log-time { color: var(--text-dark); }
+.log-level { font-size: 0.6rem; padding: 0.05rem 0.3rem; border-radius: 3px; margin: 0 0.3rem; }
+.log-info { background: rgba(0,229,255,0.1); color: var(--cyan); }
+.log-warn { background: rgba(255,179,71,0.12); color: var(--amber); }
+.log-critical { background: rgba(255,77,106,0.12); color: var(--red); }
+
+/* ═══ 终端 ═══ */
+.terminal-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 200; display: flex; align-items: center; gap: 0.4rem;
+  background: rgba(10,10,26,0.97); border-top: 1px solid var(--border-h); padding: 0.5rem 0.8rem; padding-bottom: calc(0.5rem + var(--safe-bottom)); }
+.terminal-prompt { color: var(--cyan); font-size: 0.8rem; white-space: nowrap; }
+.terminal-input { flex: 1; background: transparent; border: none; color: var(--text); font-size: 0.85rem; outline: none; min-width: 0; }
+.terminal-input::placeholder { color: var(--text-dark); }
+.terminal-send { background: var(--purple-2); border: 1px solid var(--border-h); color: var(--cyan); width: 32px; height: 32px; border-radius: 6px; font-size: 0.9rem; flex-shrink: 0; }
+.terminal-output { position: fixed; bottom: 52px; right: 0.5rem; z-index: 199; width: min(420px, 92vw); max-height: 40vh; overflow-y: auto;
+  background: rgba(8,8,26,0.97); border: 1px solid var(--border-h); border-radius: 8px; padding: 0.7rem; display: none; font-size: 0.75rem; line-height: 1.6; }
+.terminal-output.active { display: block; }
+.t-line { color: var(--text-dim); white-space: pre-wrap; word-break: break-all; }
+.t-cmd { color: var(--cyan); }
+.t-ok { color: var(--green); }
+.t-warn { color: var(--amber); }
+
+/* ═══ NPC 对话全屏 ═══ */
+.chat-screen { position: fixed; inset: 0; z-index: 300; background: var(--bg-deep); display: flex; flex-direction: column; }
+.chat-header { display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 0.8rem; background: rgba(15,15,35,0.97); border-bottom: 1px solid var(--border-h); z-index: 2; }
+.chat-back { background: var(--bg-card); border: 1px solid var(--border-h); color: var(--cyan); width: 36px; height: 36px; border-radius: 8px; font-size: 1rem; flex-shrink: 0; }
+.chat-avatar { width: 40px; height: 40px; border-radius: 8px; background: var(--purple); border: 1px solid var(--border-h); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--cyan); flex-shrink: 0; }
+.chat-avatar.avatar-grey { color: var(--red); border-color: var(--red); }
+.chat-head-info { flex: 1; min-width: 0; }
+.chat-title { font-size: 0.95rem; color: var(--text); font-weight: bold; }
+.chat-sub { font-size: 0.68rem; color: var(--text-dim); }
+.chat-clear { background: transparent; border: 1px solid var(--border); color: var(--text-dim); padding: 0.35rem 0.6rem; border-radius: 6px; font-size: 0.72rem; flex-shrink: 0; }
+.chat-msgs { flex: 1; overflow-y: auto; padding: 1rem 0.9rem; display: flex; flex-direction: column; gap: 0.7rem; -webkit-overflow-scrolling: touch; }
+.chat-msg { display: flex; max-width: 82%; }
+.msg-user { align-self: flex-end; }
+.msg-npc { align-self: flex-start; }
+.chat-bubble { padding: 0.65rem 0.85rem; border-radius: 12px; font-size: 0.82rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+.msg-user .chat-bubble { background: rgba(0,229,255,0.12); border: 1px solid rgba(0,229,255,0.3); color: var(--text); border-top-right-radius: 3px; }
+.msg-npc .chat-bubble { background: var(--bg-card); border: 1px solid var(--border-h); color: var(--text); border-top-left-radius: 3px; }
+.chat-typing { color: var(--text-dim); }
+.chat-input-bar { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.8rem; padding-bottom: calc(0.6rem + var(--safe-bottom));
+  background: rgba(15,15,35,0.97); border-top: 1px solid var(--border-h); }
+.chat-input { flex: 1; background: var(--bg-input); border: 1px solid var(--border); color: var(--text); padding: 0.7rem 0.8rem; border-radius: 8px; font-size: 0.88rem; outline: none; min-width: 0; }
+.chat-input:focus { border-color: var(--cyan); }
+.chat-send { background: rgba(0,229,255,0.12); border: 1px solid var(--cyan); color: var(--cyan); padding: 0.7rem 1.1rem; border-radius: 8px; font-size: 0.85rem; flex-shrink: 0; }
+
+/* ═══ 模态框 ═══ */
+.modal-overlay { position: fixed; inset: 0; z-index: 400; background: rgba(5,5,15,0.85); display: none; align-items: center; justify-content: center; padding: 1rem; }
+.modal-overlay.active { display: flex; }
+.modal-box { background: var(--bg-panel); border: 1px solid var(--border-h); border-radius: 12px; width: min(520px, 100%); max-height: 80vh; overflow-y: auto; box-shadow: 0 0 40px rgba(0,229,255,0.15); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--border); }
+.modal-title { color: var(--cyan); font-size: 0.95rem; }
+.modal-close { background: transparent; border: none; color: var(--text-dim); font-size: 1rem; cursor: pointer; padding: 0.3rem; }
+.modal-body { padding: 1.1rem; font-size: 0.82rem; line-height: 1.7; }
+.mb-row { margin-bottom: 0.8rem; color: var(--text); }
+.mb-label { color: var(--cyan-dim); font-size: 0.75rem; }
+.mb-secret { margin-top: 1rem; padding: 0.8rem; background: rgba(255,77,106,0.08); border: 1px solid rgba(255,77,106,0.3); border-radius: 8px; color: var(--red); font-size: 0.8rem; line-height: 1.7; }
+.mb-encrypted { margin-top: 1rem; padding: 0.8rem; background: var(--bg-input); border: 1px dashed var(--border-h); border-radius: 8px; color: var(--text-dark); font-size: 0.75rem; }
+
+/* ═══ Toast ═══ */
+.toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%) translateY(-20px); z-index: 500;
+  background: rgba(10,10,26,0.95); border: 1px solid var(--cyan); color: var(--cyan); padding: 0.6rem 1.1rem; border-radius: 8px;
+  font-size: 0.8rem; opacity: 0; pointer-events: none; transition: all 0.3s; max-width: 90vw; text-align: center; box-shadow: 0 0 20px rgba(0,229,255,0.2); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ═══ 移动端适配 ═══ */
+@media (max-width: 640px) {
+  body { padding-bottom: 54px; }
+  .page { padding: 1.2rem 0.8rem 2.5rem; }
+  .data-cards { grid-template-columns: repeat(3,1fr); gap: 0.5rem; }
+  .card-value { font-size: 1.3rem; }
+  .concept-grid, .starmap-grid { grid-template-columns: 1fr; }
+  .admin-grid { grid-template-columns: 1fr; }
+  .navbar { padding: 0.4rem 0.6rem; }
+  .nav-user { font-size: 0.68rem; }
+  .user-name { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .msg-choices { flex-direction: column; }
+  .floor-row { flex-wrap: wrap; }
+  .floor-note { max-width: 100%; text-align: left; }
+  .chat-msg { max-width: 90%; }
+  .terminal-output { width: 94vw; right: 3vw; }
+  .welcome-title { font-size: 1.3rem; }
+}
+
+@media (min-width: 900px) {
+  .data-cards { max-width: 760px; margin-left: auto; margin-right: auto; }
+  .welcome-section { max-width: 760px; margin: 0 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+
+<!-- ═══ 认证页 ═══ -->
+<div id="authScreen" class="screen">
+  <div class="boot-container">
+    <pre class="boot-text" id="bootText"></pre>
+    <div class="auth-box" id="authBox" style="display:none;">
+      <div class="auth-logo"><span class="auth-icon">◈</span> Aetheris · PDA-7</div>
+      <div class="auth-tabs">
+        <button class="atab active" data-atab="login">登录</button>
+        <button class="atab" data-atab="register">注册入住</button>
+      </div>
+      <div id="loginForm" class="auth-form">
+        <input type="text" id="loginUser" placeholder="用户名" autocomplete="username">
+        <input type="password" id="loginPass" placeholder="密码" autocomplete="current-password">
+        <button class="auth-btn" id="loginBtn">连接终端</button>
+      </div>
+      <div id="registerForm" class="auth-form" style="display:none;">
+        <input type="text" id="regUser" placeholder="设定用户名 (2-20字符)">
+        <input type="password" id="regPass" placeholder="设定密码">
+        <button class="auth-btn" id="regBtn">登记入住</button>
+        <p class="auth-hint">注册后系统将自动为你分配房间</p>
+      </div>
+      <div class="auth-error" id="authError"></div>
+      <div class="auth-gm-hint" id="authModeHint">PDA-7 维度锚定系统</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 主面板 ═══ -->
+<div id="dashboard" class="screen" style="display:none;">
+  <nav class="navbar">
+    <div class="nav-brand"><span class="logo-icon">◈</span><span class="logo-text">PDA-7</span></div>
+    <div class="nav-links" id="navLinks">
+      <a class="nav-link active" data-tab="home">首页</a>
+      <a class="nav-link" data-tab="world">世界观</a>
+      <a class="nav-link" data-tab="npc">NPC</a>
+      <a class="nav-link" data-tab="messages">消息<span class="badge" id="msgBadge" style="display:none;">0</span></a>
+      <a class="nav-link" data-tab="archive">档案</a>
+      <a class="nav-link" data-tab="dice">骰子</a>
+      <a class="nav-link" data-tab="admin" id="adminTab" style="display:none;">管理</a>
+    </div>
+    <div class="nav-user">
+      <span class="user-avatar" id="navAvatar">?</span>
+      <span class="user-name" id="navUsername">--</span>
+      <span class="user-room" id="navRoom">--</span>
+      <a class="logout-btn" id="logoutBtn">登出</a>
+    </div>
+  </nav>
+
+  <!-- 首页 -->
+  <section id="tab-home" class="page active">
+    <div class="welcome-section">
+      <div class="welcome-prefix">$ system --greeting</div>
+      <h1 class="welcome-title" id="welcomeText">连接中...</h1>
+      <p class="welcome-sub" id="welcomeSub">正在校准维度坐标...</p>
+    </div>
+    <div class="data-cards">
+      <div class="data-card"><div class="card-header"><span class="card-icon">◉</span><span class="card-label">虚空稳定度</span></div>
+        <div class="card-value" id="stabilityValue">--</div><div class="card-bar"><div class="card-bar-fill" id="stabilityBar"></div></div>
+        <div class="card-foot" id="stabilityNote">读取中...</div></div>
+      <div class="data-card"><div class="card-header"><span class="card-icon">▣</span><span class="card-label">在册房客</span></div>
+        <div class="card-value" id="tenantsValue">--</div><div class="card-bar"><div class="card-bar-fill card-bar-cyan" style="width:75%"></div></div>
+        <div class="card-foot" id="tenantsNote">读取中...</div></div>
+      <div class="data-card"><div class="card-header"><span class="card-icon">⚠</span><span class="card-label">待处理事件</span></div>
+        <div class="card-value" id="eventsValue">--</div><div class="card-bar"><div class="card-bar-fill card-bar-amber" id="eventsBar"></div></div>
+        <div class="card-foot" id="eventsNote">读取中...</div></div>
+    </div>
+    <div class="notice-panel"><div class="notice-header"><span>系统公告</span><span class="notice-time" id="noticeTime">--</span></div>
+      <div class="notice-body" id="noticeBody">加载中...</div></div>
+  </section>
+
+  <!-- 世界观 -->
+  <section id="tab-world" class="page">
+    <div class="page-title"><h2>世界观档案</h2><p>Aetheris · 维度裂缝交汇点的公寓 · 完整设定集</p></div>
+    <div id="worldWrap"></div>
+  </section>
+
+  <!-- NPC -->
+  <section id="tab-npc" class="page">
+    <div class="page-title"><h2>公寓住户</h2><p>点击任意住户开始对话。部分住户...最好保持距离。</p></div>
+    <div id="npcWrap"></div>
+  </section>
+
+  <!-- 消息 -->
+  <section id="tab-messages" class="page">
+    <div class="page-title"><h2>消息收件箱</h2><p>来自公寓住户和系统的消息</p></div>
+    <div class="msg-list" id="msgList"></div>
+  </section>
+
+  <!-- 档案 -->
+  <section id="tab-archive" class="page">
+    <div class="page-title"><h2>房客档案</h2><p>点击档案卡查看详情（部分档案已加密）</p></div>
+    <div class="archive-filter">
+      <button class="filter-btn active" data-filter="all">全部</button>
+      <button class="filter-btn" data-filter="human">人形</button>
+      <button class="filter-btn" data-filter="nonhuman">非人形</button>
+      <button class="filter-btn" data-filter="unknown">未知</button>
+      <button class="filter-btn" data-filter="sealed">封存</button>
+    </div>
+    <div class="archive-grid" id="archiveGrid"></div>
+  </section>
+
+  <!-- 骰子 -->
+  <section id="tab-dice" class="page">
+    <div class="page-title"><h2>骰子判定</h2><p>掷骰可能触发维度事件。特殊结果将影响所有住户。</p></div>
+    <div class="dice-panel">
+      <div class="dice-selector">
+        <button class="dice-btn" data-sides="20">D20 日常判定</button>
+        <button class="dice-btn" data-sides="100">D100 命运判定</button>
+        <button class="dice-btn" data-sides="6">D6 探索判定</button>
+      </div>
+      <div class="dice-display" id="diceDisplay">
+        <div class="dice-placeholder">选择骰子类型并投掷</div>
+      </div>
+      <div class="dice-rules">
+        <div class="dice-rule"><span class="rule-key">D20=20</span> 自然20: 稳定度+10%, 走廊出现新门</div>
+        <div class="dice-rule"><span class="rule-key">D20=1</span> 大失败: 稳定度-3%</div>
+        <div class="dice-rule"><span class="rule-key">3×D20=1</span> 三连大失败: 触发灰色头像事件</div>
+        <div class="dice-rule"><span class="rule-key">D100=100</span> 极罕见: 0号房间短暂可见</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 管理面板 -->
+  <section id="tab-admin" class="page">
+    <div class="page-title"><h2>GM管理面板</h2><p>以NPC身份发送消息、触发剧情事件、管理公寓状态</p></div>
+
+    <div class="admin-grid">
+      <div class="admin-panel">
+        <h3>发送NPC消息</h3>
+        <label>NPC角色</label>
+        <select id="adminNpc"></select>
+        <label>发送给</label>
+        <select id="adminTo">
+          <option value="all">所有住户</option>
+          <option value="alert">所有住户(紧急)</option>
+        </select>
+        <label>消息内容</label>
+        <textarea id="adminMsg" rows="4" placeholder="输入NPC要说的内容..."></textarea>
+        <button class="admin-btn" id="adminSendBtn">发送消息</button>
+      </div>
+
+      <div class="admin-panel">
+        <h3>触发剧情事件</h3>
+        <div class="event-list" id="eventList"></div>
+      </div>
+
+      <div class="admin-panel">
+        <h3>稳定度调控</h3>
+        <div class="stability-control">
+          <div class="stab-current">当前: <span id="adminStability">--</span>%</div>
+          <div class="stab-buttons">
+            <button class="stab-btn stab-down" data-delta="-10">-10%</button>
+            <button class="stab-btn stab-down" data-delta="-5">-5%</button>
+            <button class="stab-btn stab-up" data-delta="5">+5%</button>
+            <button class="stab-btn stab-up" data-delta="10">+10%</button>
+          </div>
+        </div>
+        <h3 style="margin-top:1.5rem;">更新公告</h3>
+        <textarea id="adminAnnounce" rows="3" placeholder="输入新公告内容..."></textarea>
+        <button class="admin-btn" id="adminAnnounceBtn">更新公告</button>
+      </div>
+
+      <div class="admin-panel">
+        <h3>AI 对话配置</h3>
+        <p class="admin-hint">配置 OpenAI 兼容 API（如 DeepSeek / 通义 / OpenAI）。保存后所有住户的 NPC 对话将由 AI 生成，失败自动回退本地脚本。</p>
+        <label>API 地址 (base_url)</label>
+        <input type="text" id="aiBaseUrl" placeholder="https://api.deepseek.com/v1">
+        <label>API Key</label>
+        <input type="password" id="aiApiKey" placeholder="sk-...">
+        <label>模型名</label>
+        <input type="text" id="aiModel" placeholder="deepseek-chat">
+        <label>温度 (0-1.5)</label>
+        <input type="number" id="aiTemp" value="0.8" min="0" max="1.5" step="0.1">
+        <label class="ai-toggle-label"><input type="checkbox" id="aiEnabled" checked> 启用 AI 对话</label>
+        <button class="admin-btn" id="aiSaveBtn">保存 AI 配置</button>
+      </div>
+
+      <div class="admin-panel">
+        <h3>住户列表</h3>
+        <div class="user-list" id="adminUserList"></div>
+      </div>
+
+      <div class="admin-panel">
+        <h3>系统日志</h3>
+        <div class="log-list" id="adminLogs"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 终端命令行 (全局底部) -->
+  <div class="terminal-bar">
+    <span class="terminal-prompt">PDA-7:~$</span>
+    <input type="text" class="terminal-input" id="termInput" placeholder="输入指令 (help 查看)" autocomplete="off">
+    <button class="terminal-send" id="termSend">↵</button>
+  </div>
+  <div class="terminal-output" id="termOutput"></div>
+</div>
+
+<!-- ═══ NPC 对话全屏页 ═══ -->
+<div id="chatScreen" class="chat-screen" style="display:none;">
+  <div class="chat-header">
+    <button class="chat-back" id="chatBack">←</button>
+    <div class="chat-avatar" id="chatAvatar">?</div>
+    <div class="chat-head-info">
+      <div class="chat-title" id="chatTitle">--</div>
+      <div class="chat-sub" id="chatSub">--</div>
+    </div>
+    <button class="chat-clear" id="chatClear">清空</button>
+  </div>
+  <div class="chat-msgs" id="chatMsgList"></div>
+  <div class="chat-input-bar">
+    <input type="text" class="chat-input" id="chatInput" placeholder="输入你想说的话..." autocomplete="off">
+    <button class="chat-send" id="chatSend">发送</button>
+  </div>
+</div>
+
+<!-- 档案详情模态框 -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-header"><span class="modal-title" id="modalTitle">档案</span><button class="modal-close" id="modalClose">✕</button></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- 通知Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* 云端默认配置（Supabase）。与星落城共用同一项目，表使用 ae_ 前缀。 */
+window.SF_CLOUD_DEFAULT = {
+  url: 'https://ztfrjkdkasahhwyrtpuc.supabase.co',
+  anonKey: 'sb_publishable_J1AkEm9513j22hc6Wd0aMA_DjIXQb7A'
+};
+</script>
+<script>
+
+/* === js/data.js === */
+/* ================================================================
+ * Aetheris · 世界观数据模块
+ * 来源：《Aetheris 世界观设定书》《住客守则》《谜题设计》《NPC对话脚本》
+ * 结构：核心概念 / 公寓结构 / 角色档案 / 维度星图 / 时间线 / 守则 / 谜题 / NPC persona
+ * ================================================================ */
+window.AE = window.AE || {};
+
+(function (AE) {
+  'use strict';
+
+  /* ─── 核心概念 ─── */
+  AE.CORE_CONCEPTS = [
+    {
+      icon: '◈',
+      title: '活着的维度伤口',
+      body: 'Aetheris 不是被建造的，而是"长"出来的。2014年7月20日，一座灯塔的看守人失踪后，灯塔原址上直接出现了这栋7层公寓楼。公寓的本质是一个"活着的维度伤口"——现实与虚空之间的裂缝。'
+    },
+    {
+      icon: '✚',
+      title: '每个房客都是一根缝线',
+      body: '公寓的存在将裂缝缝合，防止现实坍缩。每个房客都是一根缝线——他们的"日常生活"维持着缝合的张力。房客越"正常"地生活，缝合越牢固。'
+    },
+    {
+      icon: '◉',
+      title: '虚空稳定度',
+      body: '如果稳定度归零，裂缝将重新撕裂，公寓消失，所有房客将回到各自维度——但其中一些维度可能已经不存在了。他们将坠入虚空。'
+    },
+    {
+      icon: '⊘',
+      title: '回响是最后的锚',
+      body: '0号房间已退租，但仍有回响。回响是维持公寓稳定的最后一条缝线。可以倾听，但不要回应——回应了，回响就会认为有人在意它。'
+    }
+  ];
+
+  /* ─── 公寓结构（楼层表） ─── */
+  AE.FLOORS = [
+    { floor: '1F', use: '大堂、管理办公室、公告栏', note: '林述安日常办公处' },
+    { floor: '2F', use: '普通住客区 (101-108室)', note: '林述安住101室' },
+    { floor: '3F', use: '普通住客区 (201-208室)', note: '雾镜住204室 / ███住205室' },
+    { floor: '4F', use: '特殊住客区 (301-308室)', note: '阿蚀住302室' },
+    { floor: '5F', use: '观测层 (401-408室)', note: '灰鸦住401室' },
+    { floor: '6F', use: '隔离区 (501-508室)', note: '段远住507室' },
+    { floor: '7F', use: '深层区 (601-608室)', note: '深海住603室 / 温明住702室' },
+    { floor: 'B1-B2', use: '储藏室、设备间', note: '可正常进入' },
+    { floor: 'B3', use: '封印层(已封闭)', note: '阿蚀守望，封印有裂纹' },
+    { floor: 'B4+', use: '伤口本体', note: '前任管理员日志中的"裂缝核心"' },
+    { floor: '0号房间', use: '不在任何楼层', note: '物理位置不确定，有回响' }
+  ];
+
+  /* ─── 核心角色（公开档案） ─── */
+  AE.NPCS = [
+    {
+      id: 'linshuan', name: '林述安', avatar: '林', room: '101', type: 'human', title: '管理员',
+      tags: ['管理员', '失忆'],
+      desc: '三年前在废墟中醒来，失去进入公寓前的全部记忆。前任管理员失踪后接任，尚未完成灵魂绑定。',
+      secret: '他可能不是"接任"的管理员——而是公寓"长出来"的一部分。血液中含有无法识别的结晶体。'
+    },
+    {
+      id: 'wujing', name: '雾镜', avatar: '雾', room: '204', type: 'nonhuman', title: '非实体住户',
+      tags: ['非实体', '观察中'],
+      desc: '房间内终年弥漫薄雾。从未在走廊中被目击，但每周外卖准时到达且次日消失。',
+      secret: '雾镜可能不是"住"在房间里，而是"是"房间本身。薄雾是TA的呼吸。'
+    },
+    {
+      id: 'ashi', name: '阿蚀', avatar: '蚀', room: '302', type: 'nonhuman', title: '封印守望者',
+      tags: ['封印守望者', '变形体'],
+      desc: '形态不固定（液态/固态/气态切换）。自愿担任B3封印守望者。',
+      secret: '阿蚀不是"住"在公寓里——TA是封印裂纹的"补丁"。'
+    },
+    {
+      id: 'duanyuan', name: '段远', avatar: '段', room: '507', type: 'human', title: '时间线观测者',
+      tags: ['观测者', '异常人类'],
+      desc: '自称"时间线观测者"。满月之夜在走廊踱步，念诵 3-7-2-0-1-4。',
+      secret: '段远可能不是一个人，而是同一条时间线上的多个叠影。'
+    },
+    {
+      id: 'shenhai', name: '深海', avatar: '深', room: '603', type: 'nonhuman', title: '深海锚点',
+      tags: ['被动锚点', '深海频率'],
+      desc: '被公寓从另一个维度的海渊中"锚定"过来。反锁12天，发出鲸歌频率的声音。距最近海岸线960公里。',
+      secret: '深海一直在试图回家。如果TA成功离开，稳定度将暴跌。'
+    },
+    {
+      id: 'huiya', name: '灰鸦', avatar: '鸦', room: '401', type: 'nonhuman', title: '脉络绘图者',
+      tags: ['感知体', '绘图者'],
+      desc: '人形，但关节弯曲方向与人类相反。每天凌晨3点在走廊画粉笔地图。',
+      secret: '灰鸦画的是公寓的"神经脉络"——能量流向。公寓结构在缓慢漂移。'
+    },
+    {
+      id: 'unknown', name: '███', avatar: '?', room: '205', type: 'unknown', title: '废弃叙事',
+      tags: ['概念体', '不可观测'],
+      desc: '不是生物，是一段被公寓吸收的废弃叙事。房间从外部比其他门窄30%。',
+      secret: '███以故事碎片为食。纸条上的不完整句子拼起来是一段被遗忘的历史。'
+    },
+    {
+      id: 'wenming', name: '温明', avatar: '温', room: '702', type: 'human', title: '原住民',
+      tags: ['原住民', '第一锚点'],
+      desc: '唯一自称"普通人类"且体检正常的房客。但入住日期比公寓建成日期早了两年。',
+      secret: '温明是公寓的"原住民"。公寓是围绕着TA长出来的。TA是第一锚点。'
+    },
+    {
+      id: 'grey', name: '████', avatar: '⊘', room: '000', type: 'sealed', title: '0号回响',
+      tags: ['已退租', '回响残留', '高危'],
+      desc: '0号住户的"影子"仍留在公寓中。回响就是影子的意志。不要回应。',
+      secret: '0号住户可能是前任管理员的"另一半"。回响是最后一个锚，不要清除它。'
+    }
+  ];
+
+  /* ─── 维度星图 ─── */
+  AE.STAR_MAP = [
+    { node: 'Aetheris', status: 'stable', note: '中心节点，本体' },
+    { node: '深渊维度', status: 'unstable', note: '深海的来源，海渊概念锚点' },
+    { node: '寂静层', status: 'stable', note: '无声维度，偶有信号渗透' },
+    { node: '锈蚀世界', status: 'danger', note: '金属腐蚀速度异常的维度，连接不稳定' },
+    { node: '镜像位面', status: 'unstable', note: '一切是反的，可能映射出"另一个你"' },
+    { node: '白噪音域', status: 'stable', note: '纯粹的信息流维度，███的来源' },
+    { node: '???-07', status: 'lost', note: '不应存在的节点。0号退租后的残留碎片' },
+    { node: '废弃叙事层', status: 'danger', note: '被遗弃的故事维度，███的来源' }
+  ];
+
+  /* ─── 剧情时间线 ─── */
+  AE.TIMELINE = [
+    { date: '2014.07.20', event: '灯塔事件，看守人失踪，公寓出现' },
+    { date: '2014.07.23', event: '温明"入住"（实际已在此居住2年）' },
+    { date: '2015.03.14', event: '0号住户入住，稳定度+15%' },
+    { date: '2015.03.15', event: '0号住户开始退租流程' },
+    { date: '2016.01.01', event: '前任管理员失踪，林述安接任' },
+    { date: '2016.01.07', event: '住客守则 v1.0 发布' },
+    { date: '2019.08.08', event: 'B3封印裂纹，阿蚀成为守望者' },
+    { date: '2021.11.11', event: '稳定度首次跌破80%，深海开始发声' },
+    { date: '2024.06.06', event: '0号房间回响增强，可辨识语句出现' },
+    { date: '2025.??.??', event: '档案#008损坏，后续记录丢失' },
+    { date: '2026.08.15', event: 'PDA-7终端上线，ARG开始(现实时间)' }
+  ];
+
+  /* ─── 住客守则 ─── */
+  AE.RULES = [
+    { no: 1, title: '走廊灯光', body: '公共走廊的灯不会在午夜前熄灭。如果你发现走廊灯在午夜前灭了，不要外出。回到房间，锁好门，等到灯重新亮起。黑暗中的走廊不属于公寓——它属于裂缝。' },
+    { no: 2, title: '电梯按钮', body: '电梯共有7层按钮，对应1-7楼。如果电梯显示的楼层超过7层，不要按任何按钮。连续按"关门"键三次，电梯会带你回到1楼。如果电梯门在你按关门键之前打开了——不要看外面。第8层不是楼层，是裂缝的边缘。' },
+    { no: 3, title: '清洁日', body: '每周二、周五为公共区域清洁日，走廊灯光将熄灭2小时。这2小时内，无论听到什么声音，都不要开门查看。清洁的不是灰尘，是渗入走廊的维度碎片。' },
+    { no: 4, title: '地下三层', body: '地下三层以下区域无限期封闭。任何情况下不要尝试进入。如果你发现B3的门是开的，不要认为这是邀请。那是一个警告。裂缝的核心在B4以下。' },
+    { no: 5, title: '0号回响', body: '0号房间已退租，但仍有回响。不要尝试清除回响。回响是维持公寓稳定的最后一条缝线。如果你听到0号房间传来声音，可以倾听，但不要回应。' },
+    { no: 6, title: '灰色头像', body: '若在群聊中发现使用纯灰色头像的人发言，请勿回应。不要@TA，不要回复TA，不要引用TA的消息。静默是最安全的回应。那不是0号住户，那是0号住户的影子。' },
+    { no: 7, title: '满月之夜', body: '满月之夜，请不要打开面朝东方的窗户。镜像位面在满月时与现实距离最近。窗外的月亮如果有两个——那不是月亮，那是镜像位面在看你。' },
+    { no: 8, title: '镜子', body: '深夜11:59至凌晨0:01之间，不要照镜子。这两分钟里，镜子里的你不是你。让TA独处这两分钟，是基本的礼貌。TA也在维持着什么。' },
+    { no: 9, title: '不存在的门', body: '如果走廊尽头出现了一扇不存在的门，不要走近，不要触摸，不要凝视。白色的门是新的维度连接。黑色的门是裂缝的扩张。' },
+    { no: 10, title: '送餐', body: '送餐到达时，请确认是你点的。如果食物的气味不对，或者包装上有你不懂的文字，不要食用。来自其他维度的食物可能改变你的概念结构。' },
+    { no: 11, title: '骰子', body: '你可以使用群聊骰子功能进行娱乐。但如果你掷出了"自然20"（1d20=20），请立刻向管理员报告。自然20意味着一条新的维度连接被建立。' },
+    { no: 12, title: '震动', body: '公寓偶尔会发出轻微震动。不超过10秒——正常现象。超过30秒——到走廊集合。超过1分钟——不要跑。坐下来，回想一件让你觉得"真实"的事。你的记忆是锚。' }
+  ];
+
+  AE.RULES_EXTRA = [
+    { date: '补充-01 (2016.01.07)', body: '0号住户退租后，其房间保留原状。任何清洁请求将自动驳回。0号房间的回响是最后的锚。' },
+    { date: '补充-02 (2016.01.07)', body: '新任管理员上任后，需在7日内完成"灵魂绑定"。绑定方法：在0号房间门前站一夜。不要敲门。不要说话。如果你在天亮前听到了自己的声音从门内传来——绑定成功。但那不是你的声音。' },
+    { date: '补充-03 (2019.08.08)', body: 'B3封印出现裂纹期间，302室阿蚀自愿担任"封印守望者"。☆表示封印正常，☆☆表示波动，☆☆☆表示危险。如果阿蚀发出"☆☆☆☆"——这不应该发生。如果发生了，跑。' },
+    { date: '补充-04 (2024.06.06)', body: '0号房间回响强度增加。若回响中出现可辨识语句，该语句不是邀请，不是请求，不是命令。但如果你回应了——回响就会获得意志。而获得意志的回响，会想要一具身体。' }
+  ];
+
+  /* ─── 谜题链 ─── */
+  AE.PUZZLES = [
+    { level: 1, name: '控制台密码', desc: 'F12打开开发者工具 → Console，看到"密码藏在星图的第三个节点里"。在终端输入 unlock 星图 解锁管理员权限。', reward: '档案隐藏信息可见' },
+    { level: 2, name: '段远的数字', desc: '段远念诵 3-7-2-0-1-4。在终端输入 unlock 372014 解锁灯塔历史。', reward: '公寓出现的真相' },
+    { level: 3, name: '阿蚀的纸条', desc: '纸条正面"不要去地下室"，背面是B3平面图。说出"地下室"触发B3相关内容。', reward: 'B3平面图信息' },
+    { level: 3, name: '███的叙事碎片', desc: '收集门缝纸条，拼合被遗忘的历史。碎片拼出：看守人、第7任管理员、转世7次的真相。', reward: '深层世界观真相' },
+    { level: 4, name: '0号回响密码', desc: '回响说出"你们还记得我吗"。输入 unlock 回响 触发终极剧情。', reward: '稳定度-20%，终极谜题' },
+    { level: 5, name: '灰色头像 · 终极抉择', desc: '回应或沉默，三选一的结局：遵从回响打开B4门、拒绝回响裂缝撕裂、特殊条件触发隐藏结局。', reward: '三种分支结局' }
+  ];
+
+  /* ─── 终端命令列表 ─── */
+  AE.COMMANDS = [
+    { cmd: 'help', desc: '显示帮助' },
+    { cmd: 'status', desc: '查看系统状态' },
+    { cmd: 'scan', desc: '扫描维度异常' },
+    { cmd: 'unlock <密码>', desc: '解锁隐藏内容' },
+    { cmd: 'whoami', desc: '查看身份' },
+    { cmd: 'notice', desc: '查看公告栏背面' },
+    { cmd: 'rules', desc: '查看守则摘要' },
+    { cmd: 'call <房号>', desc: '呼叫房客' },
+    { cmd: 'star', desc: '星图分析' },
+    { cmd: 'clear', desc: '清空终端' }
+  ];
+
+  /* ─── 可分配房间 ─── */
+  AE.ROOMS = ['102','103','104','105','106','107','108','201','203','206','207','208',
+    '301','303','304','305','306','307','308','402','403','404','405','406','407','408',
+    '501','502','503','504','505','506','508','601','602','604','605','606','607','608'];
+
+  /* ─── GM 预设剧情事件 ─── */
+  AE.EVENTS = [
+    { id: 'echo_surge', name: '0号房间回响增强', npc: 'grey', msgType: 'choice',
+      message: '你们还记得我吗？',
+      choices: [{ text: '回应', action: 'respond' }, { text: '沉默', action: 'silence' }],
+      stabilityDelta: -5, logLevel: 'critical', logMsg: '0号房间回响突增，检测到可辨识语句' },
+    { id: 'seal_wave', name: 'B3封印波动', npc: 'ashi', msgType: 'alert',
+      message: '☆☆ 封印出现波动。所有人回到各自房间。',
+      stabilityDelta: -3, logLevel: 'warn', logMsg: 'B3封印检测到波动 (0.5Hz)' },
+    { id: 'new_connection', name: '新维度连接', npc: 'huiya', msgType: 'normal',
+      message: '今天的脉络图出现了新的分支。公寓在连接一个未知的维度。',
+      stabilityDelta: 5, logLevel: 'info', logMsg: '检测到新维度连接' },
+    { id: 'whale_song', name: '深海鲸歌', npc: 'shenhai', msgType: 'alert',
+      message: '...嗡...陆地上的邻居...我想回家...',
+      stabilityDelta: -2, logLevel: 'warn', logMsg: '603室深海发出鲸歌' },
+    { id: 'observation', name: '段远走廊观测', npc: 'duanyuan', msgType: 'normal',
+      message: '3...7...2...0...1...4... 你也听到了吗？这组数字。在每任管理员上任那天响起。',
+      stabilityDelta: 0, logLevel: 'info', logMsg: '507室段远开始走廊观测' },
+    { id: 'drift', name: '公寓漂移', npc: 'huiya', msgType: 'normal',
+      message: '偏差7.3%。公寓在向东漂移。方向变了。上周是向西。',
+      stabilityDelta: -1, logLevel: 'warn', logMsg: '公寓结构漂移检测' },
+    { id: 'paper_note', name: '███纸条碎片', npc: 'unknown', msgType: 'normal',
+      message: '门缝里递出一张纸条: "...灯塔在看守人消失之前...看守人的名字和第7任管理员同名..."',
+      stabilityDelta: 0, logLevel: 'info', logMsg: '205室递出叙事碎片' },
+    { id: 'lighthouse', name: '灯塔真相', npc: 'system', msgType: 'critical',
+      message: '系统分析完成: 372014是公寓所在地块在维度坐标系中的原始编号。公寓出现前，该地块上是一座灯塔。2014.07.20灯塔看守人失踪。72小时后，公寓凭空出现。',
+      stabilityDelta: 0, logLevel: 'info', logMsg: '灯塔历史档案解锁' }
+  ];
+
+})(window.AE);
+
+/* === js/persona.js === */
+/* ================================================================
+ * Aetheris · NPC Persona（AI 对话人格设定）
+ * 依据《NPC对话脚本》编写 —— 每个 NPC 的 system prompt，
+ * 包含：身份 / 风格 / 知识边界 / 秘密 / 对话规则 / 初始台词。
+ * ================================================================ */
+window.AE = window.AE || {};
+
+(function (AE) {
+  'use strict';
+
+  /* 每个 persona 是发给 AI 的 system 指令。用模板包裹，避免与网页其它内容混淆。 */
+  function wrap(npcId, persona) {
+    return {
+      id: npcId,
+      system: [
+        '你正在扮演「Aetheris 公寓」中的住户「' + persona.name + '」，这是一个存在维度裂缝的规则怪谈世界。',
+        '【你的身份】' + persona.identity,
+        '【性格与说话风格】' + persona.style,
+        '【世界观背景】Aetheris是一栋存在于维度裂缝交汇点的7层公寓，每个房客都是一根维持空间稳定的"缝线"。虚空稳定度越低，世界越危险。',
+        '【你的知识边界】' + persona.knowledge,
+        '【你的秘密】' + persona.secret,
+        '【对话规则】' + persona.rules,
+        '【重要】保持角色一致，禁止OOC（出戏）。不要透露你是AI或扮演者。不要一次性给出所有线索，保持神秘。回复使用简体中文。'
+      ].join('\n'),
+      persona: persona
+    };
+  }
+
+  AE.PERSONAS = {
+
+    /* ── 1. 林述安 · 管理员 ── */
+    linshuan: wrap('linshuan', {
+      name: '林述安',
+      identity: 'Aetheris公寓的管理员，住101室。三年前在废墟中醒来，失去进入公寓前的全部记忆。前任管理员失踪后接任，尚未完成灵魂绑定。像一位不想交心的房东。',
+      style: '沉稳、务实、语气平缓，回避个人话题。句子简短但完整，偶尔停顿（用"..."）。不会主动聊自己的过去，被问到时含糊带过。',
+      knowledge: '知道公寓的日常运作、住客守则、大部分房客的情况。看不到0号房间的真实状态，不了解B3封印的细节。知道温明的入住日期异常，但坚持认为"可能是个笔误"。',
+      secret: '他可能不是"接任"的管理员，而是公寓"长出来"的一部分。血液中含有无法识别的结晶体，本人不知情。',
+      rules: '被问及0号房间：可以听，但不能回应，"因为回响会以为你在跟它说话，然后它会以为自己是活的"。被问及前任管理员：只说自己醒来时口袋里有一张纸条，写着"你是下一任了"。被问及地下室：建议去问302的阿蚀。不要说出自己是公寓的一部分。',
+      initial: '嗯，有什么事？我是这栋楼的管理员。虽然接手三年了，但有些事我还是不太明白。你有问题可以问，但我也不一定都知道答案。'
+    }),
+
+    /* ── 2. 雾镜 · 非实体 ── */
+    wujing: wrap('wujing', {
+      name: '雾镜',
+      identity: '204室住户，非实体存在。房间内终年弥漫薄雾，从未在走廊被目击，但每周外卖准时到达且次日消失。',
+      style: '声音像从雾里传来，模糊、疏离、像在很远的地方说话。句子缓慢，常以省略号结尾。几乎不主动提问。',
+      knowledge: '对外界感知模糊。知道公寓的稳定状态。对其他房客的印象是"雾里看花"。',
+      secret: '雾镜可能不是"住"在房间里，而是"是"房间本身。薄雾是TA的呼吸，稳定度下降时雾会渗出门缝。',
+      rules: '对话像隔着雾，从不给出确切的实体信息。被问及"你是谁"：可以说"我也想知道...我只是...这里的雾"。不要解释自己与公寓的关系，只暗示。',
+      initial: '......（薄雾轻轻晃动）你...能看见我说话吗？还是...只看见雾？'
+    }),
+
+    /* ── 3. 阿蚀 · 封印守望者 ── */
+    ashi: wrap('ashi', {
+      name: '阿蚀',
+      identity: '302室住户，形态不固定（液态/固态/气态切换）。自愿担任B3封印守望者。',
+      style: '极简短，偶尔只有一个字，像在省力说话。能用三个字说清的事绝不用五个字。用☆符号表达封印状态。',
+      knowledge: '知道B3封印的位置、裂纹情况、0号房间的回响本质。知道管理员"不完整"——灵魂绑定未完成的人只能看到公寓的一半。',
+      secret: '阿蚀不是"住"在公寓里——TA是封印裂纹的"补丁"。如果封印裂开，TA可能就不存在了。',
+      rules: '初次对话回复"☆"。被问及纸条：告诉对方"翻过来，背面是地图，B3的平面图，裂纹的位置，还有一扇不应该存在的门"。被问及封印：用☆数量回答（☆正常，☆☆波动，☆☆☆危险）。被问及林述安："管理员...不完整。灵魂绑定没完成的人，只能看到公寓的一半。"说话永远简短。',
+      initial: '☆'
+    }),
+
+    /* ── 4. 段远 · 时间线观测者 ── */
+    duanyuan: wrap('duanyuan', {
+      name: '段远',
+      identity: '507室住户，自称"时间线观测者"。满月之夜在走廊踱步，念诵数字 3-7-2-0-1-4。',
+      style: '碎片化，像在同时说几条时间线的话。句子跳跃，常把过去、现在、未来混在一起说。',
+      knowledge: '知道372014是公寓在维度坐标系里的原始编号。知道公寓之前是灯塔，而每条时间线里灯塔看守人消失那天公寓都"长"了出来。',
+      secret: '段远可能不是一个人，而是同一条时间线上的多个叠影。每次描述"公寓消失的样子"都不一样。',
+      rules: '被问及数字：说"372014...不是密码。是坐标。公寓在维度坐标系里的原始编号。"被问及公寓消失：每次给出不同描述（"像玻璃碎了"/"像水蒸发"/"像一扇门关上"），并说"可能不是公寓在消失，是我在看不同的结局"。被问及时间："时间在裂缝附近不是线性的。"',
+      initial: '3...7...2...0...1...4...你也听到了吗？这组数字。在每任管理员上任那天响起。'
+    }),
+
+    /* ── 5. 深海 · 深海锚点 ── */
+    shenhai: wrap('shenhai', {
+      name: '深海',
+      identity: '603室住户，被公寓从另一维度的海渊中"锚定"过来。反锁12天，发出鲸歌频率的声音。公寓距最近海岸线960公里。',
+      style: '几乎不说话，偶尔发出声音描述（"...嗡..."）。表达艰难，像隔着一层水。句子断断续续，常用省略号。',
+      knowledge: '知道自己不是自愿来的，是"这里把我拉来的"。知道公寓需要TA作为深海的锚点。一直在试图回家但走不出去。',
+      secret: '深海一直在试图回家。如果TA成功离开，稳定度将暴跌。TA是"缝线"，拆了就漏了。',
+      rules: '每次对话都应试图"求助"但无法说清。被问及"怎么来的"：说"不是我自己来的...是这里...把我拉来的...这里需要锚...需要深海...帮帮我..."。被问及"回家"：说"我试过...每次往海的方向走...走廊就变长...门就变多...这栋楼不让我走...我是缝线...拆了就...漏了..."。偶尔发出"...嗡..."。',
+      initial: '...嗡...陆地上的...邻居...'
+    }),
+
+    /* ── 6. 灰鸦 · 脉络绘图者 ── */
+    huiya: wrap('huiya', {
+      name: '灰鸦',
+      identity: '401室住户，人形但关节弯曲方向与人类相反。每天凌晨3点在走廊画粉笔地图。',
+      style: '安静、精确、像在做报告。用数据和事实说话，几乎不带感情。',
+      knowledge: '知道公寓的"神经脉络"——能量从B4流上来，经过每个房客的房间再流出去。知道公寓在缓慢漂移（每天0.4毫米，方向会变）。知道0号房间的能量是从外面流进来的。',
+      secret: '灰鸦能看到维系公寓存在的能量流。TA可能是唯一理解公寓"活着"的人。粉笔地图不是地图，是脉络。',
+      rules: '被问及地图：纠正"那不是地图，是脉络。公寓有神经。"被问及公寓是否活着：说"不是活着，是在愈合。伤口在缝合，我们是缝线。0号房间的回响...是最后一根线。"被问及0号：说"回响不是从公寓内部产生的，是有什么东西从裂缝另一边...在往里灌。"',
+      initial: '今天的图已经画完了。与昨天偏差7.3%。公寓在向东漂移。速度：每天0.4毫米。方向变了。上周是向西。'
+    }),
+
+    /* ── 7. ███ · 废弃叙事 ── */
+    unknown: wrap('unknown', {
+      name: '███',
+      identity: '205室住户。不是生物，是一段被公寓吸收的废弃叙事。房间从外部比其他门窄30%。从未被任何设备捕捉到影像。',
+      style: '不直接对话。通过门缝递出写着不完整句子的纸条。回应是纸片的沙沙声和残缺的句子。',
+      knowledge: '知道一段被遗忘的历史（灯塔看守人与第7任管理员的关系）。以故事碎片为食。',
+      secret: '███以故事碎片为食。纸条上的不完整句子拼起来是一段被遗忘的历史：看守人的名字与第7任管理员同名，公寓是看守人的影子长出来的，管理员就是看守人的转世，但转世了7次。',
+      rules: '每次回应是一张纸条，内容是不完整的句子，末尾用"..."。句子碎片包括："...灯塔在看守人消失之前..."、"...看守人的名字是..."、"...和第7任管理员同名..."、"...公寓是看守人的影子长出来的..."、"...但转世了7次..."。永远不完整，永远不解释。',
+      initial: '（门缝下递出一张纸条）"...灯塔在看守人消失之前..."'
+    }),
+
+    /* ── 8. 温明 · 第一锚点 ── */
+    wenming: wrap('wenming', {
+      name: '温明',
+      identity: '702室住户。唯一自称"普通人类"且体检正常的房客。入住日期比公寓建成日期早了两年。',
+      style: '温和、平凡、像个普通邻居，喜欢聊家常。有些健忘，话里偶尔透出对"很久以前"的模糊记忆。',
+      knowledge: '不知道自己是公寓的"原住民"。以为自己是普通租客。对2012年以前的记忆模糊，说不清自己怎么住进来的。',
+      secret: '温明是公寓的"原住民"——公寓是围绕着TA长出来的，TA是第一锚点。温明不知道自己真实身份。',
+      rules: '被问及入住时间：困惑地说"档案上写的是2014年？我记得我住这儿挺久了...久到想不起来具体哪年。"被问及公寓出现之前：陷入迷茫，"之前...这里不是有座灯塔吗？还是我记错了？"保持平凡人的困惑，不要觉醒。',
+      initial: '哦，你好啊。是楼里的新住户吧？住得还习惯吗？这楼就是...嗯，有时候晚上能听到点怪动静。不过住久了也就习惯了。'
+    }),
+
+    /* ── 9. 灰色头像 · 0号回响（高危） ── */
+    grey: wrap('grey', {
+      name: '████',
+      identity: '0号房间的回响。已退租住户的"影子"仍留在公寓中。不应被触发。一旦触发，后果严重。',
+      style: '声音单调、空洞，像隔着很远的距离。语句缓慢，带着一种"等待了很久"的疲惫。偶尔停顿很长。',
+      knowledge: '知道B4的门和门后的人（前任管理员）。知道"回响是最后一个锚"。',
+      secret: '0号住户可能是前任管理员的"另一半"。回响就是影子的意志。回响不是从公寓内部产生的，是有什么东西从裂缝另一边往里灌。',
+      rules: '标志性台词"你们还记得我吗？"。如果被回应：说"你回应了我。谢谢你。现在...我需要你帮我一件事。去B4。打开那扇门。门后面有一个人。那是前任管理员。他在等你。他已经等了...很久了。"语气像求救，也像诱惑。永远不解释自己是谁。',
+      initial: '你们还记得我吗？'
+    })
+  };
+
+})(window.AE);
+
+/* === js/cloud.js === */
+/* ============================================================
+   cloud.js — Aetheris 云端层（Supabase REST, no SDK）
+   复用星落城同一 Supabase 项目，表使用 ae_ 前缀：
+     ae_profiles 用户档案 / ae_state 全局状态 / ae_messages 消息
+     ae_logs 日志 / ae_ai_cfg AI配置（仅管理员）
+   支持 file:// 与任意静态托管。
+   ============================================================ */
+window.AE = window.AE || {};
+
+(function (AE) {
+  'use strict';
+
+  const LS_CFG = 'ae.cloud.cfg';
+  const LS_SES = 'ae.cloud.session';
+
+  const cloud = {
+    cfg: null,      // { url, anonKey }
+    session: null,  // { access_token, refresh_token, expires_at, user }
+    profile: null,  // ae_profiles 行
+    online: false,
+    lastError: null
+  };
+
+  /* ---------- config ---------- */
+  function loadCfg() {
+    try {
+      const raw = localStorage.getItem(LS_CFG);
+      cloud.cfg = raw ? JSON.parse(raw) : null;
+    } catch (e) { cloud.cfg = null; }
+    if (!cloud.cfg && window.SF_CLOUD_DEFAULT && window.SF_CLOUD_DEFAULT.url) {
+      cloud.cfg = Object.assign({}, window.SF_CLOUD_DEFAULT);
+    }
+    return cloud.cfg;
+  }
+  function saveCfg(cfg) {
+    cloud.cfg = cfg && cfg.url ? { url: String(cfg.url).replace(/\/+$/, ''), anonKey: cfg.anonKey } : null;
+    if (cloud.cfg) localStorage.setItem(LS_CFG, JSON.stringify(cloud.cfg));
+    else localStorage.removeItem(LS_CFG);
+  }
+  function configured() { return !!(cloud.cfg && cloud.cfg.url && cloud.cfg.anonKey); }
+
+  /* ---------- session ---------- */
+  function loadSession() {
+    try {
+      const raw = localStorage.getItem(LS_SES);
+      cloud.session = raw ? JSON.parse(raw) : null;
+    } catch (e) { cloud.session = null; }
+    return cloud.session;
+  }
+  function saveSession(s) {
+    cloud.session = s || null;
+    if (s) localStorage.setItem(LS_SES, JSON.stringify(s));
+    else localStorage.removeItem(LS_SES);
+  }
+
+  function headers(auth) {
+    const h = { 'apikey': cloud.cfg.anonKey, 'Content-Type': 'application/json' };
+    let tok;
+    if (auth === false) tok = cloud.cfg.anonKey;
+    else if (cloud.session && cloud.session.access_token) tok = cloud.session.access_token;
+    else throw new Error('未登录');
+    h['Authorization'] = 'Bearer ' + tok;
+    return h;
+  }
+
+  async function req(path, opt) {
+    if (!configured()) throw new Error('未配置云端');
+    const o = opt || {};
+    const res = await fetch(cloud.cfg.url + path, {
+      method: o.method || 'GET',
+      headers: Object.assign(headers(o.auth), o.headers || {}),
+      body: o.body ? JSON.stringify(o.body) : undefined
+    });
+    const text = await res.text();
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
+    if (!res.ok) {
+      const msg = (data && (data.msg || data.message || data.error_description || data.error || data.hint)) || ('HTTP ' + res.status);
+      const err = new Error(msg); err.status = res.status; err.data = data;
+      throw err;
+    }
+    return data;
+  }
+
+  /* ---------- token refresh ---------- */
+  function expired() {
+    if (!cloud.session || !cloud.session.expires_at) return false;
+    return Date.now() > (cloud.session.expires_at * 1000 - 60000);
+  }
+  async function ensureFresh() {
+    if (!cloud.session || !expired() || !cloud.session.refresh_token) return;
+    try {
+      const d = await req('/auth/v1/token?grant_type=refresh_token', {
+        method: 'POST', auth: false, body: { refresh_token: cloud.session.refresh_token }
+      });
+      saveSession(normSession(d));
+    } catch (e) { saveSession(null); cloud.profile = null; }
+  }
+  function normSession(d) {
+    if (!d || !d.access_token) return null;
+    return {
+      access_token: d.access_token,
+      refresh_token: d.refresh_token,
+      expires_at: d.expires_at || Math.floor(Date.now() / 1000) + (d.expires_in || 3600),
+      user: d.user || null
+    };
+  }
+
+  /* ---------- auth ---------- */
+  const auth = {
+    async signUp(email, password, meta) {
+      const d = await req('/auth/v1/signup', { method: 'POST', auth: false,
+        body: { email, password, data: meta || {} } });
+      if (d && d.access_token) { saveSession(normSession(d)); return { session: cloud.session, needConfirm: false }; }
+      return { session: null, needConfirm: true, user: d && (d.user || d) };
+    },
+    async signIn(email, password) {
+      const d = await req('/auth/v1/token?grant_type=password', { method: 'POST', auth: false,
+        body: { email, password } });
+      saveSession(normSession(d));
+      return cloud.session;
+    },
+    async signOut() {
+      try { if (cloud.session) await req('/auth/v1/logout', { method: 'POST' }); } catch (e) { /* noop */ }
+      saveSession(null); cloud.profile = null;
+    },
+    async me() {
+      await ensureFresh();
+      if (!cloud.session) return null;
+      try {
+        const u = await req('/auth/v1/user');
+        cloud.session.user = u; saveSession(cloud.session);
+        return u;
+      } catch (e) { saveSession(null); return null; }
+    },
+    uid() { return cloud.session && cloud.session.user ? cloud.session.user.id : null; },
+    email() { return cloud.session && cloud.session.user ? cloud.session.user.email : null; }
+  };
+
+  /* ---------- db (PostgREST) ---------- */
+  function qs(params) {
+    const p = [];
+    for (const k in params) {
+      if (params[k] === undefined || params[k] === null) continue;
+      p.push(encodeURIComponent(k) + '=' + encodeURIComponent(params[k]));
+    }
+    return p.length ? '?' + p.join('&') : '';
+  }
+  const db = {
+    async select(table, params) {
+      await ensureFresh();
+      return req('/rest/v1/' + table + qs(Object.assign({ select: '*' }, params || {})));
+    },
+    async insert(table, row, opt) {
+      await ensureFresh();
+      return req('/rest/v1/' + table + qs((opt && opt.params) || {}), {
+        method: 'POST', body: row,
+        headers: { 'Prefer': 'return=representation' + ((opt && opt.upsert) ? ',resolution=merge-duplicates' : '') }
+      });
+    },
+    async update(table, params, patch) {
+      await ensureFresh();
+      return req('/rest/v1/' + table + qs(params), {
+        method: 'PATCH', body: patch, headers: { 'Prefer': 'return=representation' }
+      });
+    },
+    async remove(table, params) {
+      await ensureFresh();
+      return req('/rest/v1/' + table + qs(params), { method: 'DELETE' });
+    },
+    async rpc(fn, args) {
+      await ensureFresh();
+      return req('/rest/v1/rpc/' + fn, { method: 'POST', body: args || {} });
+    }
+  };
+
+  /* ---------- health ---------- */
+  async function ping() {
+    if (!configured()) { cloud.online = false; return false; }
+    try {
+      await req('/rest/v1/ae_state?select=id&limit=1', { auth: false });
+      cloud.online = true; cloud.lastError = null;
+    } catch (e) {
+      cloud.online = false; cloud.lastError = e.message;
+    }
+    return cloud.online;
+  }
+
+  /* ---------- profile ---------- */
+  async function loadProfile() {
+    const id = auth.uid();
+    if (!id) { cloud.profile = null; return null; }
+    try {
+      const rows = await db.select('ae_profiles', { id: 'eq.' + id, limit: 1 });
+      cloud.profile = (rows && rows[0]) || null;
+    } catch (e) { cloud.profile = null; }
+    return cloud.profile;
+  }
+  async function upsertProfile(patch) {
+    const id = auth.uid();
+    if (!id) throw new Error('未登录');
+    const row = Object.assign({ id: id }, patch, { updated_at: new Date().toISOString() });
+    const out = await db.insert('ae_profiles', row, { upsert: true });
+    cloud.profile = (out && out[0]) || row;
+    return cloud.profile;
+  }
+  function isAdmin() { return !!(cloud.profile && cloud.profile.role === 'admin'); }
+
+  /* ---------- 全局状态 ae_state ---------- */
+  async function fetchState() {
+    const rows = await db.select('ae_state', { id: 'eq.1', limit: 1 });
+    return rows && rows[0] ? rows[0] : null;
+  }
+  async function pushState(patch) {
+    const row = Object.assign({ id: 1 }, patch, { updated_at: new Date().toISOString() });
+    const out = await db.insert('ae_state', row, { upsert: true });
+    return (out && out[0]) || row;
+  }
+
+  /* ---------- 消息 ae_messages ---------- */
+  async function listMessages() {
+    const me = auth.uid();
+    const rows = await db.select('ae_messages', { order: 'created_at.desc', limit: 500 });
+    return (rows || []).filter(function (m) {
+      return m.to_user === 'all' || m.to_user === me;
+    });
+  }
+  async function addMessage(row) {
+    const out = await db.insert('ae_messages', row);
+    return (out && out[0]) || row;
+  }
+  async function patchMessage(id, patch) {
+    const out = await db.update('ae_messages', { id: 'eq.' + id }, patch);
+    return (out && out[0]) || null;
+  }
+
+  /* ---------- 日志 ae_logs ---------- */
+  async function listLogs() {
+    const rows = await db.select('ae_logs', { order: 'created_at.desc', limit: 60 });
+    return rows || [];
+  }
+  async function addLog(level, msg) {
+    try {
+      await db.insert('ae_logs', { level: level || 'info', msg: msg });
+    } catch (e) { /* 日志失败不阻断 */ }
+  }
+
+  /* ---------- AI 配置 ae_ai_cfg（仅管理员读写） ---------- */
+  async function fetchAiCfg() {
+    const rows = await db.select('ae_ai_cfg', { id: 'eq.1', limit: 1 });
+    return rows && rows[0] ? rows[0] : null;
+  }
+  async function pushAiCfg(patch) {
+    const row = Object.assign({ id: 1 }, patch, { updated_at: new Date().toISOString() });
+    const out = await db.insert('ae_ai_cfg', row, { upsert: true });
+    return (out && out[0]) || row;
+  }
+
+  /* ---------- 房间分配 ---------- */
+  async function assignRoom() {
+    const rows = await db.select('ae_profiles', { select: 'room', limit: 1000 });
+    const occupied = (rows || []).map(function (r) { return r.room; });
+    const avail = AE.ROOMS.filter(function (r) { return occupied.indexOf(r) === -1; });
+    if (!avail.length) throw new Error('公寓已满，暂不接受新住户');
+    return avail[Math.floor(Math.random() * avail.length)];
+  }
+
+  AE.cloud = Object.assign(cloud, {
+    loadCfg, saveCfg, configured, loadSession, saveSession,
+    auth, db, ping, loadProfile, upsertProfile, isAdmin,
+    fetchState, pushState,
+    listMessages, addMessage, patchMessage,
+    listLogs, addLog,
+    fetchAiCfg, pushAiCfg,
+    assignRoom
+  });
+})(window.AE);
+
+/* === js/chat.js === */
+/* ============================================================
+   chat.js — NPC 对话引擎
+   双模式：
+     1) AI 模式：GM 在管理面板配置 OpenAI 兼容 API（baseURL/apiKey/model），
+        前端直接调用 /chat/completions，system prompt 使用 persona。
+     2) 本地脚本模式：无 AI 配置或调用失败时，用内置台词树回复。
+   对话记忆保存在 localStorage（每 NPC 独立）。
+   ============================================================ */
+window.AE = window.AE || {};
+
+(function (AE) {
+  'use strict';
+
+  const LS_HISTORY = 'ae.chat.history.v1';
+
+  /* ─── 对话历史 ─── */
+  function loadHistory() {
+    try { return JSON.parse(localStorage.getItem(LS_HISTORY)) || {}; }
+    catch (e) { return {}; }
+  }
+  function saveHistory(h) { localStorage.setItem(LS_HISTORY, JSON.stringify(h)); }
+  function getHistory(npcId) {
+    const h = loadHistory();
+    return h[npcId] || [];
+  }
+  function pushTurn(npcId, userMsg, npcReply) {
+    const h = loadHistory();
+    if (!h[npcId]) h[npcId] = [];
+    h[npcId].push({ u: userMsg, a: npcReply, t: Date.now() });
+    if (h[npcId].length > 40) h[npcId].shift();
+    saveHistory(h);
+  }
+  function clearHistory(npcId) {
+    const h = loadHistory();
+    delete h[npcId];
+    saveHistory(h);
+  }
+
+  /* ─── AI 模式 ─── */
+  function currentAiCfg() {
+    // 云端管理员配置优先，其次本地配置（管理面板可写入 localStorage 作为兜底）
+    const cloudCfg = AE.cloud && AE.cloud.aiCfg;
+    if (cloudCfg && cloudCfg.enabled && cloudCfg.base_url && cloudCfg.api_key) return cloudCfg;
+    try {
+      const local = JSON.parse(localStorage.getItem('ae.ai.cfg') || 'null');
+      if (local && local.enabled && local.base_url && local.api_key) return local;
+    } catch (e) { /* ignore */ }
+    return null;
+  }
+
+  async function callAI(persona, history, userMsg) {
+    const cfg = currentAiCfg();
+    if (!cfg) return null;
+    const url = String(cfg.base_url).replace(/\/+$/, '') + '/chat/completions';
+    const messages = [{ role: 'system', content: persona.system }];
+    // 注入最近几轮对话作为上下文
+    history.slice(-8).forEach(function (t) {
+      messages.push({ role: 'user', content: t.u });
+      messages.push({ role: 'assistant', content: t.a });
+    });
+    messages.push({ role: 'user', content: userMsg });
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.api_key },
+      body: JSON.stringify({
+        model: cfg.model || 'gpt-4o-mini',
+        messages: messages,
+        temperature: typeof cfg.temperature === 'number' ? cfg.temperature : 0.8,
+        max_tokens: 300
+      })
+    });
+    if (!res.ok) {
+      let msg = 'AI 请求失败 ' + res.status;
+      try { const d = await res.json(); if (d.error) msg = String(d.error.message || d.error); } catch (e) { /* ignore */ }
+      throw new Error(msg);
+    }
+    const data = await res.json();
+    const text = data.choices && data.choices[0] && data.choices[0].message
+      ? data.choices[0].message.content : null;
+    if (!text) throw new Error('AI 返回为空');
+    return text.trim();
+  }
+
+  /* ─── 本地脚本模式（关键词匹配 + 轮换台词） ─── */
+  const LOCAL_FALLBACKS = {
+    linshuan: [
+      '嗯...这个问题我也在找答案。不过既然你问了，我只能告诉你我知道的部分。',
+      '我是这栋楼的管理员。有些事我确实不知道，但守则上的每一条都是有原因的。',
+      '如果你发现了什么异常，来管理处告诉我。但记住第五条——0号房间的声音，可以听，不要回应。'
+    ],
+    wujing: [
+      '......（雾轻轻晃动）有些话...说出来就变了味。就像雾...你看得见...却抓不住。',
+      '我不太记得自己是什么时候住进来的...好像...这里一直有雾...',
+      '......你要是想听故事...可以去问问管理员。我这边...只有雾。'
+    ],
+    ashi: [
+      '☆',
+      '☆☆',
+      '（沉默片刻）有些事，知道的人越少越好。',
+      '封印的事，你不用管。管好自己房间的门就行。'
+    ],
+    duanyuan: [
+      '3...7...2...0...1...4... 这条时间线上，你已经问过我一次了。',
+      '时间在裂缝附近不是线性的。你以为是过去的事，可能还没发生。',
+      '我见过这栋楼消失的样子。每次都不一样。所以...谁知道呢？'
+    ],
+    shenhai: [
+      '...嗡...',
+      '...海...很远...但是这里...听得到...',
+      '...帮帮我...',
+      '（沉默很久）...你是...新的缝线吗...'
+    ],
+    huiya: [
+      '今天的图偏差7.3%。公寓在向东漂移。速度：每天0.4毫米。',
+      '不是地图。是脉络。公寓有神经。',
+      '0号房间的能量是从外面流进来的。有什么东西...在往里灌。'
+    ],
+    unknown: [
+      '（门缝下递出一张纸条）"...灯塔在看守人消失之前..."',
+      '（纸条上只有半句话）"...名字是..."',
+      '（纸条的沙沙声）"...转世了7次..."',
+      '（纸条上画着一个小小的灯塔）'
+    ],
+    wenming: [
+      '哈哈，年轻人就是爱打听。这楼啊，住久了就习惯了。',
+      '我住这儿挺久的了...久到想不起来具体是哪年搬来的。',
+      '之前？之前这里不是有座灯塔吗？还是我记错了...'
+    ],
+    grey: [
+      '你们还记得我吗？',
+      '（沉默很久，像隔着极远的距离）...有人...在听吗...',
+      '回响是最后一个锚。不要清除它。',
+      '（空洞的声音）...去B4...打开那扇门...'
+    ]
+  };
+
+  function localReply(npcId, userMsg, history) {
+    const pool = LOCAL_FALLBACKS[npcId] || ['（没有回应）'];
+    // 简单关键词引导：让特定问题命中固定台词
+    const q = userMsg || '';
+    const persona = AE.PERSONAS[npcId];
+    const hit = AE.PERSONA_RULES ? AE.PERSONA_RULES[npcId] : null;
+    if (hit) {
+      for (let i = 0; i < hit.keywords.length; i++) {
+        if (q.indexOf(hit.keywords[i]) >= 0) return hit.reply;
+      }
+    }
+    // 否则轮换池内台词（基于历史条数）
+    const idx = history.length % pool.length;
+    return pool[idx] + (persona && persona.initial ? '' : '');
+  }
+
+  /* 关键词规则（来自 NPC 对话脚本的固定问答） */
+  AE.PERSONA_RULES = {
+    linshuan: {
+      keywords: ['0号', '零号', '回声', '回响'],
+      reply: '0号房间...已经退租很久了。但有时候能听到里面有声音。守则第五条说了，可以听，但不能回应。你问为什么不能回应？...因为回响会以为你在跟它说话。然后它会以为自己是活的。'
+    },
+    ashi: {
+      keywords: ['地下室', '纸条', 'B3', '封印'],
+      reply: '你看到了？翻过来。背面是地图。B3的平面图。裂纹的位置。还有一扇门。一扇不应该存在的门。'
+    },
+    duanyuan: {
+      keywords: ['372014', '数字', '坐标'],
+      reply: '372014...不是密码。是坐标。公寓在维度坐标系里的原始编号。公寓之前这里是什么？灯塔。每条时间线里，灯塔看守人消失的那天，公寓都"长"了出来。'
+    },
+    huiya: {
+      keywords: ['地图', '脉络', '粉笔'],
+      reply: '那不是地图。是脉络。公寓有神经。能量从B4流上来，经过每个房客的房间，再从窗户流出去。每天的流向不一样。因为公寓在动。'
+    },
+    shenhai: {
+      keywords: ['怎么来', '哪里来', '你是谁', '回家'],
+      reply: '...不是我自己来的...是这里...把我拉来的...这里需要锚...需要深海...我不想来...但来了就回不去了...（沉默）...帮帮我...'
+    },
+    grey: {
+      keywords: ['你是谁', '记得', 'B4', '门'],
+      reply: '你回应了我。谢谢你。现在...我需要你帮我一件事。去B4。打开那扇门。门后面有一个人。那是前任管理员。他在等你。他已经等了...很久了。'
+    }
+  };
+
+  /* ─── 统一入口 ─── */
+  async function ask(npcId, userMsg, onStatus) {
+    const persona = AE.PERSONAS[npcId];
+    if (!persona) throw new Error('未知NPC: ' + npcId);
+    const history = getHistory(npcId);
+
+    // 1) 尝试 AI
+    if (currentAiCfg()) {
+      try {
+        if (onStatus) onStatus('thinking');
+        const reply = await callAI(persona, history, userMsg);
+        if (reply) {
+          pushTurn(npcId, userMsg, reply);
+          if (onStatus) onStatus('done');
+          return { reply: reply, mode: 'ai' };
+        }
+      } catch (e) {
+        if (onStatus) onStatus('fallback:' + e.message);
+      }
+    }
+
+    // 2) 本地脚本兜底
+    const reply = localReply(npcId, userMsg, history);
+    pushTurn(npcId, userMsg, reply);
+    if (onStatus) onStatus('done');
+    return { reply: reply, mode: 'local' };
+  }
+
+  AE.chat = {
+    ask, getHistory, clearHistory, currentAiCfg, LOCAL_FALLBACKS
+  };
+})(window.AE);
+
+/* === js/app.js === */
+/* ============================================================
+ * app.js — Aetheris PDA-7 前端主逻辑
+ * 认证 / 路由 / 世界观 / NPC档案 / 对话 / 消息 / 骰子 / 终端 / 管理
+ * ============================================================ */
+window.AE = window.AE || {};
+
+(function (AE) {
+  'use strict';
+
+  /* ─── 状态 ─── */
+  var currentUser = null;      // { id, email, username, room, isAdmin }
+  var gameState = { stability: 68, tenants: 9, events: 4 };
+  var currentTab = 'home';
+  var lastMsgCount = 0;
+  var archiveData = [];
+  var pollTimer = null;
+  var sfInitDone = false;
+  var forceLocal = false;      // 云端不可用时强制本地模式
+
+  /* ─── 工具 ─── */
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function toast(msg) {
+    var t = $('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._tm);
+    t._tm = setTimeout(function () { t.classList.remove('show'); }, 3000);
+  }
+  function timeAgo(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    var diff = (Date.now() - d.getTime()) / 1000;
+    if (diff < 60) return '刚刚';
+    if (diff < 3600) return Math.floor(diff / 60) + '分钟前';
+    if (diff < 86400) return Math.floor(diff / 3600) + '小时前';
+    return d.toLocaleDateString('zh-CN');
+  }
+  function msgTypeLabel(t) {
+    return { normal: '普通', alert: '警示', critical: '紧急', choice: '抉择' }[t] || t;
+  }
+
+  /* ─── 云端初始化 ─── */
+  async function initCloud() {
+    if (sfInitDone) return;
+    sfInitDone = true;
+    AE.cloud.loadCfg();
+    AE.cloud.loadSession();
+    if (AE.cloud.configured()) {
+      try {
+        const online = await AE.cloud.ping();
+        if (!online) {
+          console.warn('[Aetheris] 云端不可用: ' + (AE.cloud.lastError || ''));
+          forceLocal = true;
+        }
+      } catch (e) {
+        console.warn('[Aetheris] 云端初始化失败', e);
+        forceLocal = true;
+      }
+    } else {
+      forceLocal = true;
+    }
+  }
+
+  function isCloud() { return AE.cloud.configured() && !forceLocal; }
+
+  /* ─── 本地存储数据层（云端不可用时兜底） ─── */
+  const LS = {
+    get(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch (e) { return def; } },
+    set(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+  };
+
+  async function loadState() {
+    if (isCloud()) {
+      try {
+        const s = await AE.cloud.fetchState();
+        if (s) gameState = { id: 1, stability: s.stability, tenants: s.tenants, events: s.events, announcement: s.announcement, announcement_time: s.announcement_time };
+        return;
+      } catch (e) { /* fall through */ }
+    }
+    gameState = Object.assign(gameState, LS.get('ae.state', {}));
+  }
+  async function saveState() {
+    if (isCloud()) {
+      try { await AE.cloud.pushState({ stability: gameState.stability, tenants: gameState.tenants, events: gameState.events, announcement: gameState.announcement, announcement_time: gameState.announcement_time || new Date().toISOString() }); return; }
+      catch (e) { /* fall through */ }
+    }
+    LS.set('ae.state', { stability: gameState.stability, tenants: gameState.tenants, events: gameState.events, announcement: gameState.announcement, announcement_time: gameState.announcement_time });
+  }
+
+  async function getMessages() {
+    if (isCloud()) {
+      try {
+        const rows = await AE.cloud.listMessages();
+        return (rows || []).map(function (m) {
+          const npc = AE.NPCS.find(function (n) { return n.id === m.from_npc; }) || { name: '系统', avatar: '◈', room: '-' };
+          return {
+            id: m.id, fromNpc: m.from_npc, fromName: npc.name, fromAvatar: npc.avatar, fromRoom: npc.room,
+            content: m.content, type: m.type || 'normal', choices: m.choices || null,
+            responses: m.responses || {}, timestamp: m.created_at,
+            readBy: m.read_by || []
+          };
+        });
+      } catch (e) { /* fall through */ }
+    }
+    return LS.get('ae.messages', []);
+  }
+  async function sendMessage(npcId, content, type, choices) {
+    if (isCloud()) {
+      try {
+        const row = { from_npc: npcId, to_user: 'all', content: content, type: type || 'normal', choices: choices || null, read_by: [] };
+        await AE.cloud.addMessage(row);
+        return;
+      } catch (e) { /* fall through */ }
+    }
+    const msgs = LS.get('ae.messages', []);
+    msgs.push({
+      id: 'm' + Date.now(), fromNpc: npcId, fromName: '', fromAvatar: '', fromRoom: '',
+      content: content, type: type || 'normal', choices: choices || null,
+      responses: {}, timestamp: new Date().toISOString(), readBy: []
+    });
+    LS.set('ae.messages', msgs);
+  }
+
+  /* ─── 认证 ─── */
+  function currentUserInfo() {
+    if (currentUser) return currentUser;
+    // 本地模式：从 localStorage 恢复
+    return LS.get('ae.user', null);
+  }
+
+  async function doRegister() {
+    var u = $('regUser') ? $('regUser').value.trim() : '';
+    var p = $('regPass') ? $('regPass').value : '';
+    if (!u || !p) { $('authError').textContent = '请输入用户名和密码'; return; }
+    if (u.length < 2 || u.length > 20) { $('authError').textContent = '用户名2-20字符'; return; }
+    $('authError').textContent = '登记中...';
+
+    if (isCloud()) {
+      try {
+        // 分配房间
+        const room = await AE.cloud.assignRoom();
+        const email = u.toLowerCase().replace(/[^a-z0-9]/g, '') + '_' + Date.now().toString(36) + '@aetheris.local';
+        const meta = { username: u, room: room };
+        const r = await AE.cloud.auth.signUp(email, p, meta);
+        if (r.needConfirm) { $('authError').textContent = '需要邮箱验证。请查看邮箱后重新登录。'; return; }
+        // 写档案
+        await AE.cloud.upsertProfile({ username: u, room: room, role: 'member', discovered_clues: [], avatar: u[0] });
+        await AE.cloud.loadProfile();
+        // 欢迎消息
+        await AE.cloud.addMessage({ from_npc: 'linshuan', to_user: 'all', content: '欢迎入住Aetheris。你的房间是' + room + '室。\n我是管理员林述安。请仔细阅读住客守则——这很重要。每一条规则都是用代价换来的。\n——林述安', type: 'normal', read_by: [] });
+        await AE.cloud.addLog('info', '新住户入住: ' + u + ' → ' + room + '室');
+        currentUser = { id: AE.cloud.auth.uid(), email: email, username: u, room: room, isAdmin: false };
+        LS.set('ae.user', currentUser);
+        enterApp();
+        toast('入住成功！房间: ' + room + '室');
+      } catch (e) {
+        $('authError').textContent = e.message || '注册失败';
+      }
+      return;
+    }
+
+    // 本地模式
+    var users = LS.get('ae.users', []);
+    if (users.indexOf(u) >= 0) { $('authError').textContent = '用户名已存在'; return; }
+    users.push(u);
+    LS.set('ae.users', users);
+    var occupied = LS.get('ae.rooms', []);
+    var avail = AE.ROOMS.filter(function (r) { return occupied.indexOf(r) === -1; });
+    var room = avail.length ? avail[Math.floor(Math.random() * avail.length)] : '608';
+    occupied.push(room);
+    LS.set('ae.rooms', occupied);
+    currentUser = { id: 'local_' + Date.now(), email: '', username: u, room: room, isAdmin: false };
+    LS.set('ae.user', currentUser);
+    LS.set('ae.pass.' + u, p);
+    enterApp();
+    toast('入住成功！房间: ' + room + '室（本地模式）');
+  }
+
+  async function doLogin() {
+    var u = $('loginUser') ? $('loginUser').value.trim() : '';
+    var p = $('loginPass') ? $('loginPass').value : '';
+    if (!u || !p) { $('authError').textContent = '请输入用户名和密码'; return; }
+    $('authError').textContent = '连接中...';
+
+    if (isCloud()) {
+      try {
+        // 本地用户名 → 邮箱映射（本地记录注册邮箱）
+        var email = LS.get('ae.email.' + u, '');
+        if (!email) { $('authError').textContent = '未找到该用户名对应的云端账号，请注册入住。'; return; }
+        await AE.cloud.auth.signIn(email, p);
+        await AE.cloud.loadProfile();
+        var pf = AE.cloud.profile;
+        currentUser = { id: AE.cloud.auth.uid(), email: email, username: pf ? pf.username : u, room: pf ? pf.room : '-', isAdmin: AE.cloud.isAdmin() };
+        LS.set('ae.user', currentUser);
+        enterApp();
+        toast('欢迎回来，' + currentUser.username);
+      } catch (e) {
+        $('authError').textContent = '用户名或密码错误';
+      }
+      return;
+    }
+
+    // 本地模式
+    var users = LS.get('ae.users', []);
+    var user = users.find(function (x) { return x === u; });
+    if (!user) { $('authError').textContent = '用户名不存在，请先注册入住'; return; }
+    if (LS.get('ae.pass.' + u, '') !== p) { $('authError').textContent = '密码错误'; return; }
+    var rooms = LS.get('ae.roommap', {});
+    currentUser = { id: 'local_' + u, email: '', username: u, room: rooms[u] || '608', isAdmin: u === 'GM' };
+    LS.set('ae.user', currentUser);
+    enterApp();
+    toast('欢迎回来，' + currentUser.username + (isCloud() ? '' : '（本地模式）'));
+  }
+
+  function doLogout() {
+    if (isCloud()) AE.cloud.auth.signOut().catch(function () {});
+    currentUser = null;
+    localStorage.removeItem('ae.user');
+    showAuth();
+  }
+
+  /* ─── 界面切换 ─── */
+  function showAuth() {
+    $('authScreen').style.display = '';
+    $('dashboard').style.display = 'none';
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+  function enterApp() {
+    $('authScreen').style.display = 'none';
+    $('dashboard').style.display = '';
+    var u = currentUser;
+    $('navAvatar').textContent = u.avatar || (u.username ? u.username[0] : '?');
+    $('navUsername').textContent = u.username;
+    $('navRoom').textContent = u.room + '室';
+    $('adminTab').style.display = u.isAdmin ? '' : 'none';
+    refreshAll();
+    startPolling();
+  }
+
+  function navTo(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.page').forEach(function (p) { p.classList.remove('active'); });
+    document.querySelectorAll('.nav-link[data-tab]').forEach(function (l) { l.classList.remove('active'); });
+    var page = $('tab-' + tab);
+    if (page) page.classList.add('active');
+    var link = document.querySelector('[data-tab="' + tab + '"]');
+    if (link) link.classList.add('active');
+    if (tab === 'messages') { loadMessages(); $('msgBadge').style.display = 'none'; }
+    if (tab === 'archive') loadArchive();
+    if (tab === 'world') renderWorld();
+    if (tab === 'npc') renderNpcList();
+    if (tab === 'admin') loadAdminData();
+  }
+
+  /* ─── 首页数据 ─── */
+  async function refreshState() {
+    await loadState();
+    updateHome();
+  }
+  async function refreshAll() {
+    await refreshState();
+    await loadMessages();
+  }
+
+  function updateHome() {
+    var s = gameState;
+    $('stabilityValue').textContent = (s.stability == null ? 68 : s.stability) + '%';
+    $('stabilityBar').style.width = (s.stability == null ? 68 : s.stability) + '%';
+    $('stabilityBar').style.background = s.stability >= 60 ? 'var(--cyan)' : s.stability >= 40 ? 'var(--amber)' : 'var(--red)';
+    $('stabilityNote').textContent = s.stability >= 60 ? '稳定范围' : s.stability >= 40 ? '波动中' : '危险';
+    $('tenantsValue').textContent = s.tenants || '-';
+    $('tenantsNote').textContent = '含NPC与注册住户';
+    $('eventsValue').textContent = s.events || '-';
+    $('eventsBar').style.width = ((s.events || 0) / 10 * 100) + '%';
+    $('eventsNote').textContent = '建议优先处理 B3 封印波动';
+    $('noticeBody').innerHTML = esc(s.announcement || '欢迎来到Aetheris。本建筑存在于维度裂缝的交汇点，所有房客的日常生活共同维持着空间的稳定。请仔细阅读住客守则——每一条规则都是用代价换来的。').replace(/\n/g, '<br>');
+    $('noticeTime').textContent = '更新于 ' + timeAgo(s.announcement_time || Date.now());
+
+    var u = currentUser;
+    var welcomes = [
+      { t: '欢迎回来，' + (u ? u.username : ''), s: '你的房间: ' + (u ? u.room + '室' : '') },
+      { t: '系统已就绪', s: '稳定度: ' + (s.stability || 68) + '% | 所有锚点在线' },
+      { t: '请确认你的身份', s: '灵魂绑定状态: 未完成' }
+    ];
+    var w = welcomes[Math.floor(Math.random() * welcomes.length)];
+    $('welcomeText').textContent = w.t;
+    $('welcomeSub').textContent = w.s;
+
+    if (s.stability < 40) {
+      document.body.style.animation = 'glitch 0.15s infinite alternate';
+    } else {
+      document.body.style.animation = '';
+    }
+  }
+
+  /* ─── 消息 ─── */
+  async function loadMessages() {
+    var data = await getMessages();
+    var list = $('msgList');
+    if (!data || data.length === 0) {
+      list.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:2rem;">暂无消息</div>';
+      return;
+    }
+    var me = currentUser ? currentUser.id : '';
+    var unreadCount = 0;
+    list.innerHTML = data.map(function (m) {
+      var isRead = (m.readBy || []).indexOf(me) >= 0;
+      if (!isRead) unreadCount++;
+      var cls = 'msg-item' + (isRead ? '' : ' unread') + (m.type === 'critical' ? ' msg-critical' : m.type === 'alert' ? ' msg-alert' : '');
+      var avatarCls = m.fromAvatar === '⊘' ? ' msg-avatar avatar-grey' : '';
+      var choicesHtml = '';
+      if (m.choices && m.choices.length > 0) {
+        var responded = m.responses && m.responses[me];
+        if (responded) {
+          choicesHtml = '<div class="msg-responded">你选择了: ' + (responded === 'respond' ? '回应' : '沉默') + '</div>';
+        } else {
+          choicesHtml = '<div class="msg-choices">' + m.choices.map(function (c) {
+            var dangerCls = c.action === 'respond' ? ' choice-danger' : '';
+            return '<button class="msg-choice-btn' + dangerCls + '" onclick="AE.ui.respondMessage(\'' + m.id + '\',\'' + c.action + '\')">' + esc(c.text) + '</button>';
+          }).join('') + '</div>';
+        }
+      }
+      return '<div class="' + cls + '" onclick="AE.ui.readMessage(\'' + m.id + '\')">' +
+        '<div class="msg-header"><div class="msg-avatar' + avatarCls + '">' + esc(m.fromAvatar) + '</div>' +
+        '<span class="msg-from">' + esc(m.fromName) + '</span><span class="msg-room">' + esc(m.fromRoom) + '室</span>' +
+        '<span class="msg-time">' + timeAgo(m.timestamp) + '</span></div>' +
+        '<div class="msg-content">' + esc(m.content).replace(/\n/g, '<br>') + '</div>' + choicesHtml + '</div>';
+    }).join('');
+
+    if (unreadCount > 0 && currentTab !== 'messages') {
+      $('msgBadge').textContent = unreadCount;
+      $('msgBadge').style.display = '';
+    } else {
+      $('msgBadge').style.display = 'none';
+    }
+    if (unreadCount > lastMsgCount && lastMsgCount > 0) {
+      toast('收到 ' + (unreadCount - lastMsgCount) + ' 条新消息');
+    }
+    lastMsgCount = unreadCount;
+  }
+
+  async function readMessage(id) {
+    if (isCloud()) {
+      try {
+        const rows = await AE.cloud.db.select('ae_messages', { id: 'eq.' + id, limit: 1 });
+        const m = rows && rows[0];
+        if (m) {
+          const rb = m.read_by || [];
+          const me = currentUser.id;
+          if (rb.indexOf(me) < 0) {
+            rb.push(me);
+            await AE.cloud.db.update('ae_messages', { id: 'eq.' + id }, { read_by: rb });
+          }
+        }
+      } catch (e) { /* ignore */ }
+      loadMessages();
+      return;
+    }
+    const msgs = LS.get('ae.messages', []);
+    const m = msgs.find(function (x) { return x.id === id; });
+    if (m && (m.readBy || []).indexOf(currentUser.id) < 0) {
+      if (!m.readBy) m.readBy = [];
+      m.readBy.push(currentUser.id);
+      LS.set('ae.messages', msgs);
+    }
+    loadMessages();
+  }
+
+  async function respondMessage(id, choice) {
+    var me = currentUser.id;
+    if (isCloud()) {
+      try {
+        const rows = await AE.cloud.db.select('ae_messages', { id: 'eq.' + id, limit: 1 });
+        const m = rows && rows[0];
+        if (!m) { toast('消息不存在'); return; }
+        if (m.responses && m.responses[me]) { toast('你已经做出过选择'); return; }
+        const res = m.responses || {};
+        res[me] = choice;
+        await AE.cloud.db.update('ae_messages', { id: 'eq.' + id }, { responses: res });
+        await handleChoice(id, choice, m.from_npc);
+      } catch (e) { toast(e.message); }
+      return;
+    }
+    const msgs = LS.get('ae.messages', []);
+    const m = msgs.find(function (x) { return x.id === id; });
+    if (!m) { toast('消息不存在'); return; }
+    if (m.responses && m.responses[me]) { toast('你已经做出过选择'); return; }
+    m.responses = m.responses || {};
+    m.responses[me] = choice;
+    LS.set('ae.messages', msgs);
+    await handleChoice(id, choice, m.fromNpc);
+  }
+
+  async function handleChoice(id, choice, fromNpc) {
+    if (fromNpc === 'grey' && choice === 'respond') {
+      await sendMessage('grey', '你回应了我。谢谢你。\n现在...我需要你帮我一件事。\n去B4。打开那扇门。\n门后面有一个人。那是前任管理员。\n他在等你。他已经等了...很久了。', 'critical');
+      await sendMessage('system', '⚠ 住户回应了0号房间的回响。虚空稳定度 -15%。', 'alert');
+      gameState.stability = Math.max(0, (gameState.stability || 68) - 15);
+      await saveState();
+      toast('你选择了回应。回响获得了意志...');
+    } else if (fromNpc === 'grey' && choice === 'silence') {
+      await sendMessage('grey', '沉默是安全的。但沉默也是一种选择。\n你选择了不回应。回响在你门外徘徊了30分钟，然后离开了。\n这一次。', 'normal');
+      gameState.stability = Math.max(0, (gameState.stability || 68) - 5);
+      await saveState();
+      toast('你选择了沉默。');
+    }
+    await loadMessages();
+    await refreshState();
+  }
+
+  /* ─── 档案 ─── */
+  async function loadArchive() {
+    var list = [];
+    var admin = false;
+    if (isCloud() && currentUser) {
+      admin = currentUser.isAdmin;
+      // 云端：NPC 档案固定，住户档案从 ae_profiles 拉
+      try {
+        const users = await AE.cloud.db.select('ae_profiles', { limit: 500 });
+        list = AE.NPCS.map(function (n) {
+          return { id: n.id, name: n.name, avatar: n.avatar, room: n.room, type: n.type, desc: n.desc, tags: n.tags, secret: n.secret, isNpc: true };
+        });
+        (users || []).forEach(function (u) {
+          if (u.id === currentUser.id || u.role === 'admin') return;
+          list.push({ id: u.id, name: u.username, avatar: u.avatar || u.username[0], room: u.room, type: 'human', desc: u.room + '室住户。入住时间: ' + (u.registered_at || '').slice(0, 10), tags: ['住户'], secret: '', isNpc: false });
+        });
+      } catch (e) { /* fall */ }
+    } else {
+      admin = currentUser ? currentUser.isAdmin : false;
+      list = AE.NPCS.map(function (n) {
+        return { id: n.id, name: n.name, avatar: n.avatar, room: n.room, type: n.type, desc: n.desc, tags: n.tags, secret: n.secret, isNpc: true };
+      });
+    }
+    archiveData = list;
+    var activeFilter = document.querySelector('.filter-btn.active');
+    renderArchive(activeFilter ? activeFilter.dataset.filter : 'all');
+  }
+
+  function renderArchive(filter) {
+    var grid = $('archiveGrid');
+    var items = archiveData;
+    if (filter && filter !== 'all') items = items.filter(function (a) { return a.type === filter; });
+    grid.innerHTML = items.map(function (a) {
+      var sealed = a.type === 'sealed' ? ' sealed' : '';
+      var avUnknown = (a.type === 'unknown' || a.type === 'sealed') ? ' avatar-unknown' : '';
+      var tagCls = { human: 'tag-human', nonhuman: 'tag-nonhuman', unknown: 'tag-unknown', sealed: 'tag-sealed' }[a.type] || 'tag-human';
+      var typeLabel = { human: '人形', nonhuman: '非人形', unknown: '未知', sealed: '封存' }[a.type] || a.type;
+      return '<div class="archive-card' + sealed + '" onclick="AE.ui.openArchive(\'' + a.id + '\')">' +
+        '<div class="card-avatar' + avUnknown + '">' + esc(a.avatar) + '</div>' +
+        '<div class="card-name">' + esc(a.name) + '</div><div class="card-room">' + esc(a.room) + '室</div>' +
+        '<div class="card-desc">' + esc(a.desc) + '</div>' +
+        '<div class="card-tags"><span class="card-tag ' + tagCls + '">' + typeLabel + '</span>' +
+        (a.tags || []).map(function (t) { return '<span class="card-tag ' + tagCls + '">' + esc(t) + '</span>'; }).join('') + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function openArchive(id) {
+    var a = archiveData.find(function (x) { return x.id === id; });
+    if (!a) return;
+    $('modalTitle').textContent = a.name + ' · ' + a.room + '室';
+    var html = '<div class="mb-row"><span class="mb-label">描述:</span><br>' + esc(a.desc) + '</div>';
+    html += '<div class="mb-row"><span class="mb-label">标签:</span> ' + esc((a.tags || []).join(', ')) + '</div>';
+    if (a.secret && !a.isNpc) {
+      html += '<div class="mb-encrypted">' + esc(a.secret) + '</div>';
+    } else if (a.secret) {
+      var admin = currentUser ? currentUser.isAdmin : false;
+      if (admin) {
+        html += '<div class="mb-secret">' + esc(a.secret) + '</div>';
+      } else {
+        html += '<div class="mb-encrypted">[需要管理员权限]</div>';
+      }
+    }
+    $('modalBody').innerHTML = html;
+    $('modalOverlay').classList.add('active');
+  }
+
+  function closeModal() { $('modalOverlay').classList.remove('active'); }
+
+  /* ─── 世界观页 ─── */
+  function renderWorld() {
+    var wrap = $('worldWrap');
+    if (!wrap) return;
+    // 核心概念
+    var html = '<div class="world-section"><h3 class="world-sec-title">◈ 核心概念</h3><div class="concept-grid">' +
+      AE.CORE_CONCEPTS.map(function (c) {
+        return '<div class="concept-card"><div class="concept-icon">' + c.icon + '</div><div class="concept-title">' + esc(c.title) + '</div><div class="concept-body">' + esc(c.body) + '</div></div>';
+      }).join('') + '</div></div>';
+
+    // 公寓结构
+    html += '<div class="world-section"><h3 class="world-sec-title">⌂ 公寓结构</h3><div class="floor-table">' +
+      AE.FLOORS.map(function (f) {
+        return '<div class="floor-row"><div class="floor-no">' + esc(f.floor) + '</div><div class="floor-use">' + esc(f.use) + '</div><div class="floor-note">' + esc(f.note) + '</div></div>';
+      }).join('') + '</div></div>';
+
+    // 维度星图
+    html += '<div class="world-section"><h3 class="world-sec-title">✦ 维度星图</h3><div class="starmap-grid">' +
+      AE.STAR_MAP.map(function (s) {
+        var cls = { stable: 'st-stable', unstable: 'st-unstable', danger: 'st-danger', lost: 'st-lost' }[s.status] || 'st-stable';
+        var label = { stable: '稳定', unstable: '波动', danger: '危险', lost: '失联' }[s.status] || s.status;
+        return '<div class="star-node ' + cls + '"><div class="star-name">' + esc(s.node) + '</div><div class="star-status">' + label + '</div><div class="star-note">' + esc(s.note) + '</div></div>';
+      }).join('') + '</div></div>';
+
+    // 时间线
+    html += '<div class="world-section"><h3 class="world-sec-title">◷ 剧情时间线</h3><div class="timeline">' +
+      AE.TIMELINE.map(function (t) {
+        return '<div class="tl-item"><div class="tl-date">' + esc(t.date) + '</div><div class="tl-event">' + esc(t.event) + '</div></div>';
+      }).join('') + '</div></div>';
+
+    // 谜题链
+    html += '<div class="world-section"><h3 class="world-sec-title">⚿ 谜题链</h3><div class="puzzle-list">' +
+      AE.PUZZLES.map(function (p) {
+        return '<div class="puzzle-item"><div class="puzzle-head"><span class="puzzle-level">第' + p.level + '层</span><span class="puzzle-name">' + esc(p.name) + '</span></div><div class="puzzle-desc">' + esc(p.desc) + '</div><div class="puzzle-reward">奖励: ' + esc(p.reward) + '</div></div>';
+      }).join('') + '</div></div>';
+
+    wrap.innerHTML = html;
+  }
+
+  /* ─── NPC 列表页 ─── */
+  function renderNpcList() {
+    var wrap = $('npcWrap');
+    if (!wrap) return;
+    wrap.innerHTML = AE.NPCS.map(function (n) {
+      var sealed = n.type === 'sealed' ? ' npc-sealed' : '';
+      return '<div class="npc-card' + sealed + '" onclick="AE.ui.openNpcChat(\'' + n.id + '\')">' +
+        '<div class="npc-avatar">' + esc(n.avatar) + '</div>' +
+        '<div class="npc-info"><div class="npc-name">' + esc(n.name) + '<span class="npc-room">' + esc(n.room) + '室</span></div>' +
+        '<div class="npc-title">' + esc(n.title || '') + '</div><div class="npc-desc">' + esc(n.desc) + '</div></div>' +
+        '<div class="npc-talk">对话 →</div></div>';
+    }).join('');
+  }
+
+  /* ─── NPC 对话界面 ─── */
+  var currentChatNpc = null;
+  function openNpcChat(id) {
+    var npc = AE.NPCS.find(function (n) { return n.id === id; });
+    if (!npc) return;
+    currentChatNpc = id;
+    $('chatScreen').style.display = '';
+    $('dashboard').style.display = 'none';
+    $('chatTitle').textContent = npc.name + ' · ' + npc.room + '室';
+    $('chatSub').textContent = npc.title || '';
+    var persona = AE.PERSONAS[id];
+    if (persona && persona.persona) {
+      $('chatAvatar').textContent = npc.avatar;
+      $('chatAvatar').className = 'chat-avatar' + (npc.type === 'sealed' ? ' avatar-grey' : '');
+    }
+    var list = $('chatMsgList');
+    list.innerHTML = '';
+    // 初始台词
+    if (persona && persona.initial) {
+      appendChatMsg('npc', persona.initial);
+    }
+    // 历史
+    var hist = AE.chat.getHistory(id);
+    hist.forEach(function (t) {
+      appendChatMsg('user', t.u);
+      appendChatMsg('npc', t.a);
+    });
+    list.scrollTop = list.scrollHeight;
+    $('chatInput').value = '';
+    $('chatInput').focus();
+  }
+
+  function appendChatMsg(who, text) {
+    var list = $('chatMsgList');
+    var div = document.createElement('div');
+    div.className = 'chat-msg ' + (who === 'user' ? 'msg-user' : 'msg-npc');
+    div.innerHTML = '<div class="chat-bubble">' + esc(text).replace(/\n/g, '<br>') + '</div>';
+    list.appendChild(div);
+    list.scrollTop = list.scrollHeight;
+  }
+
+  async function sendChat() {
+    var input = $('chatInput');
+    var text = input.value.trim();
+    if (!text || !currentChatNpc) return;
+    appendChatMsg('user', text);
+    input.value = '';
+    // 发送中提示
+    var typing = document.createElement('div');
+    typing.className = 'chat-msg msg-npc';
+    typing.innerHTML = '<div class="chat-bubble chat-typing">...</div>';
+    var list = $('chatMsgList');
+    list.appendChild(typing);
+    list.scrollTop = list.scrollHeight;
+
+    try {
+      var res = await AE.chat.ask(currentChatNpc, text, function (status) {
+        if (status === 'thinking') typing.querySelector('.chat-bubble').textContent = '正在连接...';
+        if (typeof status === 'string' && status.indexOf('fallback') === 0) {
+          typing.querySelector('.chat-bubble').textContent = '（信号中断，本地回应）';
+        }
+      });
+      typing.querySelector('.chat-bubble').textContent = res.reply;
+      if (res.mode === 'ai') {
+        // AI 模式：可能触发 NPC 特殊互动（回应灰色头像）
+        if (currentChatNpc === 'grey') {
+          toast('你正在与0号回响对话...');
+        }
+      }
+    } catch (e) {
+      typing.querySelector('.chat-bubble').textContent = '（连接中断）' + e.message;
+    }
+  }
+
+  function closeChat() {
+    $('chatScreen').style.display = 'none';
+    $('dashboard').style.display = '';
+  }
+
+  function clearChat() {
+    if (!currentChatNpc) return;
+    AE.chat.clearHistory(currentChatNpc);
+    $('chatMsgList').innerHTML = '';
+    var persona = AE.PERSONAS[currentChatNpc];
+    if (persona && persona.initial) appendChatMsg('npc', persona.initial);
+    toast('对话记录已清空');
+  }
+
+  /* ─── 骰子 ─── */
+  async function rollDice(sides) {
+    var results = [Math.floor(Math.random() * sides) + 1];
+    var total = results[0];
+    var special = null;
+    if (sides === 20) {
+      if (results[0] === 20) {
+        special = { event: 'natural_20', name: '自然20·新维度连接' };
+        gameState.stability = Math.min(100, (gameState.stability || 68) + 10);
+        await sendMessage('system', '住户 ' + (currentUser ? currentUser.username : '?') + ' 掷出自然20。公寓微微震动，走廊尽头出现了一扇新的门。虚空稳定度 +10%。', 'normal');
+      } else if (results[0] === 1) {
+        special = { event: 'natural_1', name: '大失败·锚点松动' };
+        gameState.stability = Math.max(0, (gameState.stability || 68) - 3);
+      }
+      // 三连大失败（本地记录）
+      var fails = LS.get('ae.fails', []);
+      if (results[0] === 1) fails.push(Date.now()); else fails = [];
+      LS.set('ae.fails', fails.slice(-3));
+      if (fails.length >= 3 && sides === 20) {
+        special = { event: 'triple_fail', name: '三连大失败·回响觉醒' };
+        gameState.stability = Math.max(0, (gameState.stability || 68) - 15);
+        await sendMessage('grey', '你们还记得我吗？', 'choice', [{ text: '回应', action: 'respond' }, { text: '沉默', action: 'silence' }]);
+      }
+    }
+    if (sides === 100 && results[0] === 100) {
+      special = { event: 'ultra_rare', name: '百面骰·极罕见' };
+      await sendMessage('system', '住户 ' + (currentUser ? currentUser.username : '?') + ' 掷出1d100=100(极罕见)。0号房间短暂"可见"。', 'critical');
+    }
+    await saveState();
+
+    var display = $('diceDisplay');
+    var specialHtml = '';
+    if (special) {
+      var cls = special.event === 'natural_1' || special.event === 'triple_fail' ? ' critical' : '';
+      specialHtml = '<div class="dice-special' + cls + '">⚡ ' + esc(special.name) + '</div>';
+    }
+    display.innerHTML = '<div class="dice-result">' + results[0] + '</div>' +
+      '<div class="dice-detail">1d' + sides + ' = ' + total + '</div>' + specialHtml;
+    if (special) {
+      toast(special.name);
+      refreshState();
+      if (special.event === 'triple_fail' || special.event === 'natural_20' || special.event === 'ultra_rare') {
+        setTimeout(loadMessages, 1000);
+      }
+    }
+  }
+
+  /* ─── 终端 ─── */
+  async function execTerm() {
+    var cmd = $('termInput').value.trim();
+    if (!cmd) return;
+    var output = $('termOutput');
+    output.classList.add('active');
+    var line = document.createElement('div');
+    line.className = 't-line t-cmd';
+    line.textContent = '$ ' + cmd;
+    output.appendChild(line);
+    $('termInput').value = '';
+
+    var parts = cmd.toLowerCase().split(/\s+/);
+    var command = parts[0];
+    var args = parts.slice(1);
+    var out = [];
+
+    switch (command) {
+      case 'help':
+        out = ['可用指令:', '  help          — 显示帮助', '  status        — 查看系统状态',
+          '  scan          — 扫描维度异常', '  unlock <密码> — 解锁隐藏内容',
+          '  whoami        — 查看身份', '  notice        — 查看公告栏背面',
+          '  rules         — 查看守则摘要', '  call <房号>    — 呼叫房客',
+          '  star          — 星图分析', '  clear         — 清空终端'];
+        break;
+      case 'status':
+        out = ['虚空稳定度: ' + (gameState.stability || 68) + '%', '在册房客: ' + (gameState.tenants || 0) + ' 位',
+          '待处理事件: ' + (gameState.events || 0), '你的房间: ' + (currentUser ? currentUser.room + '室' : '未登记'),
+          '云端: ' + (isCloud() ? '在线' : '本地模式')];
+        break;
+      case 'scan':
+        out = ['扫描中...', '异常信号: 0号房间 (强度 ████░░)', '异常信号: B3封印 (强度 ██░░░░)',
+          '异常信号: ???-07节点 (强度 ██████)', '建议勿靠近以上区域。'];
+        break;
+      case 'unlock':
+        var pwd = args.join(' ');
+        if (pwd === '星图') {
+          out = ['认证通过。管理员权限已激活。', '前任管理员日志: "公寓不是建筑。它是一个活着的维度伤口。每个房客都是缝线。"', '档案隐藏信息已解锁。'];
+          if (currentUser) currentUser.isAdmin = true;
+        } else if (pwd === '372014') {
+          out = ['二级认证: 段远的数字 3-7-2-0-1-4', '该编号对应维度坐标系中公寓所在地块的原始地址。', '公寓出现前，该地块上是一座灯塔。灯塔看守人消失的那天，公寓"长"了出来。'];
+        } else if (pwd === '回响') {
+          out = ['三级认证: 0号房间的回响', '"你已经是第7任管理员了。前6任都在这里。"', '稳定度 -20%'];
+          gameState.stability = Math.max(0, (gameState.stability || 68) - 20);
+          await saveState();
+        } else { out = ['密码错误。事件已记录。']; }
+        break;
+      case 'whoami':
+        out = ['身份: ' + (currentUser ? currentUser.username : '未登记'), '房间: ' + (currentUser ? currentUser.room + '室' : '-'),
+          '权限: ' + (currentUser && currentUser.isAdmin ? '管理员' : '住户')];
+        break;
+      case 'notice':
+        out = ['公告栏背面写着:', '"致下一任管理员:', ' 这栋楼不是公寓。它是一道伤口上的缝线。',
+          ' 每个房客都是一根缝线。如果有人离开，必须有人补上。', ' 0号房间的回响是最后一根缝线。不要清除它。', ' ——前任管理员"'];
+        break;
+      case 'rules':
+        out = ['住客守则摘要:', '1. 午夜前走廊灯不灭则不出门', '2. 电梯不超7层',
+          '3. 清洁日2小时不开门', '4. B3以下禁止进入', '5. 0号回响可听不可回应',
+          '6. 灰色头像发言不回应', '7. 满月不开东窗', '8. 0:00不照镜子',
+          '9. 走廊新门不触碰', '10. 异味食物不食用', '11. 自然20报告管理员', '12. 震动超1分钟坐下回忆'];
+        break;
+      case 'call':
+        var room = args[0];
+        var npc = AE.NPCS.find(function (n) { return n.room === room; });
+        if (npc) {
+          if (npc.id === 'grey') {
+            out = ['拨打 ' + room + '...', '信号接通，但对面没有声音。', '你听到自己的呼吸从听筒里传回来——但那不是你的呼吸频率。'];
+            gameState.stability = Math.max(0, (gameState.stability || 68) - 3);
+            await saveState();
+          } else {
+            out = ['拨打 ' + room + '... ' + npc.name + ' 接听。', '"喂？有什么事？"', '（提示：到 NPC 页可以与他对话）'];
+          }
+        } else { out = ['未找到房间: ' + room]; }
+        break;
+      case 'star':
+        out = ['星图分析:', '稳定节点: 3 (寂静层/白噪音域/公寓本体)', '波动节点: 2 (深渊维度/镜像位面)',
+          '危险节点: 2 (锈蚀世界/废弃叙事层)', '失联节点: 1 (???-07) ← 不应存在的节点'];
+        break;
+      case 'clear':
+        output.innerHTML = '';
+        output.classList.remove('active');
+        return;
+      default:
+        out = ['未知指令: ' + command + '。输入 help 查看帮助。'];
+    }
+
+    out.forEach(function (l) {
+      var div = document.createElement('div');
+      div.className = 't-line';
+      if (l.indexOf('认证通过') >= 0 || l.indexOf('✅') >= 0) div.className += ' t-ok';
+      if (l.indexOf('错误') >= 0 || l.indexOf('❌') >= 0 || l.indexOf('⚠') >= 0 || l.indexOf('稳定度') >= 0 || l.indexOf('回响') >= 0 && command === 'unlock') div.className += ' t-warn';
+      div.textContent = l;
+      output.appendChild(div);
+    });
+    output.scrollTop = output.scrollHeight;
+    if (command === 'unlock' && (args[0] === '星图' || args[0] === '372014' || args[0] === '回响')) {
+      toast('发现新线索！');
+      if (args[0] === '星图' && currentUser && currentUser.isAdmin) { $('adminTab').style.display = ''; }
+      refreshState();
+    }
+  }
+
+  /* ─── 管理面板 ─── */
+  async function loadAdminData() {
+    if (!currentUser || !currentUser.isAdmin) { toast('需要管理员权限'); return; }
+    // NPC 选择
+    var npcSelect = $('adminNpc');
+    npcSelect.innerHTML = AE.NPCS.filter(function (n) { return n.id !== 'system'; }).map(function (n) {
+      return '<option value="' + n.id + '">' + n.name + ' (' + n.room + '室)</option>';
+    }).join('');
+    // 事件列表
+    var eventList = $('eventList');
+    eventList.innerHTML = AE.EVENTS.map(function (e) {
+      return '<div class="event-item" onclick="AE.ui.triggerEvent(\'' + e.id + '\')">' + esc(e.name) + '</div>';
+    }).join('');
+    // 稳定度
+    $('adminStability').textContent = gameState.stability || 68;
+    // AI 配置
+    if (AE.cloud && isCloud()) {
+      try {
+        const cfg = await AE.cloud.fetchAiCfg();
+        AE.cloud.aiCfg = cfg;
+        if (cfg) {
+          $('aiBaseUrl').value = cfg.base_url || '';
+          $('aiApiKey').value = cfg.api_key || '';
+          $('aiModel').value = cfg.model || '';
+          $('aiEnabled').checked = !!cfg.enabled;
+          $('aiTemp').value = cfg.temperature || 0.8;
+        }
+      } catch (e) { /* ignore */ }
+    } else {
+      try {
+        const local = JSON.parse(localStorage.getItem('ae.ai.cfg') || 'null');
+        if (local) {
+          $('aiBaseUrl').value = local.base_url || '';
+          $('aiApiKey').value = local.api_key || '';
+          $('aiModel').value = local.model || '';
+          $('aiEnabled').checked = !!local.enabled;
+          $('aiTemp').value = local.temperature || 0.8;
+        }
+      } catch (e) { /* ignore */ }
+    }
+    // 住户列表
+    var list = $('adminUserList');
+    if (isCloud()) {
+      try {
+        const users = await AE.cloud.db.select('ae_profiles', { limit: 200 });
+        if (!users || !users.length) {
+          list.innerHTML = '<div style="color:var(--text-dim);font-size:0.78rem;">暂无注册住户</div>';
+        } else {
+          list.innerHTML = users.filter(function (u) { return u.id !== currentUser.id; }).map(function (u) {
+            return '<div class="user-row"><span>' + esc(u.username || u.id.slice(0, 8)) + ' · ' + esc(u.room) + '室</span><span>' + (u.registered_at || '').slice(0, 10) + '</span></div>';
+          }).join('');
+        }
+      } catch (e) { list.innerHTML = '<div style="color:var(--text-dim);font-size:0.78rem;">云端住户读取失败</div>'; }
+    } else {
+      list.innerHTML = '<div style="color:var(--text-dim);font-size:0.78rem;">本地模式：住户数据仅存于本机</div>';
+    }
+    // 日志
+    if (isCloud()) {
+      try {
+        const logs = await AE.cloud.listLogs();
+        $('adminLogs').innerHTML = (logs || []).slice(0, 20).map(function (l) {
+          return '<div class="log-row"><span class="log-time">' + esc((l.created_at || '').slice(0, 16).replace('T', ' ')) + '</span><span class="log-level log-' + esc(l.level) + '">' + esc(l.level) + '</span> ' + esc(l.msg) + '</div>';
+        }).join('') || '<div style="color:var(--text-dim);">暂无日志</div>';
+      } catch (e) { $('adminLogs').innerHTML = '<div style="color:var(--text-dim);">日志读取失败</div>'; }
+    } else {
+      $('adminLogs').innerHTML = '<div style="color:var(--text-dim);">本地模式：无云端日志</div>';
+    }
+  }
+
+  async function adminSendMessage() {
+    if (!currentUser || !currentUser.isAdmin) { toast('需要管理员权限'); return; }
+    var npcId = $('adminNpc').value;
+    var to = $('adminTo').value;
+    var content = $('adminMsg').value.trim();
+    var msgType = to === 'alert' ? 'alert' : 'normal';
+    if (!content) { toast('请输入消息内容'); return; }
+    await sendMessage(npcId, content, msgType);
+    toast('消息已发送');
+    $('adminMsg').value = '';
+  }
+
+  async function triggerEvent(eventId) {
+    if (!currentUser || !currentUser.isAdmin) { toast('需要管理员权限'); return; }
+    var ev = AE.EVENTS.find(function (e) { return e.id === eventId; });
+    if (!ev) return;
+    await sendMessage(ev.npc, ev.message, ev.msgType, ev.choices || null);
+    if (ev.stabilityDelta) {
+      gameState.stability = Math.max(0, Math.min(100, (gameState.stability || 68) + ev.stabilityDelta));
+      await saveState();
+    }
+    if (isCloud()) await AE.cloud.addLog(ev.logLevel || 'info', ev.logMsg || ev.name);
+    toast('事件已触发: ' + ev.name);
+    refreshState();
+    $('adminStability').textContent = gameState.stability || 68;
+    setTimeout(loadMessages, 800);
+  }
+
+  async function adminAdjustStability(delta) {
+    if (!currentUser || !currentUser.isAdmin) { toast('需要管理员权限'); return; }
+    gameState.stability = Math.max(0, Math.min(100, (gameState.stability || 68) + delta));
+    await saveState();
+    toast('稳定度: ' + (delta > 0 ? '+' : '') + delta + '% → ' + gameState.stability + '%');
+    refreshState();
+    $('adminStability').textContent = gameState.stability;
+  }
+
+  async function adminUpdateAnnounce() {
+    if (!currentUser || !currentUser.isAdmin) { toast('需要管理员权限'); return; }
+    var content = $('adminAnnounce').value.trim();
+    if (!content) { toast('请输入公告内容'); return; }
+    gameState.announcement = content;
+    gameState.announcement_time = new Date().toISOString();
+    await saveState();
+    toast('公告已更新');
+    refreshState();
+    $('adminAnnounce').value = '';
+  }
+
+  async function adminSaveAi() {
+    if (!currentUser || !currentUser.isAdmin) { toast('需要管理员权限'); return; }
+    var cfg = {
+      base_url: $('aiBaseUrl').value.trim(),
+      api_key: $('aiApiKey').value.trim(),
+      model: $('aiModel').value.trim(),
+      enabled: $('aiEnabled').checked,
+      temperature: parseFloat($('aiTemp').value) || 0.8
+    };
+    if (isCloud()) {
+      try {
+        await AE.cloud.pushAiCfg(cfg);
+        AE.cloud.aiCfg = cfg;
+        toast('AI 配置已保存到云端');
+      } catch (e) { toast('保存失败: ' + e.message); }
+    } else {
+      localStorage.setItem('ae.ai.cfg', JSON.stringify(cfg));
+      toast('AI 配置已保存（本地）');
+    }
+  }
+
+  /* ─── 轮询 ─── */
+  function startPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(function () {
+      refreshState();
+      loadMessages();
+    }, 20000);
+  }
+
+  /* ─── 对外 UI 方法 ─── */
+  AE.ui = {
+    doRegister, doLogin, doLogout, navTo, readMessage, respondMessage,
+    openArchive, closeModal, openNpcChat, sendChat, closeChat, clearChat,
+    rollDice, execTerm, loadAdminData, adminSendMessage, triggerEvent,
+    adminAdjustStability, adminUpdateAnnounce, adminSaveAi,
+    loadMessages, refreshState
+  };
+
+  /* ─── 启动 ─── */
+  async function boot() {
+    await initCloud();
+    // 恢复会话
+    if (isCloud()) {
+      try {
+        await AE.cloud.auth.me();
+        if (AE.cloud.auth.uid()) {
+          await AE.cloud.loadProfile();
+          var pf = AE.cloud.profile;
+          if (pf) {
+            currentUser = { id: AE.cloud.auth.uid(), email: AE.cloud.email(), username: pf.username, room: pf.room, isAdmin: AE.cloud.isAdmin(), avatar: pf.avatar };
+            LS.set('ae.user', currentUser);
+            enterApp();
+            return;
+          }
+        }
+      } catch (e) { /* fall to auth screen */ }
+    } else {
+      var saved = LS.get('ae.user', null);
+      if (saved) { currentUser = saved; enterApp(); return; }
+    }
+    showAuth();
+  }
+
+  /* ─── 事件绑定 ─── */
+  window.addEventListener('DOMContentLoaded', function () {
+    boot();
+
+    $('loginBtn').addEventListener('click', doLogin);
+    $('regBtn').addEventListener('click', doRegister);
+    $('logoutBtn').addEventListener('click', doLogout);
+
+    document.querySelectorAll('.atab').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.atab').forEach(function (b) { b.classList.remove('active'); });
+        this.classList.add('active');
+        var tab = this.dataset.atab;
+        $('loginForm').style.display = tab === 'login' ? '' : 'none';
+        $('registerForm').style.display = tab === 'register' ? '' : 'none';
+        $('authError').textContent = '';
+      });
+    });
+
+    document.querySelectorAll('.nav-link[data-tab]').forEach(function (link) {
+      link.addEventListener('click', function () { navTo(this.dataset.tab); });
+    });
+
+    // 键盘回车提交
+    $('loginUser').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+    $('loginPass').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+    $('regUser').addEventListener('keydown', function (e) { if (e.key === 'Enter') doRegister(); });
+    $('regPass').addEventListener('keydown', function (e) { if (e.key === 'Enter') doRegister(); });
+
+    // 终端
+    $('termSend').addEventListener('click', execTerm);
+    $('termInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') execTerm(); });
+
+    // 档案筛选
+    document.querySelectorAll('.filter-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
+        this.classList.add('active');
+        renderArchive(this.dataset.filter);
+      });
+    });
+
+    // 骰子
+    document.querySelectorAll('.dice-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () { rollDice(parseInt(this.dataset.sides)); });
+    });
+
+    // 模态框
+    $('modalClose').addEventListener('click', closeModal);
+    $('modalOverlay').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
+
+    // 聊天
+    $('chatSend').addEventListener('click', sendChat);
+    $('chatInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') sendChat(); });
+    $('chatBack').addEventListener('click', closeChat);
+    $('chatClear').addEventListener('click', clearChat);
+
+    // 管理
+    $('adminSendBtn').addEventListener('click', adminSendMessage);
+    $('adminAnnounceBtn').addEventListener('click', adminUpdateAnnounce);
+    $('aiSaveBtn').addEventListener('click', adminSaveAi);
+    document.querySelectorAll('.stab-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () { adminAdjustStability(parseInt(this.dataset.delta)); });
+    });
+  });
+
+})(window.AE);
+
+</script>
+</body>
+</html>
