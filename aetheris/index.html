@@ -769,6 +769,31 @@ body {
   line-height: 1.6;
 }
 
+/* 社区活动安排（公告栏 · 表主题） */
+.activity-list { display: flex; flex-direction: column; }
+.activity-item {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr auto;
+  gap: 1rem;
+  align-items: baseline;
+  padding: 0.85rem 0.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-day {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.activity-title { font-weight: 600; font-size: 0.9375rem; color: var(--text); }
+.activity-desc { font-size: 0.8125rem; color: var(--text-dim); margin-top: 0.2rem; line-height: 1.55; }
+.activity-place { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+@media (max-width: 600px) {
+  .activity-item { grid-template-columns: 1fr; gap: 0.25rem; }
+  .activity-place { font-size: 0.7rem; }
+}
+
 /* ════════════════════════════════════════
    里主题 · 星图
    ════════════════════════════════════════ */
@@ -2091,15 +2116,36 @@ window.AE = window.AE || {};
   ];
 
   // 表主题公告默认
-  AE.OMOTE_NOTICE = '欢迎来到暮光公寓！\n\n入住须知：\n1. 公共走廊灯光于23:00自动调暗，属正常节能设置\n2. 电梯共7层，如有异常显示请联系管理处\n3. 每周二、五为公共区域清洁日，走廊灯光将短暂熄灭\n4. B3层正在装修，请勿进入\n5. 如遇公寓轻微震动，属正常现象\n\n如有任何问题，请联系101室林管理员。\n\n— 暮光公寓管理处';
+  AE.OMOTE_NOTICE = '欢迎来到暮光公寓！\n\n入住须知：\n1. 公共走廊灯光于23:00自动调暗，属正常节能设置\n2. 电梯共7层，如遇显示异常请联系管理处\n3. 每周二、五为公共区域清洁日，走廊灯光将短暂熄灭\n4. B3层正在装修，请勿进入\n5. 楼体偶有轻微晃动，多为周边施工引起，属正常现象\n\n如有任何问题，请联系101室林管理员。\n\n— 暮光公寓管理处';
 
   // 表主题公寓指南
   AE.OMOTE_GUIDE = [
     { title: '入住流程', body: '提交入住申请后，系统将自动分配空余房间。领取门禁卡后即可入住。如需调换房间，请联系101室林管理员。' },
     { title: '公共设施', body: 'B2层洗衣房（8:00-22:00）、1楼大堂公告栏、7楼露台花园。电梯24小时运行。' },
     { title: '日常须知', body: '走廊灯光23:00调暗。每周二、五清洁日走廊灯熄灭2小时。送餐请确认是本人所点。' },
-    { title: '安全提示', body: '深夜不建议在走廊长时间逗留。如遇公寓震动（通常不超过10秒），无需惊慌。如震动持续，请到1楼大堂集合。' },
+    { title: '安全提示', body: '深夜不建议在走廊长时间逗留。楼体偶有轻微晃动（多为周边施工引起，通常不超过10秒），无需惊慌。如持续不止，请到1楼大堂集合。' },
     { title: '联系方式', body: '管理处：101室林述安。紧急联系：按门禁对讲机呼叫101。' }
+  ];
+
+  // 表主题住户守则（正常公寓管理条款，不含任何里层内容；第3条为解谜钩子）
+  AE.OMOTE_RULES = [
+    { no: 1, title: '门禁与出入', body: '出入请随身携带门禁卡，遗失请到1楼101室管理处补办。访客请在1楼大堂登记后进入。' },
+    { no: 2, title: '公共区域', body: '大堂、走廊、7楼露台花园为共享空间，请保持整洁，离开时随手关灯。' },
+    { no: 3, title: '电梯使用', body: '电梯共7层，运行平稳。若显示屏出现不属于本楼的楼层编号，请直接按"1楼"返回大堂，并联系管理处。' },
+    { no: 4, title: '夜间安静', body: '22:00后请降低音量，避免打扰邻居。深夜不建议在公共走廊长时间逗留。' },
+    { no: 5, title: '宠物管理', body: '允许饲养小型宠物，外出请系绳并及时清理。大型宠物请提前向管理处报备。' },
+    { no: 6, title: '垃圾与分类', body: '每日19:00前将垃圾投放至B1层收集点，请按本市分类标准投放。' },
+    { no: 7, title: '设施报修', body: '设施故障请通过门禁对讲机报修，管理处24小时响应，一般问题当天解决。' },
+    { no: 8, title: '消防安全', body: '楼道禁止堆放杂物，请熟悉最近的逃生路线。灭火器位于每层电梯口。' },
+    { no: 9, title: '地下空间', body: 'B1-B2为储藏与设备区域，正常开放。B3层正在装修，请勿进入。' },
+    { no: 10, title: '社区活动', body: '每月第一个周六为社区活动日，1楼大堂举办茶话会，欢迎各位住户参加。' }
+  ];
+
+  // 表主题社区活动安排（公告栏展示，让表层更像真实住户门户）
+  AE.OMOTE_ACTIVITIES = [
+    { day: '本周六 15:00', title: '住户茶话会', place: '1楼大堂', desc: '新一期社区茶话会，提供茶水与点心，欢迎闲聊认识邻居。' },
+    { day: '每周二 / 五', title: '公共区域清洁日', place: '全楼走廊', desc: '走廊灯光将短暂熄灭2小时进行清洁，请提前安排好进出。' },
+    { day: '每月首个周六', title: '社区活动日', place: '露台花园', desc: '固定社区活动，当月具体安排见社区公告。' }
   ];
 
   /* ════════════════════════════════════════
@@ -3414,10 +3460,21 @@ window.AE = window.AE || {};
     html += '<div class="notice-panel" style="margin-bottom:1.5rem;">' +
       '<div class="notice-header"><span>社区公告</span><span class="notice-time">' + (gameState.announcement_time ? timeAgo(gameState.announcement_time) : '今日') + '</span></div>' +
       '<div class="notice-body">' + esc(gameState.announcement || AE.OMOTE_NOTICE).replace(/\n/g, '<br>') + '</div></div>';
-    // 住客守则（第三条可触发解谜）
-    html += '<h3 style="font-family:var(--font-display);font-size:1rem;margin-bottom:.75rem;color:var(--text);">住客守则</h3>';
+    // 社区活动安排
+    html += '<h3 style="font-family:var(--font-display);font-size:1rem;margin-bottom:.75rem;color:var(--text);">社区活动安排</h3>';
+    html += '<div class="activity-list">';
+    (AE.OMOTE_ACTIVITIES || []).forEach(function (a) {
+      html += '<div class="activity-item">' +
+        '<div class="activity-day">' + esc(a.day) + '</div>' +
+        '<div class="activity-main"><div class="activity-title">' + esc(a.title) + '</div>' +
+        '<div class="activity-desc">' + esc(a.desc) + '</div></div>' +
+        '<div class="activity-place">' + esc(a.place) + '</div></div>';
+    });
+    html += '</div>';
+    // 住客守则（正常公寓条款；第三条含异常楼层措辞，可触发解谜）
+    html += '<h3 style="font-family:var(--font-display);font-size:1rem;margin:1.5rem 0 .75rem;color:var(--text);">住客守则</h3>';
     html += '<div class="rule-list">';
-    (AE.RULES || []).forEach(function (rl, idx) {
+    (AE.OMOTE_RULES || []).forEach(function (rl) {
       var clickable = (rl.no === 3) ? ' hidden-clue puzzle-trigger' : '';
       html += '<div class="rule-item' + clickable + '"' + (rl.no === 3 ? ' data-rule3="1"' : '') + '>' +
         '<span class="rule-no">' + rl.no + '.</span><span class="rule-title">' + esc(rl.title) + '</span>' +
@@ -3428,11 +3485,11 @@ window.AE = window.AE || {};
     var r3 = wrap.querySelector('[data-rule3]');
     if (r3) {
       r3.addEventListener('click', function () {
-        if (unlock.p1) { toast('第三条守则的异样，你已经了然于心。'); return; }
+        if (unlock.p1) { toast('第三条守则的措辞，你已经了然于心。'); return; }
         rule3Clicks++;
         r3.classList.add('discovered');
         setTimeout(function () { r3.classList.remove('discovered'); }, 500);
-        addFeed('活动', '反复阅读住客守则第三条 (' + rule3Clicks + '/3)');
+        addFeed('活动', '反复阅读住客守则第三条 · 电梯楼层编号 (' + rule3Clicks + '/3)');
         if (rule3Clicks >= 3) { rule3Clicks = 0; triggerPuzzle(1); }
         else toast('第三条守则的措辞，似乎藏着什么... (' + rule3Clicks + '/3)');
       });
