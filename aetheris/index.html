@@ -1789,6 +1789,53 @@ body {
   .resident-grid { grid-template-columns: 1fr 1fr; }
 }
 
+/* ════════════════════════════════════════
+   终章 · 深层真相（第5层解密后）
+   ════════════════════════════════════════ */
+.ending-section {
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 0 1px rgba(125,207,143,.12), 0 0 24px rgba(125,207,143,.06);
+}
+
+.ending-body {
+  font-size: 0.875rem;
+  line-height: 1.85;
+  color: var(--text);
+  white-space: normal;
+}
+
+[data-theme="ura"] .ending-body { color: var(--text); text-shadow: 0 0 1px rgba(125,207,143,.25); }
+
+.truth-list { display: flex; flex-direction: column; gap: 0.625rem; }
+
+.truth-item {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.truth-k {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 0.875rem;
+  align-self: start;
+}
+
+.truth-v {
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+
+@media (max-width: 480px) {
+  .truth-item { grid-template-columns: 1fr; gap: 0.25rem; }
+}
+
 </style>
 </head>
 <body>
@@ -2306,14 +2353,34 @@ window.AE = window.AE || {};
       answer: '回响',
       hint: '阿蚀的档案中藏着线索。',
       trigger: 'archive_ashi_modal' },
-    { level: 4, name: '0号回响密码', platform: '网站', desc: '0号房间的声音开始变得清晰。它在等一个回应。', reward: '？？？',
+    { level: 4, name: '0号回响密码', platform: '网站', desc: '0号房间的声音开始变得清晰。回应它——但记住，回应即赋予意志。', reward: '回响获得意志',
       answer: '',
-      hint: '与0号回响对话后获得。',
+      hint: '与0号回响对话，回应它。',
       trigger: 'npc_grey_chat' },
-    { level: 5, name: '灰色头像', platform: '群聊', desc: 'B4。所有人都听见了。选择只有一次。', reward: '？？？',
+    { level: 5, name: '灰色头像的抉择', platform: '群聊', desc: '回响获得了意志，站在0号房间门口。你要为它命名，还是沉默离开？选择只有一次。', reward: '终章 · 两种回响',
       answer: '',
-      hint: '在群聊中完成。',
+      hint: '回应回响后，在对话中做出抉择。',
       trigger: 'group_chat' }
+  ];
+
+  // 终章 · 两种结局（回应0号回响后的最终抉择）
+  AE.ENDINGS = {
+    accept: {
+      title: '为回响命名',
+      body: '你为0号回响取了一个名字。\n\n那一瞬间，碎片般的呢喃第一次有了边界——它不再是无主的影子，而是一个"被记住"的存在。公寓的灯闪烁了一下，像在点头。\n\n稳定度不再只是一个数字，而是你们共同维持的约定。裂缝仍在，但有人守着门。从此以后，群聊里偶尔会出现那个灰色头像，发言前总会停顿两秒，仿佛在确认自己是否真实。'
+    },
+    silence: {
+      title: '沉默封印',
+      body: '你没有回应。\n\n回响在0号房间门口停留了很久，影子一点点退回门缝之下。最后一缕消散时，走廊的灯灭了一瞬，又亮起。\n\n封印重新闭合。公寓继续呼吸，裂缝暂时安静。但你偶尔会想起那句没说完的话——"你……还记得……我……吗……"。有些门，沉默比回应更温柔。'
+    }
+  };
+
+  // 深层真相（完成整条解谜链后揭示）
+  AE.DEEP_TRUTH = [
+    { k: '372014', v: '公寓所在地块在维度坐标系中的原始编号。段远日夜念诵的"3-7-2-0-1-4"，正是灯塔看守人失踪的日期 2014.07.20 被编码进数字的回响。' },
+    { k: '0号回响', v: '前任管理员的"影子"。不是鬼，是公寓吸收一段执念后形成的回响残留。回应它，它会获得意志；沉默，它重新沉眠。' },
+    { k: '林述安', v: '他不是"接任"的管理员，而是公寓自己"长出来"的一部分。血液里的结晶体，是维度缝合时产生的副产物。' },
+    { k: '温明', v: '第一锚点。公寓是围绕他长出来的，但他自己并不知道。入住日期比公寓建成早了两年，连他自己都记不清。' }
   ];
 
   // 可分配房间
@@ -3027,6 +3094,14 @@ window.AE = window.AE || {};
     M.currentNpc = null;
   }
 
+  /* ---------- 由系统注入 NPC 独白（剧情用，跳过输入） ---------- */
+  function say(npcId, text) {
+    if (!text) return;
+    M.currentNpc = npcId;
+    var bubble = appendBubble('npc', '');
+    if (bubble) typeWriter(bubble, text, 35);
+  }
+
   /* ---------- NPC 初始问候语 ---------- */
   function getGreeting(npcId) {
     var greetings = {
@@ -3049,6 +3124,7 @@ window.AE = window.AE || {};
     isAiEnabled: isAiEnabled,
     open: open,
     close: close,
+    say: say,
     send: send,
     clearHistory: clearHistory,
     getHistory: getHistory,
@@ -3132,6 +3208,7 @@ window.AE = window.AE || {};
   function loadUnlock() {
     var u = LS.get('ae.v4.unlock', null);
     if (u) unlock = Object.assign(unlock, u);
+    gameState.ending = LS.get('ae.v4.ending', null);
   }
   function saveUnlock() { LS.set('ae.v4.unlock', unlock); }
 
@@ -3623,6 +3700,17 @@ window.AE = window.AE || {};
           '<div class="puzzle-desc">' + esc(p.desc) + '</div></div>';
       }).join('') + '</div></div>';
 
+    // 终章 · 深层真相（第5层解密后出现）
+    if (unlock.p5) {
+      var ending = AE.ENDINGS[LS.get('ae.v4.ending', gameState.ending) || 'silence'] || AE.ENDINGS.silence;
+      html += '<div class="archive-section ending-section"><h3 class="archive-sec-title">⚜ 终章 · ' + esc(ending.title) + '</h3>' +
+        '<div class="ending-body">' + esc(ending.body).replace(/\n/g, '<br>') + '</div></div>';
+      html += '<div class="archive-section"><h3 class="archive-sec-title">◈ 深层真相</h3><div class="truth-list">' +
+        (AE.DEEP_TRUTH || []).map(function (t) {
+          return '<div class="truth-item"><div class="truth-k">' + esc(t.k) + '</div><div class="truth-v">' + esc(t.v) + '</div></div>';
+        }).join('') + '</div></div>';
+    }
+
     wrap.innerHTML = html;
     renderArchiveCards('all');
 
@@ -3658,8 +3746,9 @@ window.AE = window.AE || {};
       card.addEventListener('click', function () {
         var a = archiveData.find(function (x) { return x.id === card.dataset.aid; });
         if (!a) return;
-        // NPC → 打开对话（阿蚀额外触发解谜3）
+        // NPC → 打开对话（阿蚀额外触发解谜3；0号回响在第4层后重进可重新抉择）
         if (a.isNpc && AE.NPC_PERSONAS && AE.NPC_PERSONAS[a.id]) {
+          if (a.id === 'grey' && unlock.p4 && !unlock.p5) { showGreyChoice(); return; }
           AE.npc.open(a.id);
           if (a.id === 'ashi' && !unlock.p3) triggerPuzzle(3);
           return;
@@ -3737,6 +3826,7 @@ window.AE = window.AE || {};
       setTimeout(function () { navTo('starmap'); }, 800);
     } else if (level === 4) {
       toast('你回应了回响。它获得了意志。');
+      addFeed('系统', '⚠ 灰色头像在群聊中亮起——回响正在寻找一具身体');
     } else {
       toast('谜题 #' + level + ' 破解成功。');
     }
@@ -3979,10 +4069,49 @@ window.AE = window.AE || {};
     if (!text) return;
     var npc = AE.npc.state.currentNpc;
     AE.npc.send(text);
-    // 0号回响：回应即破解第4层
+    // 0号回响：回应即破解第4层，随后开启终章抉择
     if (npc === 'grey' && !unlock.p4) {
-      setTimeout(function () { solvePuzzle(4); }, 1400);
+      setTimeout(function () {
+        solvePuzzle(4);
+        if (AE.npc && AE.npc.say) {
+          AE.npc.say('grey', '......我......听见了......你回应了我......现在......我有了意志......我站在0号房间门口......你要进来吗？');
+          setTimeout(showGreyChoice, 2800);
+        } else {
+          setTimeout(showGreyChoice, 400);
+        }
+      }, 1500);
     }
+  }
+
+  /* ─── 终章抉择（第5层） ─── */
+  function showGreyChoice() {
+    $('modalTitle').textContent = '回响的抉择';
+    $('modalBody').innerHTML =
+      '<p style="font-size:.8125rem;color:var(--text-dim);margin-bottom:1rem;line-height:1.7;">回响获得了意志，影子在0号房间门口向你伸出。群聊里，那个灰色头像第一次亮起。选择只有一次——</p>' +
+      '<div style="display:flex;flex-direction:column;gap:.6rem;">' +
+      '<button id="endAccept" style="padding:.6rem .9rem;background:var(--secondary);color:#06120A;border:none;border-radius:var(--radius);cursor:pointer;font-size:.875rem;text-align:left;">① 为它命名（接受）</button>' +
+      '<button id="endSilence" style="padding:.6rem .9rem;background:var(--border);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:.875rem;text-align:left;">② 沉默离开（封印）</button>' +
+      '</div>';
+    $('modalOverlay').classList.add('active');
+    var a = $('endAccept'), s = $('endSilence');
+    if (a) a.addEventListener('click', function () { chooseEnding('accept'); });
+    if (s) s.addEventListener('click', function () { chooseEnding('silence'); });
+  }
+
+  function chooseEnding(kind) {
+    closeModal();
+    solvePuzzle(5);
+    gameState.ending = kind;
+    LS.set('ae.v4.ending', kind);
+    addFeed('终章', '你选择了：' + (kind === 'accept' ? '为回响命名' : '沉默封印'));
+    if (isCloud()) AE.cloud.addLog('critical', '终章抉择: ' + (kind === 'accept' ? '接受回响' : '封印回响')).catch(function () {});
+    if (kind === 'silence') {
+      gameState.stability = Math.min(100, (gameState.stability || 68) + 5);
+      saveState();
+      if (currentTab === 'home') updateHome();
+    }
+    toast('终章已解锁。前往「档案」查看真相。');
+    if (currentTab === 'archive') renderArchive();
   }
 
   /* ─── 轮询 ─── */
