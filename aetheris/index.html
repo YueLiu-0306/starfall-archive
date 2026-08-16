@@ -2089,14 +2089,14 @@ body {
       <div class="admin-panel">
         <h3>桥接配置</h3>
         <div class="bridge-config">
-          <input type="text" id="bridgeUrl" placeholder="QQ群 Webhook URL (https://...)" value="">
+          <input type="text" id="bridgeUrl" placeholder="中转服务地址 (Cloudflare Worker URL)" value="">
           <div class="bridge-msg-area">
             <input type="text" id="bridgeMsg" placeholder="发送消息到群聊...">
             <button class="bridge-send-btn" id="bridgeSendBtn">发送</button>
           </div>
         </div>
         <div style="margin-top:0.5rem;font-size:0.6875rem;color:var(--text-muted);">
-          配置 Webhook 后，骰娘掷骰结果和系统事件将自动转发到群聊
+          配置中转服务地址后，骰娘掷骰与系统事件将自动转发到 NapCat 所在的 QQ 群。部署见 tools/aetheris-bridge/worker.js
         </div>
       </div>
 
@@ -4097,30 +4097,35 @@ window.AE = window.AE || {};
     }).join('');
   }
 
-  /* ─── 桥接（QQ群 Webhook） ─── */
+  /* ─── 桥接（站点 → 中转 Worker → NapCat → QQ群） ─── */
   function sendBridge(text) {
     if (!bridgeUrl) return;
     fetch(bridgeUrl, {
       method: 'POST',
+      mode: 'cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: text, msgtype: 'text', text: { content: text } })
+      body: JSON.stringify({ text: text })
     }).then(function (r) {
-      if (r.ok) addFeed('桥接', '已转发到群聊');
-      else addFeed('桥接', '转发失败: HTTP ' + r.status);
-    }).catch(function (e) { addFeed('桥接', '转发失败: ' + (e.message || '网络错误')); });
+      return r.json().then(function (j) {
+        if (r.ok && j && j.ok) addFeed('桥接', '已转发到 QQ 群');
+        else addFeed('桥接', '转发失败: ' + ((j && j.error) || ('HTTP ' + r.status)));
+      }, function () { addFeed('桥接', '转发失败: 无法解析响应 (HTTP ' + r.status + ')'); });
+    }).catch(function (e) {
+      addFeed('桥接', '转发失败: ' + (e.message || '网络错误（Worker 不可达 / CORS）'));
+    });
   }
 
   function saveBridge() {
     bridgeUrl = ($('bridgeUrl').value || '').trim();
     LS.set('ae.v4.bridge', bridgeUrl);
     toast(bridgeUrl ? '桥接已配置' : '桥接已清除');
-    addFeed('桥接', bridgeUrl ? 'Webhook 已更新' : 'Webhook 已清空');
+    addFeed('桥接', bridgeUrl ? '中转地址已更新' : '中转地址已清空');
   }
 
   function bridgeSend() {
     var msg = ($('bridgeMsg').value || '').trim();
     if (!msg) { toast('请输入消息'); return; }
-    if (!bridgeUrl) { toast('请先配置 Webhook URL'); return; }
+    if (!bridgeUrl) { toast('请先配置中转服务地址'); return; }
     sendBridge(msg);
     $('bridgeMsg').value = '';
   }
