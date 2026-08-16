@@ -2159,6 +2159,8 @@ window.AE_AI_DEFAULT = {
 };
 /* GM 管理密钥 —— 本地管理员登录入口（可自行修改；默认 372014 呼应世界观编码） */
 window.AE_ADMIN_CODE = '372014';
+/* 管理员用户名 —— 用此账号登录/注册即获得管理员权限（无需配置 Supabase role） */
+window.AE_ADMIN_USER = '林述安';
 </script>
 <script>
 
@@ -3317,6 +3319,9 @@ window.AE = window.AE || {};
   }
 
   /* ─── 认证 ─── */
+  var ADMIN_USER = (window.AE_ADMIN_USER || '林述安');
+  function isAdminUsername(name) { return !!name && String(name).trim() === ADMIN_USER; }
+
   async function doRegister() {
     var u = $('regUser') ? $('regUser').value.trim() : '';
     var p = $('regPass') ? $('regPass').value : '';
@@ -3339,7 +3344,7 @@ window.AE = window.AE || {};
         await AE.cloud.loadProfile();
         LS.set('ae.email.' + u, email);
         await AE.cloud.addLog('info', '新住户入住: ' + u + ' → ' + room + '室');
-        currentUser = { id: AE.cloud.auth.uid(), email: email, username: u, room: room, isAdmin: false, avatar: u[0] };
+        currentUser = { id: AE.cloud.auth.uid(), email: email, username: u, room: room, isAdmin: isAdminUsername(u), avatar: u[0] };
         LS.set('ae.user', currentUser);
         enterApp();
         toast('入住成功！房间: ' + room + '室');
@@ -3358,7 +3363,7 @@ window.AE = window.AE || {};
     var room2 = avail.length ? avail[Math.floor(Math.random() * avail.length)] : '608';
     occupied.push(room2);
     LS.set('ae.rooms', occupied);
-    currentUser = { id: 'local_' + Date.now(), email: '', username: u, room: room2, isAdmin: false, avatar: u[0] };
+    currentUser = { id: 'local_' + Date.now(), email: '', username: u, room: room2, isAdmin: isAdminUsername(u), avatar: u[0] };
     LS.set('ae.user', currentUser);
     LS.set('ae.pass.' + u, p);
     enterApp();
@@ -3381,7 +3386,7 @@ window.AE = window.AE || {};
         currentUser = {
           id: AE.cloud.auth.uid(), email: email,
           username: pf ? pf.username : u, room: pf ? pf.room : '-',
-          isAdmin: AE.cloud.isAdmin(), avatar: pf ? pf.avatar : u[0]
+          isAdmin: (AE.cloud.isAdmin() || isAdminUsername(u)), avatar: pf ? pf.avatar : u[0]
         };
         LS.set('ae.user', currentUser);
         enterApp();
@@ -3396,7 +3401,7 @@ window.AE = window.AE || {};
     if (users.indexOf(u) < 0) { $('authError').textContent = '用户名不存在，请先注册入住'; return; }
     if (LS.get('ae.pass.' + u, '') !== p) { $('authError').textContent = '密码错误'; return; }
     var rooms = LS.get('ae.roommap', {});
-    currentUser = { id: 'local_' + u, email: '', username: u, room: rooms[u] || '608', isAdmin: false, avatar: u[0] };
+    currentUser = { id: 'local_' + u, email: '', username: u, room: rooms[u] || '608', isAdmin: isAdminUsername(u), avatar: u[0] };
     LS.set('ae.user', currentUser);
     enterApp();
     toast('欢迎回来，' + currentUser.username + '（本地模式）');
@@ -3415,7 +3420,7 @@ window.AE = window.AE || {};
     if (!code) { $('authError').textContent = '请输入管理密钥'; return; }
     var expected = window.AE_ADMIN_CODE || '372014';
     if (code !== expected) { $('authError').textContent = '管理密钥错误'; return; }
-    currentUser = { id: 'admin_local', email: '', username: '暮光公寓·管理员', room: '101 管理处', isAdmin: true, avatar: '管' };
+    currentUser = { id: 'admin_local', email: '', username: '林述安', room: '101 管理处', isAdmin: true, avatar: '林' };
     LS.set('ae.user', currentUser);
     enterApp();
     toast('管理员模式已启用 · 监听与桥接可用');
@@ -3428,8 +3433,8 @@ window.AE = window.AE || {};
     currentSide = t;
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', isUra ? '#08090F' : '#F4EDE0');
-    // 里主题导航：解谜1完成后显示
-    var uraVisible = isUra || unlock.p1;
+    // 里主题导航：解谜1完成后显示；管理员始终可见（含管理面板入口）
+    var uraVisible = isUra || unlock.p1 || !!(currentUser && currentUser.isAdmin);
     document.querySelectorAll('.ura-nav').forEach(function (l) {
       l.style.display = uraVisible ? '' : 'none';
     });
@@ -4218,7 +4223,10 @@ window.AE = window.AE || {};
         } catch (e) {}
       } else {
         var saved = LS.get('ae.user', null);
-        if (saved) { currentUser = saved; hideSplash(function () { enterApp(); }); return; }
+        if (saved) {
+          if (isAdminUsername(saved.username)) saved.isAdmin = true;
+          currentUser = saved; hideSplash(function () { enterApp(); }); return;
+        }
       }
       hideSplash(function () { showAuth(); });
     } catch (err) {
