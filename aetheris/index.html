@@ -1759,15 +1759,22 @@ window.AE = window.AE || {};
 
     if (isCloud()) {
       try {
-        // 分配房间
-        const room = await AE.cloud.assignRoom();
-        const email = u.toLowerCase().replace(/[^a-z0-9]/g, '') + '_' + Date.now().toString(36) + '@aetheris.local';
-        const meta = { username: u, room: room };
+        // 先注册（此时还没有 session，assignRoom 需要 auth 所以放到注册后）
+        var emailBase = u.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (!emailBase) emailBase = 'user';
+        const email = emailBase + '_' + Date.now().toString(36) + '@aetheris.local';
+        const meta = { username: u };
         const r = await AE.cloud.auth.signUp(email, p, meta);
         if (r.needConfirm) { $('authError').textContent = '需要邮箱验证。请查看邮箱后重新登录。'; return; }
-        // 写档案
+        // 注册成功后分配房间（此时已有 session）
+        var room;
+        try { room = await AE.cloud.assignRoom(); }
+        catch (e2) { room = AE.ROOMS[Math.floor(Math.random() * AE.ROOMS.length)] || '608'; }
+        // 写档案（触发器已自动建行，这里 upsert 更新房号/昵称）
         await AE.cloud.upsertProfile({ username: u, room: room, role: 'member', discovered_clues: [], avatar: u[0] });
         await AE.cloud.loadProfile();
+        // 保存用户名→邮箱映射（登录时需要）
+        LS.set('ae.email.' + u, email);
         // 欢迎消息
         await AE.cloud.addMessage({ from_npc: 'linshuan', to_user: 'all', content: '欢迎入住Aetheris。你的房间是' + room + '室。\n我是管理员林述安。请仔细阅读住客守则——这很重要。每一条规则都是用代价换来的。\n——林述安', type: 'normal', read_by: [] });
         await AE.cloud.addLog('info', '新住户入住: ' + u + ' → ' + room + '室');
