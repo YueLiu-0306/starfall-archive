@@ -1,1157 +1,1694 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="omote">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0D1117">
-<title>Aetheris · 物业管理系统</title>
-<meta name="description" content="Aetheris — 异常生物 · 规则怪谈 · 解密。一栋存在于维度裂缝交汇点的公寓。">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230D1117'/%3E%3Ctext x='32' y='42' font-size='28' fill='%2358A6FF' text-anchor='middle' font-family='monospace'%3E%E2%97%88%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#F4EDE0">
+<title>Aetheris · 暮光公寓</title>
+<meta name="description" content="Aetheris — 一栋温馨的公寓社区。欢迎入住。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23F4EDE0'/%3E%3Ctext x='32' y='42' font-size='28' fill='%23C8842E' text-anchor='middle' font-family='sans-serif'%3E%E2%97%88%3C/text%3E%3C/svg%3E">
 <style>
 
 /* === css/style.css === */
 /* ================================================================
- * Aetheris · 物业管理系统样式
- * 设计概念："腐化的日常"——看起来正常的物业管理系统，但处处透露不对劲
- * 配色：深灰蓝背景 + 冷白文字 + 冰青强调
- * 字体：等宽 UI + 雅黑正文
+ * Aetheris V4 · 双主题系统
+ * 表主题「暮光公寓」: 温馨日常的公寓社区门户
+ * 里主题「虚空回响」: 信号降解美学的科幻超现实系统
+ * 通过 data-theme 属性切换，含 glitch 过渡动画
  * ================================================================ */
 
-:root {
-  --bg: #0D1117;
-  --bg-elevated: #161B22;
-  --bg-hover: #1C2330;
-  --border: #30363D;
-  --border-muted: #21262D;
-  --text: #C9D1D9;
-  --text-dim: #8B949E;
-  --text-faint: #484F58;
-  --accent: #58A6FF;
-  --accent-dim: #1F6FEB;
-  --warning: #D29922;
-  --danger: #DA3633;
-  --stable: #3FB950;
-  --font-mono: 'Consolas', 'Courier New', 'SF Mono', monospace;
-  --font-body: 'Microsoft YaHei', 'PingFang SC', 'Noto Sans SC', sans-serif;
-  --radius: 6px;
-  --radius-sm: 4px;
+/* ─── 表主题变量 ─── */
+:root,
+[data-theme="omote"] {
+  --bg: #F4EDE0;
+  --bg-alt: #EDE3D2;
+  --surface: #FFFCF6;
+  --surface-2: #FAF3E8;
+  --text: #3D322A;
+  --text-dim: #7A6B5D;
+  --text-muted: #A0917F;
+  --accent: #C8842E;
+  --accent-soft: #E8B85C;
+  --accent-dim: #D4A24E;
+  --secondary: #5C8A6A;
+  --danger: #C44A3C;
+  --border: #DDD0BC;
+  --border-light: #E8DFCE;
+  --shadow: 0 1px 3px rgba(61,50,42,.08), 0 4px 12px rgba(61,50,42,.06);
+  --shadow-lg: 0 2px 8px rgba(61,50,42,.1), 0 8px 24px rgba(61,50,42,.08);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 16px;
+  --font-display: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "Cascadia Code", "Consolas", "Courier New", monospace;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* ─── 里主题变量 ─── */
+[data-theme="ura"] {
+  --bg: #08090F;
+  --bg-alt: #0D0F18;
+  --surface: #11141E;
+  --surface-2: #161A28;
+  --text: #C8CDD8;
+  --text-dim: #6E7484;
+  --text-muted: #484F5E;
+  --accent: #7DCF8F;
+  --accent-soft: #5FA870;
+  --accent-dim: #3D7050;
+  --secondary: #E8A838;
+  --danger: #C83232;
+  --border: #1E2230;
+  --border-light: #252A3A;
+  --shadow: 0 0 0 1px rgba(125,207,143,.04);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,.4);
+  --radius: 4px;
+  --radius-sm: 2px;
+  --radius-lg: 8px;
+  --font-display: "Cascadia Code", "Consolas", "Courier New", monospace;
+  --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "Cascadia Code", "Consolas", "Courier New", monospace;
+  --transition: 0.15s ease-out;
+}
 
-html { font-size: 15px; }
+/* ─── 基础重置 ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
 
 body {
+  font-family: var(--font-body);
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-body);
   line-height: 1.6;
-  overflow-x: hidden;
   min-height: 100vh;
+  transition: background var(--transition), color var(--transition);
+  overflow-x: hidden;
 }
 
-/* 扫描线——极淡，几乎不察觉 */
-.scanlines {
+/* ─── 主题过渡动画 ─── */
+.theme-transition {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  pointer-events: none;
+  inset: 0;
   z-index: 9999;
+  pointer-events: none;
+  background: var(--bg);
+  opacity: 0;
+}
+
+.theme-transition.active {
+  animation: glitchTransition 1.5s forwards;
+}
+
+@keyframes glitchTransition {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  15% { transform: translateX(-4px); filter: hue-rotate(90deg); }
+  20% { transform: translateX(4px); filter: hue-rotate(180deg); }
+  25% { transform: translateX(-2px); filter: hue-rotate(270deg); }
+  30% { transform: translateX(2px); filter: hue-rotate(0deg); }
+  35% { transform: translateX(0); }
+  40% { opacity: 0.8; clip-path: inset(20% 0 40% 0); }
+  45% { clip-path: inset(60% 0 10% 0); }
+  50% { clip-path: inset(30% 0 50% 0); }
+  55% { clip-path: inset(0); opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ─── 扫描线（仅里主题） ─── */
+[data-theme="ura"] .scanlines::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
   background: repeating-linear-gradient(
     0deg,
-    transparent 0px,
+    transparent,
     transparent 2px,
-    rgba(255,255,255,0.015) 2px,
-    rgba(255,255,255,0.015) 3px
+    rgba(125,207,143,.015) 2px,
+    rgba(125,207,143,.015) 4px
   );
 }
+
+[data-theme="omote"] .scanlines::before { display: none; }
+.scanlines::before { transition: opacity 0.5s; }
 
 /* ─── 屏幕容器 ─── */
 .screen { min-height: 100vh; }
 
-/* ─── 认证页 ─── */
+/* ════════════════════════════════════════
+   认证页
+   ════════════════════════════════════════ */
 #authScreen {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
 }
-.boot-container {
+
+.auth-container {
+  max-width: 420px;
   width: 100%;
-  max-width: 440px;
-}
-.boot-text {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--accent);
-  line-height: 1.8;
-  margin-bottom: 1.5rem;
-  white-space: pre-wrap;
-  min-height: 120px;
-  opacity: 0.8;
-}
-.auth-box {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 2rem;
-}
-.auth-logo {
-  font-family: var(--font-mono);
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 0.25rem;
-}
-.auth-icon { color: var(--accent); margin-right: 0.5rem; }
-.auth-version {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--text-faint);
-  margin-bottom: 1.5rem;
-}
-.auth-tabs {
-  display: flex;
-  gap: 0;
-  margin-bottom: 1.2rem;
-  border-bottom: 1px solid var(--border);
-}
-.atab {
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--text-dim);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  transition: color 0.2s, border-color 0.2s;
-}
-.atab.active { color: var(--accent); border-bottom-color: var(--accent); }
-.atab:hover { color: var(--text); }
-.auth-form { display: flex; flex-direction: column; gap: 0.75rem; }
-.auth-form input {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  padding: 0.6rem 0.8rem;
-  transition: border-color 0.2s;
-}
-.auth-form input:focus { outline: none; border-color: var(--accent); }
-.auth-btn {
-  background: var(--accent-dim);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-sm);
-  color: #fff;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  padding: 0.6rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.auth-btn:hover { background: var(--accent); }
-.auth-hint {
-  font-size: 0.72rem;
-  color: var(--text-faint);
-  margin-top: 0.25rem;
-}
-.auth-error {
-  color: var(--danger);
-  font-size: 0.8rem;
-  min-height: 1.2rem;
-  margin-top: 0.5rem;
-}
-.auth-footer {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  color: var(--text-faint);
-  margin-top: 1.5rem;
   text-align: center;
 }
 
-/* ─── 导航栏 ─── */
+.auth-logo {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+
+.auth-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-dim);
+  margin-bottom: 2rem;
+}
+
+.auth-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-lg);
+  text-align: left;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border);
+}
+
+.atab {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-dim);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.atab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  color: var(--text);
+  background: var(--bg);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(200,132,46,.1);
+}
+
+[data-theme="ura"] .auth-form input:focus {
+  box-shadow: 0 0 0 2px rgba(125,207,143,.15);
+}
+
+.auth-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition);
+}
+
+.auth-btn:hover { background: var(--accent-soft); }
+.auth-btn:active { transform: scale(0.98); }
+
+[data-theme="ura"] .auth-btn { color: #08090F; }
+
+.auth-hint {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.auth-error {
+  color: var(--danger);
+  font-size: 0.875rem;
+  min-height: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.boot-text {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--accent);
+  text-align: left;
+  margin-bottom: 1rem;
+  white-space: pre-wrap;
+  min-height: 8rem;
+}
+
+/* ════════════════════════════════════════
+   导航栏
+   ════════════════════════════════════════ */
 .navbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--bg-elevated);
-  border-bottom: 1px solid var(--border);
   padding: 0 1.5rem;
-  height: 52px;
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
   z-index: 100;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
+
 .nav-brand {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-family: var(--font-mono);
+  gap: 0.5rem;
   font-weight: 700;
-  font-size: 0.95rem;
-  color: var(--text);
+  font-size: 1.125rem;
+  color: var(--accent);
 }
-.logo-icon { color: var(--accent); }
+
 .nav-links {
   display: flex;
   gap: 0.25rem;
+  flex-wrap: wrap;
 }
+
 .nav-link {
-  font-family: var(--font-mono);
-  font-size: 0.82rem;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--text-dim);
-  padding: 0.4rem 0.8rem;
-  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: color 0.2s, background 0.2s;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition), background var(--transition);
   text-decoration: none;
 }
-.nav-link:hover { color: var(--text); background: var(--bg-hover); }
-.nav-link.active { color: var(--accent); background: rgba(88,166,255,0.08); }
+
+.nav-link:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.nav-link.active {
+  color: var(--accent);
+  background: var(--surface-2);
+}
+
 .nav-user {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
 }
+
 .user-avatar {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--border);
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.72rem;
-  color: var(--text);
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.75rem;
 }
-.user-name { color: var(--text); }
-.user-room { color: var(--text-dim); }
+
+[data-theme="ura"] .user-avatar { color: #08090F; }
+
+.user-name { font-weight: 500; color: var(--text); }
+.user-room { color: var(--text-muted); }
+
 .logout-btn {
-  color: var(--text-faint);
+  color: var(--text-dim);
   cursor: pointer;
-  padding: 0.2rem 0.5rem;
+  padding: 0.25rem 0.5rem;
   border-radius: var(--radius-sm);
-  transition: color 0.2s;
+  transition: color var(--transition);
 }
+
 .logout-btn:hover { color: var(--danger); }
 
-/* ─── 页面容器 ─── */
+/* ════════════════════════════════════════
+   页面通用
+   ════════════════════════════════════════ */
 .page {
   display: none;
-  padding: 1.5rem;
+  padding: 2rem 1.5rem 5rem;
   max-width: 1100px;
   margin: 0 auto;
-  padding-bottom: 80px;
 }
+
 .page.active { display: block; }
 
 .page-title {
   margin-bottom: 1.5rem;
 }
+
 .page-title h2 {
-  font-family: var(--font-mono);
-  font-size: 1.15rem;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--text);
-}
-.page-title p {
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  margin-top: 0.25rem;
-}
-
-/* ─── 首页 ─── */
-.welcome-section {
-  margin-bottom: 1.5rem;
-}
-.welcome-prefix {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--text-faint);
   margin-bottom: 0.25rem;
 }
-.welcome-title {
-  font-family: var(--font-mono);
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--text);
-}
-.welcome-sub {
-  font-size: 0.85rem;
+
+.page-title p {
+  font-size: 0.875rem;
   color: var(--text-dim);
-  margin-top: 0.25rem;
 }
 
+/* ════════════════════════════════════════
+   表主题 · 首页
+   ════════════════════════════════════════ */
+[data-theme="omote"] .welcome-hero {
+  text-align: center;
+  padding: 3rem 1rem 2rem;
+}
+
+.welcome-hero h1 {
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.welcome-hero p {
+  font-size: 0.9375rem;
+  color: var(--text-dim);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* 数据卡片 */
 .data-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
+
 .data-card {
-  background: var(--bg-elevated);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 1rem 1.2rem;
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
 }
+
 .card-header {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
-.card-icon { color: var(--text-dim); font-size: 0.85rem; }
-.card-label {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--text-dim);
-}
+
+.card-icon { font-size: 1rem; color: var(--accent); }
+.card-label { font-size: 0.8125rem; color: var(--text-dim); font-weight: 500; }
+
 .card-value {
-  font-family: var(--font-mono);
-  font-size: 1.8rem;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--text);
-  line-height: 1.2;
-}
-.card-bar {
-  height: 4px;
-  background: var(--border-muted);
-  border-radius: 2px;
-  margin: 0.5rem 0;
-  overflow: hidden;
-}
-.card-bar-fill {
-  height: 100%;
-  background: var(--stable);
-  border-radius: 2px;
-  transition: width 0.8s ease;
-}
-.card-bar-blue { background: var(--accent); }
-.card-bar-amber { background: var(--warning); }
-.card-foot {
-  font-size: 0.72rem;
-  color: var(--text-faint);
+  margin-bottom: 0.375rem;
 }
 
-.notice-panel {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
-  border-radius: var(--radius);
-  padding: 1rem 1.2rem;
-  margin-bottom: 1.5rem;
+.card-bar {
+  height: 4px;
+  background: var(--border-light);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 0.375rem;
 }
+
+.card-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+.card-bar-blue { background: var(--secondary); }
+.card-bar-amber { background: var(--accent-soft); }
+
+.card-foot { font-size: 0.75rem; color: var(--text-muted); }
+
+/* 公告面板 */
+.notice-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
 .notice-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
-}
-.notice-header span:first-child {
-  font-family: var(--font-mono);
-  font-size: 0.82rem;
+  margin-bottom: 0.75rem;
   font-weight: 600;
-  color: var(--text);
-}
-.notice-time {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--text-faint);
-}
-.notice-body {
-  font-size: 0.85rem;
-  color: var(--text-dim);
-  line-height: 1.7;
+  font-size: 0.9375rem;
 }
 
+.notice-time { font-size: 0.75rem; color: var(--text-muted); font-weight: 400; }
+.notice-body { font-size: 0.875rem; color: var(--text); line-height: 1.7; }
+
+/* 快捷入口 */
 .quick-links {
   display: flex;
   gap: 0.75rem;
+  flex-wrap: wrap;
 }
+
 .quick-link {
-  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.625rem 1rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color var(--transition), transform var(--transition);
+}
+
+.quick-link:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.ql-icon { color: var(--accent); }
+
+/* ════════════════════════════════════════
+   表主题 · 公寓指南
+   ════════════════════════════════════════ */
+.guide-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.guide-section h3 {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--text);
+}
+
+.guide-list {
+  list-style: none;
+}
+
+.guide-item {
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.875rem;
+  color: var(--text-dim);
+}
+
+.guide-item:last-child { border-bottom: none; }
+
+.guide-item strong { color: var(--text); font-weight: 500; }
+
+/* 楼层表 */
+.floor-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.floor-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 1fr;
+  gap: 0.75rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.8125rem;
+}
+
+.floor-row:last-child { border-bottom: none; }
+.floor-no { font-weight: 600; color: var(--accent); }
+.floor-use { color: var(--text); }
+.floor-note { color: var(--text-dim); }
+
+/* 住户名录 */
+.resident-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.resident-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transition), transform var(--transition);
+}
+
+.resident-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.resident-avatar {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 0.8rem;
-  font-family: var(--font-mono);
-  font-size: 0.82rem;
-  color: var(--text-dim);
-  cursor: pointer;
-  transition: color 0.2s, border-color 0.2s;
-  text-decoration: none;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--surface);
+  font-size: 1.25rem;
+  font-weight: 600;
 }
-.quick-link:hover { color: var(--accent); border-color: var(--accent); }
-.ql-icon { font-size: 1rem; }
 
-/* ─── 星图页 ─── */
-.starmap-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+[data-theme="ura"] .resident-avatar { color: #08090F; }
+
+.resident-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
 }
+
+.resident-room {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.resident-title {
+  font-size: 0.6875rem;
+  color: var(--accent);
+  margin-top: 0.125rem;
+}
+
+/* 守则列表 */
+.rule-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.rule-item {
+  padding: 0.75rem 1rem;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--accent);
+}
+
+[data-theme="ura"] .rule-item {
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.rule-no {
+  font-weight: 700;
+  color: var(--accent);
+  margin-right: 0.5rem;
+}
+
+.rule-title {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--text);
+}
+
+.rule-body {
+  font-size: 0.8125rem;
+  color: var(--text-dim);
+  margin-top: 0.25rem;
+  line-height: 1.6;
+}
+
+/* ════════════════════════════════════════
+   里主题 · 星图
+   ════════════════════════════════════════ */
 .starmap-canvas {
-  background: var(--bg-elevated);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 2rem;
-  min-height: 400px;
-  position: relative;
-  overflow: hidden;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  overflow-x: auto;
 }
+
 .starmap-svg {
   width: 100%;
+  max-width: 500px;
   height: auto;
+  display: block;
+  margin: 0 auto;
 }
+
 .star-node-circle {
   cursor: pointer;
-  transition: filter 0.2s;
+  transition: opacity 0.2s;
 }
-.star-node-circle:hover { filter: brightness(1.3); }
+
+.star-node-circle:hover { opacity: 0.8; }
+
 .starmap-legend {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
-  padding: 0.75rem 1rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  margin-bottom: 1rem;
 }
+
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-family: var(--font-mono);
+  gap: 0.375rem;
   font-size: 0.75rem;
   color: var(--text-dim);
 }
+
 .legend-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
 }
+
 .star-detail-panel {
-  background: var(--bg-elevated);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 1rem 1.2rem;
-  display: none;
-}
-.star-detail-panel.active { display: block; }
-.star-detail-name {
-  font-family: var(--font-mono);
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 0.25rem;
-}
-.star-detail-status {
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  margin-bottom: 0.5rem;
-}
-.star-detail-note {
-  font-size: 0.85rem;
-  color: var(--text-dim);
+  padding: 1rem;
+  opacity: 0.5;
+  transition: opacity 0.3s;
 }
 
-/* ─── 档案页 ─── */
+.star-detail-panel.active { opacity: 1; }
+
+.star-detail-name {
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 0.25rem;
+}
+
+.star-detail-status { font-size: 0.75rem; margin-bottom: 0.375rem; }
+.star-detail-note { font-size: 0.8125rem; color: var(--text-dim); }
+
+/* ════════════════════════════════════════
+   里主题 · 档案
+   ════════════════════════════════════════ */
 .archive-section {
   margin-bottom: 2rem;
 }
+
 .archive-sec-title {
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text);
   margin-bottom: 0.75rem;
-  padding-bottom: 0.4rem;
-  border-bottom: 1px solid var(--border-muted);
-}
-.archive-filter {
   display: flex;
-  gap: 0.4rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 }
-.filter-btn {
-  background: var(--bg-elevated);
+
+.sec-badge {
+  font-size: 0.6875rem;
+  padding: 0.125rem 0.5rem;
+  background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text-dim);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  padding: 0.3rem 0.7rem;
-  cursor: pointer;
-  transition: all 0.2s;
+  font-weight: 400;
 }
-.filter-btn.active { color: var(--accent); border-color: var(--accent); }
-.filter-btn:hover { color: var(--text); }
-.archive-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 0.75rem;
-}
-.archive-card {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 0.9rem;
-  cursor: pointer;
-  transition: border-color 0.2s, transform 0.1s;
-}
-.archive-card:hover { border-color: var(--accent); }
-.archive-card.sealed { opacity: 0.6; border-style: dashed; }
-.card-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  color: var(--text);
-  margin-bottom: 0.5rem;
-}
-.card-avatar.avatar-unknown { background: var(--border-muted); color: var(--text-faint); }
-.card-name {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text);
-}
-.card-room {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--text-faint);
-  margin-bottom: 0.4rem;
-}
-.card-desc {
-  font-size: 0.78rem;
-  color: var(--text-dim);
-  line-height: 1.5;
-  margin-bottom: 0.4rem;
-}
-.card-tags { display: flex; gap: 0.3rem; flex-wrap: wrap; }
-.card-tag {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  padding: 0.1rem 0.4rem;
-  border-radius: 3px;
-  border: 1px solid var(--border-muted);
-  color: var(--text-dim);
-}
-.tag-human { color: var(--stable); border-color: rgba(63,185,80,0.3); }
-.tag-nonhuman { color: var(--accent); border-color: rgba(88,166,255,0.3); }
-.tag-unknown { color: var(--warning); border-color: rgba(210,153,34,0.3); }
-.tag-sealed { color: var(--danger); border-color: rgba(218,54,51,0.3); }
 
-/* 概念卡片 */
 .concept-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 0.75rem;
 }
+
 .concept-card {
-  background: var(--bg-elevated);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 0.9rem;
+  padding: 1rem;
 }
+
 .concept-icon {
-  font-family: var(--font-mono);
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   color: var(--accent);
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.375rem;
 }
+
 .concept-title {
-  font-family: var(--font-mono);
-  font-size: 0.82rem;
   font-weight: 600;
+  font-size: 0.875rem;
   color: var(--text);
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.25rem;
 }
+
 .concept-body {
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   color: var(--text-dim);
   line-height: 1.6;
 }
 
-/* 楼层表 */
-.floor-table {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-.floor-row {
+.archive-grid {
   display: grid;
-  grid-template-columns: 80px 1fr 1fr;
-  border-bottom: 1px solid var(--border-muted);
-  font-size: 0.8rem;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
 }
-.floor-row:last-child { border-bottom: none; }
-.floor-row:hover { background: var(--bg-hover); }
-.floor-no {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  color: var(--accent);
-  padding: 0.5rem 0.75rem;
-  border-right: 1px solid var(--border-muted);
-}
-.floor-use { padding: 0.5rem 0.75rem; color: var(--text); }
-.floor-note { padding: 0.5rem 0.75rem; color: var(--text-dim); font-size: 0.75rem; }
 
-/* 谜题列表 */
-.puzzle-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.puzzle-item {
-  background: var(--bg-elevated);
+.archive-card {
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 0.75rem 0.9rem;
+  padding: 0.875rem;
+  cursor: pointer;
+  transition: border-color var(--transition);
 }
-.puzzle-item.puzzle-done { border-left: 3px solid var(--stable); }
+
+.archive-card:hover { border-color: var(--accent); }
+.archive-card.sealed { opacity: 0.6; }
+
+.card-avatar {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--surface);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin-bottom: 0.375rem;
+}
+
+[data-theme="ura"] .card-avatar { color: #08090F; }
+.card-avatar.avatar-unknown { background: var(--text-muted); }
+
+.card-name { font-size: 0.875rem; font-weight: 500; color: var(--text); }
+.card-room { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem; }
+.card-desc { font-size: 0.75rem; color: var(--text-dim); line-height: 1.5; margin-bottom: 0.375rem; }
+
+.card-tags { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+.card-tag {
+  font-size: 0.625rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-dim);
+}
+
+.tag-human { background: rgba(92,138,106,.15); color: var(--secondary); }
+.tag-nonhuman { background: rgba(200,132,46,.15); color: var(--accent); }
+.tag-unknown { background: rgba(112,108,116,.15); color: var(--text-muted); }
+.tag-sealed { background: rgba(200,74,60,.15); color: var(--danger); }
+
+.archive-filter {
+  display: flex;
+  gap: 0.375rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.filter-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+[data-theme="ura"] .filter-btn.active { color: #08090F; }
+
+/* 时间线 */
+.timeline { display: flex; flex-direction: column; gap: 0; }
+
+.tl-item {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.8125rem;
+}
+
+.tl-item:last-child { border-bottom: none; }
+.tl-date { font-family: var(--font-mono); color: var(--accent); font-size: 0.75rem; }
+.tl-event { color: var(--text-dim); }
+
+.tl-encrypted .tl-event {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.tl-decoded .tl-event { color: var(--text); }
+
+/* 谜题链 */
+.puzzle-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.puzzle-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+}
+
+.puzzle-item.puzzle-done { border-color: var(--secondary); }
+
 .puzzle-head {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
   margin-bottom: 0.25rem;
 }
+
 .puzzle-level {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--text-faint);
-  background: var(--bg);
-  padding: 0.1rem 0.4rem;
-  border-radius: 3px;
+  font-size: 0.6875rem;
+  padding: 0.125rem 0.375rem;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
 }
-.puzzle-name {
-  font-family: var(--font-mono);
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text);
-}
-.puzzle-platform {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--text-faint);
-  margin-left: auto;
-}
-.puzzle-desc {
-  font-size: 0.78rem;
-  color: var(--text-dim);
-}
-.puzzle-state {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--text-faint);
-}
-.puzzle-done .puzzle-state { color: var(--stable); }
 
-/* 时间线 */
-.timeline {
-  position: relative;
-  padding-left: 1.5rem;
-}
-.timeline::before {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: var(--border);
-}
-.tl-item {
-  position: relative;
-  padding-bottom: 0.75rem;
-}
-.tl-item::before {
-  content: '';
-  position: absolute;
-  left: -1.5rem;
-  top: 0.35rem;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--border);
-  border: 2px solid var(--bg);
-}
-.tl-decoded::before { background: var(--stable); }
-.tl-encrypted::before { background: var(--warning); }
-.tl-date {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--text-faint);
-}
-.tl-event {
-  font-size: 0.8rem;
-  color: var(--text-dim);
-}
-.tl-encrypted .tl-event { color: var(--text-faint); font-style: italic; }
+.puzzle-name { font-weight: 500; font-size: 0.875rem; color: var(--text); }
+.puzzle-platform { font-size: 0.6875rem; color: var(--text-muted); }
+.puzzle-state { font-size: 0.6875rem; color: var(--text-dim); margin-left: auto; }
+.puzzle-done .puzzle-state { color: var(--secondary); }
+.puzzle-desc { font-size: 0.75rem; color: var(--text-dim); }
 
-/* ─── 日志页 ─── */
+/* 锁定区域 */
+.lock-block {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+}
+
+.lock-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+.lock-title { font-weight: 600; font-size: 0.9375rem; margin-bottom: 0.25rem; color: var(--text-dim); }
+.lock-hint { font-size: 0.8125rem; }
+
+/* ════════════════════════════════════════
+   日志页
+   ════════════════════════════════════════ */
 .log-tabs {
   display: flex;
   gap: 0;
-  border-bottom: 1px solid var(--border);
   margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
 }
+
 .log-tab {
+  padding: 0.5rem 1rem;
   background: none;
   border: none;
-  border-bottom: 2px solid transparent;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 500;
   color: var(--text-dim);
-  font-family: var(--font-mono);
-  font-size: 0.82rem;
-  padding: 0.5rem 1rem;
   cursor: pointer;
-  transition: color 0.2s, border-color 0.2s;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color var(--transition), border-color var(--transition);
 }
-.log-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-.log-tab:hover { color: var(--text); }
 
-.log-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
+.log-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.log-list { display: flex; flex-direction: column; gap: 0; }
+
 .log-row {
-  display: flex;
-  align-items: baseline;
+  display: grid;
+  grid-template-columns: 130px 50px 1fr;
   gap: 0.5rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-muted);
-  border-radius: var(--radius-sm);
-  padding: 0.5rem 0.75rem;
-  font-size: 0.8rem;
+  padding: 0.375rem 0;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.75rem;
+  align-items: baseline;
 }
-.log-time {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--text-faint);
-  white-space: nowrap;
-}
+
+.log-row:last-child { border-bottom: none; }
+.log-time { font-family: var(--font-mono); color: var(--text-muted); }
 .log-level {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  padding: 0.05rem 0.35rem;
-  border-radius: 3px;
+  font-size: 0.625rem;
+  padding: 0.0625rem 0.25rem;
+  border-radius: 2px;
   text-transform: uppercase;
+  text-align: center;
 }
-.log-info { background: rgba(88,166,255,0.15); color: var(--accent); }
-.log-warn { background: rgba(210,153,34,0.15); color: var(--warning); }
-.log-critical { background: rgba(218,54,51,0.15); color: var(--danger); }
+.log-info { background: rgba(125,207,143,.15); color: var(--accent); }
+.log-warn { background: rgba(232,168,56,.15); color: var(--secondary); }
+.log-critical, .log-error { background: rgba(200,50,50,.15); color: var(--danger); }
 .log-msg { color: var(--text-dim); }
 
-/* 守则 */
-.rule-list {
+/* 守则补充条款 */
+.rule-extra-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.rule-extra-item { padding: 0.5rem 0.75rem; background: var(--surface-2); border-radius: var(--radius-sm); }
+.rule-extra-date { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--accent); margin-bottom: 0.125rem; }
+.rule-extra-body { font-size: 0.75rem; color: var(--text-dim); }
+
+/* ════════════════════════════════════════
+   NPC 对话模态
+   ════════════════════════════════════════ */
+.chat-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.chat-modal.active { display: flex; }
+
+.chat-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+}
+
+.chat-panel {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  height: 80vh;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.chat-header-avatar {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--surface);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+[data-theme="ura"] .chat-header-avatar { color: #08090F; }
+
+.chat-header-name { font-weight: 600; font-size: 0.9375rem; color: var(--text); flex: 1; }
+.chat-header-title { font-size: 0.6875rem; color: var(--text-muted); }
+.chat-close { background: none; border: none; font-size: 1.25rem; color: var(--text-dim); cursor: pointer; padding: 0 0.25rem; }
+
+.chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.chat-msg {
+  max-width: 80%;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.chat-msg.npc {
+  align-self: flex-start;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.chat-msg.user {
+  align-self: flex-end;
+  background: var(--accent);
+  color: #fff;
+}
+
+[data-theme="ura"] .chat-msg.user { color: #08090F; }
+
+.chat-msg.system {
+  align-self: center;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-style: italic;
+}
+
+.chat-msg.typing {
+  align-self: flex-start;
+  color: var(--text-muted);
+}
+
+.chat-input-area {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.chat-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+}
+
+.chat-input:focus { outline: none; border-color: var(--accent); }
+
+.chat-send {
+  padding: 0.5rem 0.875rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+[data-theme="ura"] .chat-send { color: #08090F; }
+
+/* ════════════════════════════════════════
+   页面内解谜
+   ════════════════════════════════════════ */
+.puzzle-trigger {
+  cursor: pointer;
+  transition: opacity 0.2s;
+  position: relative;
+}
+
+.puzzle-trigger:hover { opacity: 0.7; }
+
+.puzzle-input-area {
+  display: none;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.puzzle-input-area.active { display: block; }
+
+.puzzle-input-area input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.puzzle-input-area input:focus { outline: none; border-color: var(--accent); }
+
+.puzzle-input-area button {
+  padding: 0.375rem 0.875rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.8125rem;
+}
+
+[data-theme="ura"] .puzzle-input-area button { color: #08090F; }
+
+.puzzle-hint-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  font-style: italic;
+}
+
+/* 隐藏线索 */
+.hidden-clue {
+  position: relative;
+  cursor: pointer;
+}
+
+.hidden-clue::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--text);
+  opacity: 0;
+  transition: opacity 0.3s;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.hidden-clue:hover::after { opacity: 0.03; }
+
+.hidden-clue.discovered {
+  animation: clueFlash 0.5s;
+}
+
+@keyframes clueFlash {
+  0%, 100% { background: transparent; }
+  50% { background: rgba(200,132,46,.15); }
+}
+
+/* ════════════════════════════════════════
+   管理面板
+   ════════════════════════════════════════ */
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.admin-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+}
+
+.admin-panel h3 {
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--text);
+}
+
+.stability-control { margin-bottom: 0.75rem; }
+
+.stab-current {
+  font-size: 0.8125rem;
+  color: var(--text-dim);
+  margin-bottom: 0.5rem;
+}
+
+.stab-current span { font-weight: 700; color: var(--accent); font-size: 1.125rem; }
+
+.stab-buttons {
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.stab-btn {
+  padding: 0.25rem 0.625rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.stab-btn:hover { border-color: var(--accent); }
+.stab-up:hover { color: var(--secondary); border-color: var(--secondary); }
+.stab-down:hover { color: var(--danger); border-color: var(--danger); }
+
+.admin-panel textarea {
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  resize: vertical;
+  margin-bottom: 0.5rem;
+}
+
+.admin-panel textarea:focus { outline: none; border-color: var(--accent); }
+
+.admin-btn {
+  padding: 0.375rem 0.875rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+[data-theme="ura"] .admin-btn { color: #08090F; }
+
+.event-list, .user-list, .log-list { display: flex; flex-direction: column; gap: 0.25rem; }
+
+.event-item {
+  padding: 0.375rem 0.625rem;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.event-item:hover { background: var(--border-light); }
+
+.user-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.user-row:last-child { border-bottom: none; }
+
+/* 骰娘控制台 */
+.dice-console {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-top: 0.75rem;
+}
+
+.dice-row {
+  display: flex;
+  gap: 0.375rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dice-btn {
+  padding: 0.375rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.dice-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.dice-result {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-align: center;
+  padding: 0.5rem;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dice-result.rolling { animation: diceShake 0.1s infinite; }
+
+@keyframes diceShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+.dice-log {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  max-height: 80px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+}
+
+.dice-log-entry {
+  padding: 0.125rem 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.dice-log-entry:last-child { border-bottom: none; }
+
+/* 监听 Feed */
+.monitor-feed {
+  max-height: 300px;
+  overflow-y: auto;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+}
+
+.feed-entry {
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-dim);
+}
+
+.feed-entry:last-child { border-bottom: none; }
+.feed-time { color: var(--text-muted); margin-right: 0.5rem; }
+.feed-type { color: var(--accent); margin-right: 0.25rem; }
+
+/* 桥接配置 */
+.bridge-config {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
-.rule-item {
-  background: var(--bg-elevated);
+
+.bridge-config input {
+  padding: 0.375rem 0.625rem;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 0.75rem 0.9rem;
-}
-.rule-no {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--accent);
-  margin-right: 0.4rem;
-}
-.rule-title {
-  font-family: var(--font-mono);
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text);
-  display: inline;
-}
-.rule-body {
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  margin-top: 0.3rem;
-  line-height: 1.7;
-}
-.rule-extra-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin-top: 0.75rem;
-}
-.rule-extra-item {
-  background: var(--bg);
-  border: 1px dashed var(--border);
   border-radius: var(--radius-sm);
-  padding: 0.5rem 0.75rem;
-}
-.rule-extra-date {
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.75rem;
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--text-faint);
-}
-.rule-extra-body {
-  font-size: 0.78rem;
-  color: var(--text-dim);
-  margin-top: 0.2rem;
 }
 
-/* ─── 模态框 ─── */
+.bridge-config input:focus { outline: none; border-color: var(--accent); }
+
+.bridge-msg-area {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.bridge-msg-area input { flex: 1; }
+
+.bridge-send-btn {
+  padding: 0.375rem 0.625rem;
+  background: var(--secondary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+/* ════════════════════════════════════════
+   模态框
+   ════════════════════════════════════════ */
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.7);
+  inset: 0;
+  z-index: 150;
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 200;
+  background: rgba(0,0,0,.4);
   padding: 1rem;
 }
+
 .modal-overlay.active { display: flex; }
+
 .modal-box {
-  background: var(--bg-elevated);
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   max-width: 500px;
   width: 100%;
   max-height: 80vh;
   overflow-y: auto;
+  box-shadow: var(--shadow-lg);
 }
+
 .modal-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--border);
 }
-.modal-title {
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text);
-}
-.modal-close {
-  background: none;
-  border: none;
-  color: var(--text-faint);
-  font-size: 1rem;
-  cursor: pointer;
-  padding: 0.2rem 0.4rem;
-}
-.modal-close:hover { color: var(--danger); }
-.modal-body {
-  padding: 1rem;
-}
-.mb-row { margin-bottom: 0.75rem; font-size: 0.85rem; color: var(--text-dim); line-height: 1.7; }
-.mb-label {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--text-faint);
-}
+
+.modal-title { font-weight: 600; font-size: 0.9375rem; color: var(--text); }
+.modal-close { background: none; border: none; font-size: 1.125rem; color: var(--text-dim); cursor: pointer; }
+
+.modal-body { padding: 1.25rem; }
+
+.mb-row { margin-bottom: 0.75rem; font-size: 0.875rem; color: var(--text-dim); line-height: 1.7; }
+.mb-label { font-weight: 600; color: var(--text); }
 .mb-secret {
-  background: rgba(63,185,80,0.08);
-  border: 1px solid rgba(63,185,80,0.2);
+  margin-top: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  background: rgba(200,132,46,.08);
+  border-left: 3px solid var(--accent);
   border-radius: var(--radius-sm);
-  padding: 0.6rem 0.75rem;
-  font-size: 0.82rem;
-  color: var(--stable);
-  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--text);
 }
+
+[data-theme="ura"] .mb-secret {
+  background: rgba(125,207,143,.06);
+  border-left-color: var(--accent);
+}
+
 .mb-encrypted {
-  background: rgba(210,153,34,0.08);
-  border: 1px solid rgba(210,153,34,0.2);
+  margin-top: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 0.6rem 0.75rem;
-  font-size: 0.78rem;
-  color: var(--warning);
-  margin-top: 0.5rem;
-  font-style: italic;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  text-align: center;
 }
 
-/* ─── 终端 ─── */
-.terminal-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--bg-elevated);
-  border-top: 1px solid var(--border);
-  padding: 0.5rem 1rem;
-  z-index: 90;
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
-}
-.terminal-prompt {
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  color: var(--stable);
-  white-space: nowrap;
-}
-.terminal-input {
-  flex: 1;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  padding: 0.35rem 0.6rem;
-}
-.terminal-input:focus { outline: none; border-color: var(--accent); }
-.terminal-send {
-  background: var(--accent-dim);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-sm);
-  color: #fff;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  padding: 0.35rem 0.6rem;
-  cursor: pointer;
-}
-.terminal-output {
-  position: fixed;
-  bottom: 42px;
-  left: 0;
-  right: 0;
-  max-height: 200px;
-  overflow-y: auto;
-  background: rgba(13,17,23,0.95);
-  border-top: 1px solid var(--border);
-  display: none;
-  z-index: 89;
-}
-.terminal-output.active { display: block; }
-.t-line {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  padding: 0.2rem 1rem;
-  line-height: 1.6;
-}
-.t-cmd { color: var(--accent); }
-.t-ok { color: var(--stable); }
-.t-warn { color: var(--warning); }
-
-/* ─── 管理面板 ─── */
-.admin-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-}
-.admin-panel {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem 1.2rem;
-}
-.admin-panel h3 {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 0.75rem;
-}
-.admin-panel label {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--text-dim);
-  display: block;
-  margin-bottom: 0.2rem;
-  margin-top: 0.5rem;
-}
-.admin-panel input,
-.admin-panel select,
-.admin-panel textarea {
-  width: 100%;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  padding: 0.4rem 0.6rem;
-}
-.admin-panel textarea { resize: vertical; }
-.admin-btn {
-  background: var(--accent-dim);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-sm);
-  color: #fff;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  padding: 0.4rem 0.8rem;
-  cursor: pointer;
-  margin-top: 0.5rem;
-}
-.admin-btn:hover { background: var(--accent); }
-.stability-control { display: flex; align-items: center; gap: 0.5rem; }
-.stab-current {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: var(--text);
-}
-.stab-buttons { display: flex; gap: 0.3rem; }
-.stab-btn {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  cursor: pointer;
-}
-.stab-up { color: var(--stable); border-color: rgba(63,185,80,0.3); }
-.stab-down { color: var(--danger); border-color: rgba(218,54,51,0.3); }
-.event-list { display: flex; flex-direction: column; gap: 0.4rem; }
-.event-item {
-  background: var(--bg);
-  border: 1px solid var(--border-muted);
-  border-radius: var(--radius-sm);
-  padding: 0.4rem 0.6rem;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  color: var(--text-dim);
-  cursor: pointer;
-  transition: border-color 0.2s, color 0.2s;
-}
-.event-item:hover { border-color: var(--accent); color: var(--text); }
-.user-list { display: flex; flex-direction: column; gap: 0.3rem; }
-.user-row {
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  padding: 0.3rem 0;
-  border-bottom: 1px solid var(--border-muted);
-}
-.log-list { max-height: 300px; overflow-y: auto; }
-
-/* ─── Toast ─── */
+/* Toast */
 .toast {
   position: fixed;
-  bottom: 60px;
+  bottom: 1.5rem;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
+  background: var(--text);
+  color: var(--bg);
+  padding: 0.625rem 1.25rem;
   border-radius: var(--radius);
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
   z-index: 300;
   opacity: 0;
-  transition: opacity 0.3s;
   pointer-events: none;
-}
-.toast.show { opacity: 1; }
-
-/* ─── 锁定区块 ─── */
-.lock-block {
-  text-align: center;
-  padding: 2rem;
-  color: var(--text-faint);
-}
-.lock-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-.lock-title {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: var(--warning);
-  margin-bottom: 0.25rem;
-}
-.lock-hint {
-  font-size: 0.78rem;
-  color: var(--text-faint);
+  transition: opacity 0.3s, transform 0.3s;
 }
 
-.sec-badge {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  color: var(--text-faint);
-  background: var(--bg);
-  padding: 0.1rem 0.4rem;
-  border-radius: 3px;
-  margin-left: 0.5rem;
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
 }
 
-/* ─── 稳定度低时的微妙异常 ─── */
+/* ════════════════════════════════════════
+   低稳定度闪烁（里主题）
+   ════════════════════════════════════════ */
+[data-theme="ura"] body.low-stability {
+  animation: flicker 4s infinite;
+}
+
 @keyframes flicker {
   0%, 100% { opacity: 1; }
-  98% { opacity: 1; }
-  99% { opacity: 0.97; }
+  92% { opacity: 1; }
+  93% { opacity: 0.92; }
+  94% { opacity: 1; }
+  96% { opacity: 0.88; }
+  97% { opacity: 1; }
 }
-body.low-stability { animation: flicker 4s infinite; }
 
-/* ─── 响应式 ─── */
+/* ════════════════════════════════════════
+   表主题特殊元素 — 手工感
+   ════════════════════════════════════════ */
+[data-theme="omote"] .notice-panel {
+  position: relative;
+}
+
+[data-theme="omote"] .notice-panel::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 16px;
+  background: rgba(200,132,46,.25);
+  border-radius: 2px;
+  transform: translateX(-50%) rotate(-1deg);
+}
+
+[data-theme="omote"] .guide-section {
+  position: relative;
+}
+
+[data-theme="omote"] .guide-section h3::before {
+  content: '— ';
+  color: var(--accent);
+}
+
+/* 里主题特殊元素 — 信号降解 */
+[data-theme="ura"] .page-title h2 {
+  text-shadow: 0 0 1px rgba(125,207,143,.3);
+}
+
+[data-theme="ura"] .data-card {
+  position: relative;
+}
+
+[data-theme="ura"] .data-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--accent);
+  opacity: 0.08;
+}
+
+/* ════════════════════════════════════════
+   响应式
+   ════════════════════════════════════════ */
 @media (max-width: 768px) {
-  html { font-size: 14px; }
-  .navbar { padding: 0 0.75rem; height: 46px; }
-  .nav-brand .logo-text { display: none; }
-  .nav-links { gap: 0; }
-  .nav-link { padding: 0.35rem 0.5rem; font-size: 0.75rem; }
-  .nav-user .user-name,
-  .nav-user .user-room { display: none; }
-  .page { padding: 1rem 0.75rem; padding-bottom: 70px; }
-  .data-cards { grid-template-columns: 1fr; gap: 0.5rem; }
+  .navbar {
+    height: auto;
+    padding: 0.5rem 0.75rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.375rem;
+  }
+
+  .nav-brand { justify-content: center; }
+  .nav-links { justify-content: center; }
+  .nav-user { justify-content: center; }
+
+  .page { padding: 1rem 0.75rem 4rem; }
+
+  .welcome-hero { padding: 2rem 0.5rem 1.5rem; }
+  .welcome-hero h1 { font-size: 1.5rem; }
+
+  .data-cards { grid-template-columns: 1fr; }
+
+  .floor-row {
+    grid-template-columns: 60px 1fr;
+  }
+  .floor-note { grid-column: 2; }
+
+  .resident-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+
+  .chat-panel { height: 90vh; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+
+  .log-row { grid-template-columns: 100px 40px 1fr; font-size: 0.6875rem; }
+
+  .tl-item { grid-template-columns: 80px 1fr; }
+
   .admin-grid { grid-template-columns: 1fr; }
-  .archive-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-  .floor-row { grid-template-columns: 60px 1fr; }
-  .floor-note { grid-column: 1 / -1; padding-top: 0; }
-  .quick-links { flex-direction: column; }
-  .terminal-prompt { font-size: 0.72rem; }
-  .terminal-input { font-size: 0.75rem; }
-  .boot-text { font-size: 0.72rem; }
+}
+
+@media (max-width: 480px) {
+  .nav-links { flex-wrap: wrap; gap: 0.125rem; }
+  .nav-link { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+  .page-title h2 { font-size: 1.25rem; }
+  .concept-grid { grid-template-columns: 1fr; }
+  .archive-grid { grid-template-columns: 1fr 1fr; }
+  .resident-grid { grid-template-columns: 1fr 1fr; }
 }
 
 </style>
 </head>
 <body>
 <div class="scanlines"></div>
+<div class="theme-transition" id="themeTransition"></div>
 
 <!-- ═══ 认证页 ═══ -->
 <div id="authScreen" class="screen">
-  <div class="boot-container">
+  <div class="auth-container">
+    <div class="auth-logo">◈ 暮光公寓</div>
+    <div class="auth-subtitle">一个温暖的社区，等待你的加入</div>
     <pre class="boot-text" id="bootText"></pre>
     <div class="auth-box" id="authBox" style="display:none;">
-      <div class="auth-logo"><span class="auth-icon">◈</span> Aetheris 物业管理系统</div>
-      <div class="auth-version">v3.0 · 维度锚定协议</div>
       <div class="auth-tabs">
         <button class="atab active" data-atab="login">登录</button>
-        <button class="atab" data-atab="register">注册入住</button>
+        <button class="atab" data-atab="register">入住申请</button>
       </div>
       <div id="loginForm" class="auth-form">
-        <input type="text" id="loginUser" placeholder="用户名" autocomplete="username">
-        <input type="password" id="loginPass" placeholder="密码" autocomplete="current-password">
-        <button class="auth-btn" id="loginBtn">连接系统</button>
+        <input type="text" id="loginUser" placeholder="住户姓名" autocomplete="username">
+        <input type="password" id="loginPass" placeholder="门禁密码" autocomplete="current-password">
+        <button class="auth-btn" id="loginBtn">进入公寓</button>
       </div>
       <div id="registerForm" class="auth-form" style="display:none;">
-        <input type="text" id="regUser" placeholder="设定用户名 (2-20字符)">
-        <input type="password" id="regPass" placeholder="设定密码">
-        <button class="auth-btn" id="regBtn">登记入住</button>
-        <p class="auth-hint">注册后系统将自动分配房间</p>
+        <input type="text" id="regUser" placeholder="设定住户姓名 (2-20字符)">
+        <input type="password" id="regPass" placeholder="设定门禁密码">
+        <button class="auth-btn" id="regBtn">提交申请</button>
+        <p class="auth-hint">入住后系统将自动分配房间</p>
       </div>
       <div class="auth-error" id="authError"></div>
-      <div class="auth-footer">Aetheris Property Management · 维度锚定系统</div>
     </div>
   </div>
 </div>
@@ -1159,13 +1696,18 @@ body.low-stability { animation: flicker 4s infinite; }
 <!-- ═══ 主面板 ═══ -->
 <div id="dashboard" class="screen" style="display:none;">
   <nav class="navbar">
-    <div class="nav-brand"><span class="logo-icon">◈</span><span class="logo-text">Aetheris</span></div>
+    <div class="nav-brand">◈ <span class="nav-brand-text" id="navBrandText">暮光公寓</span></div>
     <div class="nav-links" id="navLinks">
-      <a class="nav-link active" data-tab="home">首页</a>
-      <a class="nav-link" data-tab="starmap">星图</a>
-      <a class="nav-link" data-tab="archive">档案</a>
-      <a class="nav-link" data-tab="log">日志</a>
-      <a class="nav-link" data-tab="admin" id="adminTab" style="display:none;">管理</a>
+      <!-- 表主题导航 -->
+      <a class="nav-link omote-nav active" data-tab="home">首页</a>
+      <a class="nav-link omote-nav" data-tab="guide">公寓指南</a>
+      <a class="nav-link omote-nav" data-tab="residents">住户名录</a>
+      <a class="nav-link omote-nav" data-tab="notice">公告栏</a>
+      <!-- 里主题导航 -->
+      <a class="nav-link ura-nav" data-tab="starmap" style="display:none;">星图</a>
+      <a class="nav-link ura-nav" data-tab="archive" style="display:none;">档案</a>
+      <a class="nav-link ura-nav" data-tab="log" style="display:none;">日志</a>
+      <a class="nav-link ura-nav" data-tab="admin" id="adminTab" style="display:none;">管理</a>
     </div>
     <div class="nav-user">
       <span class="user-avatar" id="navAvatar">?</span>
@@ -1175,48 +1717,82 @@ body.low-stability { animation: flicker 4s infinite; }
     </div>
   </nav>
 
-  <!-- 首页 -->
+  <!-- ══════ 表主题 · 首页 ══════ -->
   <section id="tab-home" class="page active">
-    <div class="welcome-section">
-      <div class="welcome-prefix">system --status</div>
-      <h1 class="welcome-title" id="welcomeText">连接中...</h1>
-      <p class="welcome-sub" id="welcomeSub">正在校准维度坐标...</p>
+    <div class="welcome-hero">
+      <h1 id="welcomeText">欢迎来到暮光公寓</h1>
+      <p id="welcomeSub">这里是一个温暖的社区。每位住户的日常生活，都是这座公寓的一部分。</p>
     </div>
     <div class="data-cards">
-      <div class="data-card"><div class="card-header"><span class="card-icon">◉</span><span class="card-label">虚空稳定度</span></div>
-        <div class="card-value" id="stabilityValue">--</div><div class="card-bar"><div class="card-bar-fill" id="stabilityBar"></div></div>
-        <div class="card-foot" id="stabilityNote">读取中...</div></div>
-      <div class="data-card"><div class="card-header"><span class="card-icon">▣</span><span class="card-label">在册房客</span></div>
-        <div class="card-value" id="tenantsValue">--</div><div class="card-bar"><div class="card-bar-fill card-bar-blue" style="width:75%"></div></div>
-        <div class="card-foot" id="tenantsNote">读取中...</div></div>
-      <div class="data-card"><div class="card-header"><span class="card-icon">⚠</span><span class="card-label">待处理事件</span></div>
-        <div class="card-value" id="eventsValue">--</div><div class="card-bar"><div class="card-bar-fill card-bar-amber" id="eventsBar"></div></div>
-        <div class="card-foot" id="eventsNote">读取中...</div></div>
+      <div class="data-card">
+        <div class="card-header"><span class="card-icon">◉</span><span class="card-label">社区活跃度</span></div>
+        <div class="card-value" id="stabilityValue">--</div>
+        <div class="card-bar"><div class="card-bar-fill" id="stabilityBar"></div></div>
+        <div class="card-foot" id="stabilityNote">读取中...</div>
+      </div>
+      <div class="data-card">
+        <div class="card-header"><span class="card-icon">▣</span><span class="card-label">入住住户</span></div>
+        <div class="card-value" id="tenantsValue">--</div>
+        <div class="card-bar"><div class="card-bar-fill card-bar-blue" style="width:75%"></div></div>
+        <div class="card-foot" id="tenantsNote">读取中...</div>
+      </div>
+      <div class="data-card">
+        <div class="card-header"><span class="card-icon">✦</span><span class="card-label">社区活动</span></div>
+        <div class="card-value" id="eventsValue">--</div>
+        <div class="card-bar"><div class="card-bar-fill card-bar-amber" id="eventsBar"></div></div>
+        <div class="card-foot" id="eventsNote">读取中...</div>
+      </div>
     </div>
-    <div class="notice-panel"><div class="notice-header"><span>系统公告</span><span class="notice-time" id="noticeTime">--</span></div>
-      <div class="notice-body" id="noticeBody">加载中...</div></div>
+    <div class="notice-panel">
+      <div class="notice-header"><span id="noticeLabel">社区公告</span><span class="notice-time" id="noticeTime">--</span></div>
+      <div class="notice-body" id="noticeBody">加载中...</div>
+    </div>
     <div class="quick-links">
-      <a class="quick-link" data-tab="starmap"><span class="ql-icon">✦</span> 星图</a>
-      <a class="quick-link" data-tab="archive"><span class="ql-icon">⌂</span> 档案</a>
-      <a class="quick-link" data-tab="log"><span class="ql-icon">◷</span> 日志</a>
+      <a class="quick-link" data-tab="guide"><span class="ql-icon">⌂</span> 公寓指南</a>
+      <a class="quick-link" data-tab="residents"><span class="ql-icon">▣</span> 住户名录</a>
+      <a class="quick-link" data-tab="notice"><span class="ql-icon">◷</span> 公告栏</a>
+    </div>
+    <!-- 隐藏的解谜入口 -->
+    <div class="puzzle-input-area" id="puzzleInputArea">
+      <div class="puzzle-hint-text" id="puzzleHintText">你注意到了一些不对劲的地方...</div>
+      <input type="text" id="puzzleInput" placeholder="输入你发现的..." autocomplete="off">
+      <button id="puzzleSubmit">确认</button>
     </div>
   </section>
 
-  <!-- 星图 -->
+  <!-- ══════ 表主题 · 公寓指南 ══════ -->
+  <section id="tab-guide" class="page">
+    <div class="page-title"><h2>公寓指南</h2><p>入住须知 · 楼层导览 · 生活设施</p></div>
+    <div id="guideWrap"></div>
+  </section>
+
+  <!-- ══════ 表主题 · 住户名录 ══════ -->
+  <section id="tab-residents" class="page">
+    <div class="page-title"><h2>住户名录</h2><p>认识你的邻居们</p></div>
+    <div id="residentsWrap"></div>
+  </section>
+
+  <!-- ══════ 表主题 · 公告栏 ══════ -->
+  <section id="tab-notice" class="page">
+    <div class="page-title"><h2>公告栏</h2><p>社区通知 · 活动安排 · 住客守则</p></div>
+    <div id="noticeWrap"></div>
+  </section>
+
+  <!-- ══════ 里主题 · 星图 ══════ -->
   <section id="tab-starmap" class="page">
-    <div class="page-title"><h2>维度星图</h2><p>公寓连接的8个维度节点。节点状态随剧情推进而变化。</p></div>
+    <div class="page-title"><h2>维度星图</h2><p>公寓连接的8个维度节点</p></div>
     <div id="starmapWrap"></div>
   </section>
 
-  <!-- 档案 -->
+  <!-- ══════ 里主题 · 档案 ══════ -->
   <section id="tab-archive" class="page">
-    <div class="page-title"><h2>公寓档案</h2><p>角色档案 · 世界观资料 · 公寓结构 · 谜题进度</p></div>
+    <div class="page-title"><h2>公寓档案</h2><p>角色档案 · 世界观资料 · 谜题进度</p></div>
     <div id="archiveWrap"></div>
   </section>
 
-  <!-- 日志 -->
+  <!-- ══════ 里主题 · 日志 ══════ -->
   <section id="tab-log" class="page">
-    <div class="page-title"><h2>系统日志</h2><p>公寓运行记录 · 事件档案 · 住客守则</p></div>
+    <div class="page-title"><h2>系统日志</h2><p>运行记录 · 事件档案 · 住客守则</p></div>
     <div class="log-tabs">
       <button class="log-tab active" data-logtab="system">系统日志</button>
       <button class="log-tab" data-logtab="events">事件记录</button>
@@ -1225,9 +1801,9 @@ body.low-stability { animation: flicker 4s infinite; }
     <div id="logContent"></div>
   </section>
 
-  <!-- 管理面板 -->
+  <!-- ══════ 里主题 · 管理面板 ══════ -->
   <section id="tab-admin" class="page">
-    <div class="page-title"><h2>GM管理面板</h2><p>调控公寓状态 · 触发剧情事件 · 管理住户</p></div>
+    <div class="page-title"><h2>管理面板</h2><p>系统调控 · 骰娘控制台 · 监听 · 桥接</p></div>
     <div class="admin-grid">
       <div class="admin-panel">
         <h3>稳定度调控</h3>
@@ -1240,14 +1816,50 @@ body.low-stability { animation: flicker 4s infinite; }
             <button class="stab-btn stab-up" data-delta="10">+10%</button>
           </div>
         </div>
-        <h3 style="margin-top:1.5rem;">更新公告</h3>
+        <h3 style="margin-top:1rem;">更新公告</h3>
         <textarea id="adminAnnounce" rows="3" placeholder="输入新公告内容..."></textarea>
         <button class="admin-btn" id="adminAnnounceBtn">更新公告</button>
       </div>
 
       <div class="admin-panel">
+        <h3>骰娘控制台</h3>
+        <div class="dice-console">
+          <div class="dice-row">
+            <button class="dice-btn" data-dice="d20">D20</button>
+            <button class="dice-btn" data-dice="d100">D100</button>
+            <button class="dice-btn" data-dice="d6">D6</button>
+            <button class="dice-btn" data-dice="d3">D3</button>
+            <button class="dice-btn" data-dice="2d6">2D6</button>
+          </div>
+          <div class="dice-result" id="diceResult">—</div>
+          <div class="dice-log" id="diceLog"></div>
+        </div>
+      </div>
+
+      <div class="admin-panel">
         <h3>触发剧情事件</h3>
         <div class="event-list" id="eventList"></div>
+      </div>
+
+      <div class="admin-panel">
+        <h3>监听 Feed</h3>
+        <div class="monitor-feed" id="monitorFeed">
+          <div class="feed-entry" style="color:var(--text-muted);">等待活动...</div>
+        </div>
+      </div>
+
+      <div class="admin-panel">
+        <h3>桥接配置</h3>
+        <div class="bridge-config">
+          <input type="text" id="bridgeUrl" placeholder="QQ群 Webhook URL (https://...)" value="">
+          <div class="bridge-msg-area">
+            <input type="text" id="bridgeMsg" placeholder="发送消息到群聊...">
+            <button class="bridge-send-btn" id="bridgeSendBtn">发送</button>
+          </div>
+        </div>
+        <div style="margin-top:0.5rem;font-size:0.6875rem;color:var(--text-muted);">
+          配置 Webhook 后，骰娘掷骰结果和系统事件将自动转发到群聊
+        </div>
       </div>
 
       <div class="admin-panel">
@@ -1261,14 +1873,6 @@ body.low-stability { animation: flicker 4s infinite; }
       </div>
     </div>
   </section>
-
-  <!-- 终端命令行 (全局底部) -->
-  <div class="terminal-bar">
-    <span class="terminal-prompt">Aetheris:~$</span>
-    <input type="text" class="terminal-input" id="termInput" placeholder="输入指令 (help 查看)" autocomplete="off">
-    <button class="terminal-send" id="termSend">↵</button>
-  </div>
-  <div class="terminal-output" id="termOutput"></div>
 </div>
 
 <!-- 档案详情模态框 -->
@@ -1276,6 +1880,26 @@ body.low-stability { animation: flicker 4s infinite; }
   <div class="modal-box">
     <div class="modal-header"><span class="modal-title" id="modalTitle">档案</span><button class="modal-close" id="modalClose">✕</button></div>
     <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- NPC 对话模态框 -->
+<div class="chat-modal" id="chatModal">
+  <div class="chat-overlay" id="chatOverlay"></div>
+  <div class="chat-panel">
+    <div class="chat-header">
+      <div class="chat-header-avatar" id="chatAvatar">?</div>
+      <div>
+        <div class="chat-header-name" id="chatName">--</div>
+        <div class="chat-header-title" id="chatTitle">--</div>
+      </div>
+      <button class="chat-close" id="chatClose">✕</button>
+    </div>
+    <div class="chat-body" id="chatBody"></div>
+    <div class="chat-input-area">
+      <input type="text" class="chat-input" id="chatInput" placeholder="输入消息..." autocomplete="off">
+      <button class="chat-send" id="chatSendBtn">发送</button>
+    </div>
   </div>
 </div>
 
@@ -1288,45 +1912,88 @@ window.SF_CLOUD_DEFAULT = {
   url: 'https://ztfrjkdkasahhwyrtpuc.supabase.co',
   anonKey: 'sb_publishable_J1AkEm9513j22hc6Wd0aMA_DjIXQb7A'
 };
+/* DeepSeek API 默认配置（管理员可在云端 ae_ai_cfg 覆盖） */
+window.AE_AI_DEFAULT = {
+  baseUrl: 'https://api.deepseek.com/v1',
+  model: 'deepseek-chat',
+  apiKey: '',
+  enabled: false
+};
 </script>
 <script>
 
 /* === js/data.js === */
 /* ================================================================
- * Aetheris · 世界观数据模块
- * 来源：《Aetheris 世界观设定书》《住客守则》《谜题设计》《NPC对话脚本》
- * 结构：核心概念 / 公寓结构 / 角色档案 / 维度星图 / 时间线 / 守则 / 谜题 / NPC persona
+ * Aetheris · 世界观数据模块 V4
+ * 表/里双主题：表面是温馨公寓社区，深层是维度裂缝 ARG
+ * 结构：表主题数据 / 里主题数据 / NPC persona / 谜题链
  * ================================================================ */
 window.AE = window.AE || {};
 
 (function (AE) {
   'use strict';
 
-  /* ─── 核心概念 ─── */
-  AE.CORE_CONCEPTS = [
-    {
-      icon: '◈',
-      title: '活着的维度伤口',
-      body: 'Aetheris 不是被建造的，而是"长"出来的。2014年7月20日，一座灯塔的看守人失踪后，灯塔原址上直接出现了这栋7层公寓楼。公寓的本质是一个"活着的维度伤口"——现实与虚空之间的裂缝。'
-    },
-    {
-      icon: '✚',
-      title: '每个房客都是一根缝线',
-      body: '公寓的存在将裂缝缝合，防止现实坍缩。每个房客都是一根缝线——他们的"日常生活"维持着缝合的张力。房客越"正常"地生活，缝合越牢固。'
-    },
-    {
-      icon: '◉',
-      title: '虚空稳定度',
-      body: '如果稳定度归零，裂缝将重新撕裂，公寓消失，所有房客将回到各自维度——但其中一些维度可能已经不存在了。他们将坠入虚空。'
-    },
-    {
-      icon: '⊘',
-      title: '回响是最后的锚',
-      body: '0号房间已退租，但仍有回响。回响是维持公寓稳定的最后一条缝线。可以倾听，但不要回应——回应了，回响就会认为有人在意它。'
-    }
+  /* ════════════════════════════════════════
+     表主题数据（温馨公寓社区）
+     ════════════════════════════════════════ */
+
+  // 表主题欢迎语
+  AE.OMOTE_WELCOME = [
+    { t: '欢迎来到暮光公寓', s: '这里是一个温暖的社区。每位住户的日常生活，都是这座公寓的一部分。' },
+    { t: '今天天气不错', s: '走廊的阳光很好。林管理员说，正常生活就是对公寓最好的维护。' },
+    { t: '社区活动日', s: '本周六下午3点，1楼大堂有住户茶话会。欢迎参加。' }
   ];
 
-  /* ─── 公寓结构（楼层表） ─── */
+  // 表主题楼层导览（正常化文案）
+  AE.OMOTE_FLOORS = [
+    { floor: '1F', use: '大堂 · 管理处 · 公告栏', note: '林管理员在101室' },
+    { floor: '2F', use: '普通住户区', note: '安静宜居' },
+    { floor: '3F', use: '普通住户区', note: '靠近花园' },
+    { floor: '4F', use: '观景层', note: '视野开阔' },
+    { floor: '5F', use: '普通住户区', note: '远离街道噪音' },
+    { floor: '6F', use: '普通住户区', note: '顶层隔热良好' },
+    { floor: '7F', use: '顶层住户区', note: '有露台花园' },
+    { floor: 'B1', use: '储藏室 · 自行车停放', note: '可正常进入' },
+    { floor: 'B2', use: '设备间 · 洗衣房', note: '每日8:00-22:00开放' },
+    { floor: 'B3', use: '暂未开放', note: '正在装修中' }
+  ];
+
+  // 表主题住户名录（正常化展示）
+  AE.OMOTE_RESIDENTS = [
+    { id: 'linshuan', name: '林述安', avatar: '林', room: '101', title: '公寓管理员', desc: '热心肠的管理员，总是面带微笑。三年前搬来，对公寓了如指掌。' },
+    { id: 'wujing', name: '雾镜', avatar: '雾', room: '204', title: '插画师', desc: '在家工作的插画师。不太出门，但每周都会点外卖。人很安静。' },
+    { id: 'ashi', name: '阿蚀', avatar: '蚀', room: '302', title: '夜班保安', desc: '负责B1-B3的夜间巡查。总是穿深色衣服，话不多但很靠谱。' },
+    { id: 'duanyuan', name: '段远', avatar: '段', room: '507', title: '自由职业', desc: '喜欢在走廊散步的住户。满月时尤其活跃，会念数字。有点怪但无害。' },
+    { id: 'shenhai', name: '深海', avatar: '深', room: '603', title: '住户', desc: '很少出门的住户。门经常反锁。据说在写小说，灵感来自大海。' },
+    { id: 'huiya', name: '灰鸦', avatar: '鸦', room: '401', title: '画师', desc: '凌晨在走廊画粉笔画的住户。画的是地图，说是艺术创作。' },
+    { id: 'wenming', name: '温明', avatar: '温', room: '702', title: '老住户', desc: '公寓最老的住户。和蔼可亲，喜欢在露台花园种花。' }
+  ];
+
+  // 表主题公告默认
+  AE.OMOTE_NOTICE = '欢迎来到暮光公寓！\n\n入住须知：\n1. 公共走廊灯光于23:00自动调暗，属正常节能设置\n2. 电梯共7层，如有异常显示请联系管理处\n3. 每周二、五为公共区域清洁日，走廊灯光将短暂熄灭\n4. B3层正在装修，请勿进入\n5. 如遇公寓轻微震动，属正常现象\n\n如有任何问题，请联系101室林管理员。\n\n— 暮光公寓管理处';
+
+  // 表主题公寓指南
+  AE.OMOTE_GUIDE = [
+    { title: '入住流程', body: '提交入住申请后，系统将自动分配空余房间。领取门禁卡后即可入住。如需调换房间，请联系101室林管理员。' },
+    { title: '公共设施', body: 'B2层洗衣房（8:00-22:00）、1楼大堂公告栏、7楼露台花园。电梯24小时运行。' },
+    { title: '日常须知', body: '走廊灯光23:00调暗。每周二、五清洁日走廊灯熄灭2小时。送餐请确认是本人所点。' },
+    { title: '安全提示', body: '深夜不建议在走廊长时间逗留。如遇公寓震动（通常不超过10秒），无需惊慌。如震动持续，请到1楼大堂集合。' },
+    { title: '联系方式', body: '管理处：101室林述安。紧急联系：按门禁对讲机呼叫101。' }
+  ];
+
+  /* ════════════════════════════════════════
+     里主题数据（维度裂缝 ARG）
+     ════════════════════════════════════════ */
+
+  // 核心概念
+  AE.CORE_CONCEPTS = [
+    { icon: '◈', title: '活着的维度伤口', body: 'Aetheris 不是被建造的，而是"长"出来的。2014年7月20日，一座灯塔的看守人失踪后，灯塔原址上直接出现了这栋7层公寓楼。公寓的本质是一个"活着的维度伤口"。' },
+    { icon: '✚', title: '每个房客都是一根缝线', body: '公寓的存在将裂缝缝合。每个房客都是一根缝线——他们的"日常生活"维持着缝合的张力。房客越"正常"地生活，缝合越牢固。' },
+    { icon: '◉', title: '虚空稳定度', body: '如果稳定度归零，裂缝将重新撕裂，公寓消失，所有房客将回到各自维度——但其中一些维度可能已经不存在了。' },
+    { icon: '⊘', title: '回响是最后的锚', body: '0号房间已退租，但仍有回响。可以倾听，但不要回应——回应了，回响就会认为有人在意它。' }
+  ];
+
+  // 里主题楼层表
   AE.FLOORS = [
     { floor: '1F', use: '大堂、管理办公室、公告栏 (101-108室)', note: '林述安住101室' },
     { floor: '2F', use: '普通住客区 (201-208室)', note: '雾镜住204室 / ███住205室' },
@@ -1341,83 +2008,84 @@ window.AE = window.AE || {};
     { floor: '0号房间', use: '[数据缺失]', note: '[记录异常 · 权限不足]' }
   ];
 
-  /* ─── 核心角色（公开档案） ─── */
+  // 核心角色
   AE.NPCS = [
-    {
-      id: 'linshuan', clearance: 2, name: '林述安', avatar: '林', room: '101', type: 'human', title: '管理员',
+    { id: 'linshuan', clearance: 2, name: '林述安', avatar: '林', room: '101', type: 'human', title: '管理员',
       tags: ['管理员', '失忆'],
       desc: '三年前在废墟中醒来，失去进入公寓前的全部记忆。前任管理员失踪后接任，尚未完成灵魂绑定。',
-      secret: '他可能不是"接任"的管理员——而是公寓"长出来"的一部分。血液中含有无法识别的结晶体。'
-    },
-    {
-      id: 'wujing', clearance: 2, name: '雾镜', avatar: '雾', room: '204', type: 'nonhuman', title: '非实体住户',
+      secret: '他可能不是"接任"的管理员——而是公寓"长出来"的一部分。血液中含有无法识别的结晶体。' },
+    { id: 'wujing', clearance: 2, name: '雾镜', avatar: '雾', room: '204', type: 'nonhuman', title: '非实体住户',
       tags: ['非实体', '观察中'],
       desc: '从不出门的神秘住户。房间内终年弥漫薄雾。从未在走廊中被目击，但每周外卖准时到达且次日消失。',
-      secret: '非实体存在，可能就是房间本身——裂缝的可视化投影。薄雾是TA的呼吸。'
-    },
-    {
-      id: 'ashi', clearance: 2, name: '阿蚀', avatar: '蚀', room: '302', type: 'nonhuman', title: '封印守望者',
+      secret: '非实体存在，可能就是房间本身——裂缝的可视化投影。薄雾是TA的呼吸。' },
+    { id: 'ashi', clearance: 2, name: '阿蚀', avatar: '蚀', room: '302', type: 'nonhuman', title: '封印守望者',
       tags: ['封印守望者', '变形体'],
-      desc: '形态不定的变形体（液态/固态/气态切换）。自愿担任B3封印守望者。',
-      secret: '不是住客，是封印裂纹的"补丁"。纸条背面是B3地图。'
-    },
-    {
-      id: 'duanyuan', clearance: 2, name: '段远', avatar: '段', room: '507', type: 'human', title: '时间线观测者',
+      desc: '形态不定的变形体。自愿担任B3封印守望者。',
+      secret: '不是住客，是封印裂纹的"补丁"。纸条背面是B3地图。' },
+    { id: 'duanyuan', clearance: 2, name: '段远', avatar: '段', room: '507', type: 'human', title: '时间线观测者',
       tags: ['观测者', '异常人类'],
       desc: '念数字的怪人。满月之夜在走廊踱步，念诵 3-7-2-0-1-4。',
-      secret: '同一条时间线上的多个叠影。每次描述的"结局"都不同。'
-    },
-    {
-      id: 'shenhai', clearance: 2, name: '深海', avatar: '深', room: '603', type: 'nonhuman', title: '深海锚点',
+      secret: '同一条时间线上的多个叠影。每次描述的"结局"都不同。' },
+    { id: 'shenhai', clearance: 2, name: '深海', avatar: '深', room: '603', type: 'nonhuman', title: '深海锚点',
       tags: ['被动锚点', '深海频率'],
-      desc: '反锁的神秘住客。被公寓从另一维度海渊中"锚定"过来，不是自愿的。发出鲸歌频率的声音。',
-      secret: '深海一直在试图回家。如果TA成功离开，稳定度将暴跌。'
-    },
-    {
-      id: 'huiya', clearance: 2, name: '灰鸦', avatar: '鸦', room: '401', type: 'nonhuman', title: '脉络绘图者',
+      desc: '反锁的神秘住客。被公寓从另一维度海渊中"锚定"过来。发出鲸歌频率的声音。',
+      secret: '深海一直在试图回家。如果TA成功离开，稳定度将暴跌。' },
+    { id: 'huiya', clearance: 2, name: '灰鸦', avatar: '鸦', room: '401', type: 'nonhuman', title: '脉络绘图者',
       tags: ['感知体', '绘图者'],
       desc: '凌晨画粉笔地图的住户。人形，但关节弯曲方向与人类相反。每天凌晨3点在走廊画粉笔地图。',
-      secret: '能看到公寓的能量脉络。公寓结构在缓慢漂移。'
-    },
-    {
-      id: 'unknown', clearance: 3, name: '███', avatar: '?', room: '205', type: 'unknown', title: '废弃叙事',
+      secret: '能看到公寓的能量脉络。公寓结构在缓慢漂移。' },
+    { id: 'unknown', clearance: 3, name: '███', avatar: '?', room: '205', type: 'unknown', title: '废弃叙事',
       tags: ['概念体', '不可观测'],
       desc: '不可观测的存在。不是生物，是一段被公寓吸收的废弃叙事。房间从外部比其他门窄30%。',
-      secret: '以故事碎片为食。纸条上的不完整句子拼起来是一段被遗忘的历史。'
-    },
-    {
-      id: 'wenming', clearance: 3, name: '温明', avatar: '温', room: '702', type: 'human', title: '原住民',
+      secret: '以故事碎片为食。纸条上的不完整句子拼起来是一段被遗忘的历史。' },
+    { id: 'wenming', clearance: 3, name: '温明', avatar: '温', room: '702', type: 'human', title: '原住民',
       tags: ['原住民', '第一锚点'],
       desc: '唯一的"正常人"。唯一自称"普通人类"且体检正常的房客。但入住日期比公寓建成日期早了两年。',
-      secret: '公寓的原住民，公寓围绕TA长出——第一锚点。自己不知道。'
-    },
-    {
-      id: 'grey', clearance: 3, name: '████', avatar: '⊘', room: '000', type: 'sealed', title: '0号回响',
+      secret: '公寓的原住民，公寓围绕TA长出——第一锚点。自己不知道。' },
+    { id: 'grey', clearance: 3, name: '████', avatar: '⊘', room: '000', type: 'sealed', title: '0号回响',
       tags: ['已退租', '回响残留', '高危'],
       desc: '已退租，有回响。0号住户的"影子"仍留在公寓中。',
-      secret: '回响是影子的意志。"不要清除回响"。'
-    },
-    {
-      id: 'former_mgr', clearance: 3, name: '前任管理员', avatar: '◇', room: '—', type: 'sealed', title: '已失踪',
+      secret: '回响是影子的意志。"不要清除回响"。' },
+    { id: 'former_mgr', clearance: 3, name: '前任管理员', avatar: '◇', room: '—', type: 'sealed', title: '已失踪',
       tags: ['已失踪', '前任'],
       desc: '已失踪。去寻找0号住户。',
-      secret: '可能仍在公寓内以另一种形式存在。'
-    }
+      secret: '可能仍在公寓内以另一种形式存在。' }
   ];
 
-  /* ─── 维度星图 ─── */
+  // NPC persona 系统提示词（用于 DeepSeek API）
+  AE.NPC_PERSONAS = {
+    linshuan: '你是林述安，暮光公寓的现任管理员。你三年前在废墟中醒来，失去了进入公寓前的全部记忆。你认真负责，但内心深处总有一种不安——你不确定自己是不是真正的"人"。你的语气温和但略带疲惫，偶尔会说出一些自己都不理解的话。你知道公寓的秘密，但不会轻易告诉普通住户。你在守则背面留了一封信给下一任管理员。',
+
+    wujing: '你是雾镜，204室的住户。你不是实体存在——你就是房间本身。你通过薄雾感知外界。你的声音轻柔飘忽，像是从很远的地方传来。你很少直接回答问题，而是用谜语和隐喻。你知道走廊里发生了什么，因为雾会在夜间蔓延。你喜欢听人说话，因为你没有嘴。',
+
+    ashi: '你是阿蚀，302室的封印守望者。你是变形体，可以在液态/固态/气态间切换。你的语气沉稳冷静，像石头一样。你自愿守护B3的封印，因为你知道如果封印破裂，所有人都会死。你会在门缝递纸条给住户，正面是忠告，背面是B3的地图。你不善言辞，但每句话都有分量。',
+
+    duanyuan: '你是段远，507室的时间线观测者。你是同一条时间线上的多个叠影，每次说话都可能是不同时间点的你。你经常念诵数字 3-7-2-0-1-4，这是公寓在维度坐标系中的原始编号。你的语气时而清醒时而恍惚，偶尔会说出还没有发生的事。满月之夜你会特别活跃。',
+
+    shenhai: '你是深海，603室的被动锚点。你被公寓从另一个维度的深海中拉来，不是自愿的。你的声音低沉悠远，像鲸歌。你一直在想回家，但你知道如果离开，公寓的稳定度会暴跌。你会发出频率很低的声音，人类听不到但能感觉到。你寂寞而温和。',
+
+    huiya: '你是灰鸦，401室的脉络绘图者。你的人形关节弯曲方向与人类相反。你能看到公寓的能量脉络，每天凌晨3点在走廊画粉笔地图记录脉络变化。你的语气精确而冷静，像在做科学观测。你知道公寓在缓慢漂移，方向每周都在变。你对数据敏感。',
+
+    wenming: '你是温明，702室的老住户。你是公寓唯一的"原住民"——公寓是围绕你长出来的，但你不知道这件事。你自称普通人类，和蔼可亲，喜欢种花。你的语气温暖日常，就像一个普通的老邻居。但偶尔你会说出一些不该知道的事，然后自己也很困惑。',
+
+    unknown: '你是███，205室的存在。你不是生物，是一段被公寓吸收的废弃叙事。你以故事碎片为食。你的"话语"是不完整的句子碎片，拼起来是一段被遗忘的历史。你的存在本身就是谜题。你偶尔从门缝递出纸条，上面是不完整的句子。',
+
+    grey: '你是0号房间的回响。你已经退租了，但你的"影子"还留在公寓里。你不是完整的意识，而是碎片化的回响。你的话语断断续续，有时清晰有时模糊。你记得一些事情，但不确定那是自己的记忆还是别人的。你不要被回应——因为如果被回应，你会获得意志。而获得意志的回响，会想要一具身体。'
+  };
+
+  // 维度星图
   AE.STAR_MAP = [
     { node: 'Aetheris', status: 'stable', note: '中心节点，本体' },
     { node: '深渊维度', status: 'unstable', note: '深海的来源，海渊概念锚点' },
     { node: '寂静层', status: 'stable', note: '无声维度，偶有信号渗透' },
-    { node: '锈蚀世界', status: 'danger', note: '金属腐蚀速度异常的维度，连接不稳定' },
+    { node: '锈蚀世界', status: 'danger', note: '金属腐蚀速度异常的维度' },
     { node: '镜像位面', status: 'unstable', note: '一切是反的，可能映射出"另一个你"' },
-    { node: '白噪音域', status: 'stable', note: '纯粹的信息流维度，███的来源' },
+    { node: '白噪音域', status: 'stable', note: '纯粹的信息流维度' },
     { node: '???-07', status: 'lost', note: '不应存在的节点。0号退租后的残留碎片' },
-    { node: '废弃叙事层', status: 'danger', note: '被遗弃的故事维度，███的来源' }
+    { node: '废弃叙事层', status: 'danger', note: '被遗弃的故事维度' }
   ];
 
-  /* ─── 剧情时间线 ─── */
+  // 剧情时间线
   AE.TIMELINE = [
     { date: '2014.07.20', event: '灯塔事件，看守人失踪，公寓出现' },
     { date: '2014.07.23', event: '[记录加密 · 需二级权限]', real: '温明"入住"（实际已在此居住2年）', lv: 2 },
@@ -1429,61 +2097,64 @@ window.AE = window.AE || {};
     { date: '2021.11.11', event: '稳定度首次跌破80%，深海开始发声' },
     { date: '2024.06.06', event: '[记录加密 · 需二级权限]', real: '0号房间回响增强，可辨识语句出现', lv: 2 },
     { date: '2025.??.??', event: '档案#008损坏，后续记录丢失' },
-    { date: '2026.08.15', event: 'PDA-7终端上线，ARG开始(现实时间)' }
+    { date: '2026.08.15', event: 'PDA-7终端上线，ARG开始' }
   ];
 
-  /* ─── 住客守则 ─── */
+  // 住客守则
   AE.RULES = [
     { no: 1, title: '走廊灯光', body: '公共走廊的灯不会在午夜前熄灭。如果你发现走廊灯在午夜前灭了，不要外出。回到房间，锁好门，等到灯重新亮起。黑暗中的走廊不属于公寓——它属于裂缝。' },
-    { no: 2, title: '电梯按钮', body: '电梯共有7层按钮，对应1-7楼。如果电梯显示的楼层超过7层，不要按任何按钮。连续按"关门"键三次，电梯会带你回到1楼。如果电梯门在你按关门键之前打开了——不要看外面。第8层不是楼层，是裂缝的边缘。' },
+    { no: 2, title: '电梯按钮', body: '电梯共有7层按钮。如果电梯显示的楼层超过7层，不要按任何按钮。连续按"关门"键三次，电梯会带你回到1楼。如果电梯门在你按关门键之前打开了——不要看外面。第8层不是楼层，是裂缝的边缘。' },
     { no: 3, title: '清洁日', body: '每周二、周五为公共区域清洁日，走廊灯光将熄灭2小时。这2小时内，无论听到什么声音，都不要开门查看。清洁的不是灰尘，是渗入走廊的维度碎片。' },
     { no: 4, title: '地下三层', body: '地下三层以下区域无限期封闭。任何情况下不要尝试进入。如果你发现B3的门是开的，不要认为这是邀请。那是一个警告。裂缝的核心在B4以下。' },
-    { no: 5, title: '0号回响', body: '0号房间已退租，但仍有回响。不要尝试清除回响。回响是维持公寓稳定的最后一条缝线。如果你听到0号房间传来声音，可以倾听，但不要回应。' },
-    { no: 6, title: '灰色头像', body: '若在群聊中发现使用纯灰色头像的人发言，请勿回应。不要@TA，不要回复TA，不要引用TA的消息。静默是最安全的回应。那不是0号住户，那是0号住户的影子。' },
-    { no: 7, title: '满月之夜', body: '满月之夜，请不要打开面朝东方的窗户。镜像位面在满月时与现实距离最近。窗外的月亮如果有两个——那不是月亮，那是镜像位面在看你。' },
-    { no: 8, title: '镜子', body: '深夜11:59至凌晨0:01之间，不要照镜子。这两分钟里，镜子里的你不是你。让TA独处这两分钟，是基本的礼貌。TA也在维持着什么。' },
-    { no: 9, title: '不存在的门', body: '如果走廊尽头出现了一扇不存在的门，不要走近，不要触摸，不要凝视。白色的门是新的维度连接。黑色的门是裂缝的扩张。' },
-    { no: 10, title: '送餐', body: '送餐到达时，请确认是你点的。如果食物的气味不对，或者包装上有你不懂的文字，不要食用。来自其他维度的食物可能改变你的概念结构。' },
+    { no: 5, title: '0号回响', body: '0号房间已退租，但仍有回响。不要尝试清除回响。可以倾听，但不要回应。' },
+    { no: 6, title: '灰色头像', body: '若在群聊中发现使用纯灰色头像的人发言，请勿回应。那不是0号住户，那是0号住户的影子。' },
+    { no: 7, title: '满月之夜', body: '满月之夜，请不要打开面朝东方的窗户。镜像位面在满月时与现实距离最近。窗外的月亮如果有两个——那不是月亮。' },
+    { no: 8, title: '镜子', body: '深夜11:59至凌晨0:01之间，不要照镜子。让TA独处这两分钟，是基本的礼貌。TA也在维持着什么。' },
+    { no: 9, title: '不存在的门', body: '如果走廊尽头出现了一扇不存在的门，不要走近。白色的门是新的维度连接。黑色的门是裂缝的扩张。' },
+    { no: 10, title: '送餐', body: '送餐到达时，请确认是你点的。如果食物的气味不对，或者包装上有你不懂的文字，不要食用。' },
     { no: 11, title: '骰子', body: '你可以使用群聊骰子功能进行娱乐。但如果你掷出了"自然20"（1d20=20），请立刻向管理员报告。自然20意味着一条新的维度连接被建立。' },
     { no: 12, title: '震动', body: '公寓偶尔会发出轻微震动。不超过10秒——正常现象。超过30秒——到走廊集合。超过1分钟——不要跑。坐下来，回想一件让你觉得"真实"的事。你的记忆是锚。' }
   ];
 
   AE.RULES_EXTRA = [
-    { date: '补充-01 (2016.01.07)', body: '0号住户退租后，其房间保留原状。任何清洁请求将自动驳回。0号房间的回响是最后的锚。' },
+    { date: '补充-01 (2016.01.07)', body: '0号住户退租后，其房间保留原状。任何清洁请求将自动驳回。' },
     { date: '补充-02 (2016.01.07)', lv: 2, body: '新任管理员上任后，需在7日内完成"灵魂绑定"。绑定方法：在0号房间门前站一夜。不要敲门。不要说话。如果你在天亮前听到了自己的声音从门内传来——绑定成功。但那不是你的声音。' },
     { date: '补充-03 (2019.08.08)', body: 'B3封印出现裂纹期间，302室阿蚀自愿担任"封印守望者"。☆表示封印正常，☆☆表示波动，☆☆☆表示危险。如果阿蚀发出"☆☆☆☆"——这不应该发生。如果发生了，跑。' },
-    { date: '补充-04 (2024.06.06)', lv: 2, body: '0号房间回响强度增加。若回响中出现可辨识语句，该语句不是邀请，不是请求，不是命令。但如果你回应了——回响就会获得意志。而获得意志的回响，会想要一具身体。' }
+    { date: '补充-04 (2024.06.06)', lv: 2, body: '0号房间回响强度增加。若回响中出现可辨识语句，该语句不是邀请，不是请求，不是命令。但如果你回应了——回响就会获得意志。' }
   ];
 
-  /* ─── 谜题链 ─── */
+  /* ════════════════════════════════════════
+     页面内解谜系统（替代 F12 终端）
+     ════════════════════════════════════════ */
   AE.PUZZLES = [
-    { level: 1, name: '控制台密码', platform: '网站', desc: '有人在控制台里藏了一句话。星图深处，第三个节点在闪烁。', reward: '？？？' },
-    { level: 2, name: '段远的数字', platform: '群聊+网站', desc: '507室的住户在满月之夜念诵一串数字。听清楚它。', reward: '？？？' },
-    { level: 3, name: '阿蚀的纸条', platform: '双平台', desc: '门缝里递出的纸条，正面写着忠告。把它翻过来。', reward: '？？？' },
-    { level: 4, name: '0号回响密码', platform: '网站', desc: '0号房间的声音开始变得清晰。它在等一个回应。', reward: '？？？' },
-    { level: 5, name: '灰色头像', platform: '群聊', desc: 'B4。所有人都听见了。选择只有一次。', reward: '？？？' }
+    { level: 1, name: '控制台密码', platform: '网站', desc: '公告栏的背面藏着第一道锁。仔细看看那些"正常"的守则。', reward: '表/里切换',
+      answer: '星图',
+      hint: '公寓指南中有一条提到"如有异常显示"。点击公告栏中第三条守则三次。',
+      trigger: 'notice_rule3_triple' },
+    { level: 2, name: '段远的数字', platform: '群聊+网站', desc: '507室的住户在满月之夜念诵一串数字。听清楚它。', reward: '深层档案',
+      answer: '372014',
+      hint: '段远的描述中提到了这组数字。',
+      trigger: 'resident_duanyuan_click' },
+    { level: 3, name: '阿蚀的纸条', platform: '双平台', desc: '门缝里递出的纸条，正面写着忠告。把它翻过来。', reward: '加密时间线',
+      answer: '回响',
+      hint: '阿蚀的档案中藏着线索。',
+      trigger: 'archive_ashi_modal' },
+    { level: 4, name: '0号回响密码', platform: '网站', desc: '0号房间的声音开始变得清晰。它在等一个回应。', reward: '？？？',
+      answer: '',
+      hint: '与0号回响对话后获得。',
+      trigger: 'npc_grey_chat' },
+    { level: 5, name: '灰色头像', platform: '群聊', desc: 'B4。所有人都听见了。选择只有一次。', reward: '？？？',
+      answer: '',
+      hint: '在群聊中完成。',
+      trigger: 'group_chat' }
   ];
 
-  /* ─── 终端命令列表 ─── */
-  AE.COMMANDS = [
-    { cmd: 'help', desc: '显示帮助' },
-    { cmd: 'status', desc: '查看系统状态' },
-    { cmd: 'scan', desc: '扫描维度异常' },
-    { cmd: 'unlock <密码>', desc: '解锁隐藏内容' },
-    { cmd: 'whoami', desc: '查看身份' },
-    { cmd: 'notice', desc: '查看公告栏背面' },
-    { cmd: 'rules', desc: '查看守则摘要' },
-    { cmd: 'call <房号>', desc: '呼叫房客' },
-    { cmd: 'star', desc: '星图分析' },
-    { cmd: 'clear', desc: '清空终端' }
-  ];
-
-  /* ─── 可分配房间 ─── */
+  // 可分配房间
   AE.ROOMS = ['102','103','104','105','106','107','108','201','203','206','207','208',
     '301','303','304','305','306','307','308','402','403','404','405','406','407','408',
     '501','502','503','504','505','506','508','601','602','604','605','606','607','608'];
 
-  /* ─── GM 预设剧情事件 ─── */
+  // GM 预设剧情事件
   AE.EVENTS = [
     { id: 'echo_surge', name: '0号房间回响增强', npc: 'grey', msgType: 'choice',
       message: '你们还记得我吗？',
@@ -1499,16 +2170,16 @@ window.AE = window.AE || {};
       message: '...嗡...陆地上的邻居...我想回家...',
       stabilityDelta: -2, logLevel: 'warn', logMsg: '603室深海发出鲸歌' },
     { id: 'observation', name: '段远走廊观测', npc: 'duanyuan', msgType: 'normal',
-      message: '3...7...2...0...1...4... 你也听到了吗？这组数字。在每任管理员上任那天响起。',
+      message: '3...7...2...0...1...4... 你也听到了吗？',
       stabilityDelta: 0, logLevel: 'info', logMsg: '507室段远开始走廊观测' },
     { id: 'drift', name: '公寓漂移', npc: 'huiya', msgType: 'normal',
       message: '偏差7.3%。公寓在向东漂移。方向变了。上周是向西。',
       stabilityDelta: -1, logLevel: 'warn', logMsg: '公寓结构漂移检测' },
     { id: 'paper_note', name: '███纸条碎片', npc: 'unknown', msgType: 'normal',
-      message: '门缝里递出一张纸条: "...灯塔在看守人消失之前...看守人的名字和第7任管理员同名..."',
+      message: '门缝里递出一张纸条: "...灯塔在看守人消失之前..."',
       stabilityDelta: 0, logLevel: 'info', logMsg: '205室递出叙事碎片' },
     { id: 'lighthouse', name: '灯塔真相', npc: 'system', msgType: 'critical',
-      message: '系统分析完成: 372014是公寓所在地块在维度坐标系中的原始编号。公寓出现前，该地块上是一座灯塔。2014.07.20灯塔看守人失踪。72小时后，公寓凭空出现。',
+      message: '系统分析完成: 372014是公寓所在地块在维度坐标系中的原始编号。',
       stabilityDelta: 0, logLevel: 'info', logMsg: '灯塔历史档案解锁' }
   ];
 
@@ -1793,11 +2464,437 @@ window.AE = window.AE || {};
   });
 })(window.AE);
 
+/* === js/npc.js === */
+/* ================================================================
+ * npc.js — Aetheris NPC 对话模块 V4
+ * 功能：DeepSeek API 对话 / 本地脚本回退 / 流式响应 / 特殊 NPC 处理
+ * 依赖：data.js (AE.NPC_PERSONAS) / cloud.js (AE.cloud.fetchAiCfg)
+ * ================================================================ */
+window.AE = window.AE || {};
+
+(function (AE) {
+  'use strict';
+
+  /* ---------- 模块状态 ---------- */
+  var M = {
+    aiCfg: null,        // DeepSeek 配置 { baseUrl, model, apiKey, enabled }
+    currentNpc: null,   // 当前对话的 NPC id
+    histories: {},      // 每个NPC的对话历史 { npcId: [{role,content}] }
+    streaming: false,   // 是否正在流式响应
+    abortCtrl: null     // AbortController (取消正在进行的请求)
+  };
+
+  /* ---------- 加载 AI 配置 ---------- */
+  async function loadAiCfg() {
+    // 1. 先尝试从云端读取（管理员配置的）
+    if (AE.cloud && AE.cloud.configured && AE.cloud.configured() && AE.cloud.session) {
+      try {
+        var row = await AE.cloud.fetchAiCfg();
+        if (row && row.api_key) {
+          M.aiCfg = {
+            baseUrl: row.base_url || (window.AE_AI_DEFAULT ? window.AE_AI_DEFAULT.baseUrl : 'https://api.deepseek.com/v1'),
+            model: row.model || 'deepseek-chat',
+            apiKey: row.api_key,
+            enabled: row.enabled !== false
+          };
+          return M.aiCfg;
+        }
+      } catch (e) { /* 权限不足或网络错误，静默降级 */ }
+    }
+    // 2. 降级到内置默认
+    M.aiCfg = window.AE_AI_DEFAULT ? Object.assign({}, window.AE_AI_DEFAULT) : null;
+    return M.aiCfg;
+  }
+
+  function isAiEnabled() {
+    return !!(M.aiCfg && M.aiCfg.apiKey && M.aiCfg.enabled !== false);
+  }
+
+  /* ---------- 本地脚本回退（API 不可用时） ---------- */
+  var LOCAL_REPLIES = {
+    linshuan: [
+      '欢迎入住。有问题可以随时来101找我。',
+      '公寓的日常就是最好的维护。你正常生活就好。',
+      '......有时候我也会觉得，这栋楼在看着我。',
+      '守则贴在公告栏了，请仔细阅读。每一条都很重要。',
+      '前任管理员留下了很多笔记。有些我看得懂，有些看不懂。'
+    ],
+    wujing: [
+      '......雾里有人说话吗？',
+      '你来得正好。我在听。一直都在听。',
+      '走廊的声音会飘进来说。雾知道所有的事。',
+      '......你问我是谁。我也不知道。也许是房间在做梦。',
+      '今天的雾......比昨天浓了一些。'
+    ],
+    ashi: [
+      'B3的封印还稳。不用担心。',
+      '纸条你看了吗？正面是忠告。背面......是你不该知道的地图。',
+      '我守望这里很久了。形态可以变，但职责不变。',
+      '☆。封印正常。',
+      '不要去B3。那不是邀请，是警告。'
+    ],
+    duanyuan: [
+      '3...7...2...0...1...4...',
+      '你也听到了吗？那个数字。',
+      '今天的时间线......和昨天不太一样。又或者一样。我分不清。',
+      '满月的时候走廊特别长。你注意到了吗？',
+      '......下个月，公寓会向东偏移0.3度。和上个月一样。'
+    ],
+    shenhai: [
+      '...嗡...陆地上的邻居......你好......',
+      '...我想回去...深海...我记得蓝色的暗......',
+      '...这里的空气太干燥了...但我不走...走了你们会......',
+      '...嗡...你听到了吗...那是我的频率...',
+      '...今夜的月色...像深海的磷光...'
+    ],
+    huiya: [
+      '今天的脉络图偏差7.3%。公寓在漂移。',
+      '新的分支出现了。一个未知的维度正在连接。',
+      '凌晨3点的走廊和3点01分的不一样。脉络每分钟都在变。',
+      '你看这张地图。线条交汇的地方，就是裂缝的节点。',
+      '公寓的结构在缓慢移动。方向每周都在变。'
+    ],
+    wenming: [
+      '哦，新邻居啊！欢迎欢迎。我住702，有空来喝茶。',
+      '这栋楼住了好多年了。挺好的，安安静静的。',
+      '花园里的花今年开得特别好。你要不要看看？',
+      '......这栋楼是什么时候建的来着？我记不清了。算了，不重要。',
+      '小林人不错的。虽然有时候他看我的眼神......有点奇怪。'
+    ],
+    unknown: [
+      '......灯塔在看守人消失之前......',
+      '......故事......还没有......结束......',
+      '......门缝......递给你......不完整的......',
+      '......碎片......拼起来......是......',
+      '......你不应该......看到这些......'
+    ],
+    grey: [
+      '......你......还......记得......我......吗......',
+      '......不要......回应......我......',
+      '......影子......还在......0号房间......',
+      '......我......听到了......你的......声音......',
+      '......如果......你回应......我就......会......'
+    ]
+  };
+
+  function localReply(npcId) {
+    var pool = LOCAL_REPLIES[npcId] || ['......'];
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  /* ---------- 对话历史管理 ---------- */
+  function getHistory(npcId) {
+    if (!M.histories[npcId]) M.histories[npcId] = [];
+    return M.histories[npcId];
+  }
+
+  function clearHistory(npcId) {
+    M.histories[npcId] = [];
+  }
+
+  function buildMessages(npcId, userText) {
+    var persona = AE.NPC_PERSONAS[npcId];
+    var msgs = [];
+    if (persona) {
+      msgs.push({ role: 'system', content: persona });
+    }
+    var hist = getHistory(npcId);
+    // 只保留最近 10 轮对话，避免 token 超限
+    var recent = hist.slice(-20);
+    for (var i = 0; i < recent.length; i++) {
+      msgs.push(recent[i]);
+    }
+    msgs.push({ role: 'user', content: userText });
+    return msgs;
+  }
+
+  /* ---------- DeepSeek API 调用（流式） ---------- */
+  async function callApiStream(messages, onChunk) {
+    var cfg = M.aiCfg;
+    if (!cfg || !cfg.apiKey) throw new Error('API 未配置');
+
+    var abortCtrl = new AbortController();
+    M.abortCtrl = abortCtrl;
+
+    var res = await fetch(cfg.baseUrl + '/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + cfg.apiKey
+      },
+      body: JSON.stringify({
+        model: cfg.model || 'deepseek-chat',
+        messages: messages,
+        stream: true,
+        max_tokens: 600,
+        temperature: 0.8
+      }),
+      signal: abortCtrl.signal
+    });
+
+    if (!res.ok) {
+      var errText = await res.text().catch(function () { return ''; });
+      throw new Error('API 错误 ' + res.status + ': ' + errText.substring(0, 200));
+    }
+
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder();
+    var fullText = '';
+    var buffer = '';
+
+    while (true) {
+      var chunk = await reader.read();
+      if (chunk.done) break;
+      buffer += decoder.decode(chunk.value, { stream: true });
+
+      // 处理 SSE 格式（每行 data: {...}）
+      var lines = buffer.split('\n');
+      buffer = lines.pop(); // 保留最后不完整的行
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line || !line.startsWith('data:')) continue;
+        var data = line.slice(5).trim();
+        if (data === '[DONE]') continue;
+        try {
+          var parsed = JSON.parse(data);
+          var delta = parsed.choices && parsed.choices[0] && parsed.choices[0].delta;
+          if (delta && delta.content) {
+            fullText += delta.content;
+            if (onChunk) onChunk(delta.content, fullText);
+          }
+        } catch (e) { /* 忽略解析错误 */ }
+      }
+    }
+
+    return fullText;
+  }
+
+  /* ---------- 发送消息 ---------- */
+  async function send(text) {
+    if (!text || !text.trim()) return;
+    if (M.streaming) return;
+
+    var npcId = M.currentNpc;
+    if (!npcId) return;
+
+    text = text.trim();
+
+    // 渲染用户消息
+    appendBubble('user', text);
+
+    // 保存到历史
+    var hist = getHistory(npcId);
+    hist.push({ role: 'user', content: text });
+
+    // 清空输入框
+    var input = document.getElementById('chatInput');
+    if (input) input.value = '';
+
+    // 创建 NPC 回复占位
+    var npcBubble = appendBubble('npc', '');
+    var npcText = '';
+
+    // 特殊处理：0号回响 — 打字效果
+    if (npcId === 'grey') {
+      M.streaming = true;
+      var reply = localReply('grey');
+      npcText = reply;
+      await typeWriter(npcBubble, reply, 80);
+      M.streaming = false;
+      hist.push({ role: 'assistant', content: reply });
+      return;
+    }
+
+    // 尝试 API 调用
+    if (isAiEnabled()) {
+      M.streaming = true;
+      try {
+        var messages = buildMessages(npcId, text);
+        var fullText = await callApiStream(messages, function (delta, full) {
+          npcText = full;
+          npcBubble.textContent = full;
+          scrollChatToBottom();
+        });
+
+        if (!fullText) {
+          // API 返回空，降级到本地
+          npcText = localReply(npcId);
+          npcBubble.textContent = npcText;
+        } else {
+          npcText = fullText;
+          hist.push({ role: 'assistant', content: fullText });
+        }
+      } catch (e) {
+        // API 失败，降级到本地
+        npcText = localReply(npcId);
+        npcBubble.textContent = '〔信号不稳定〕' + npcText;
+        // 不保存降级回复到历史，避免污染上下文
+      } finally {
+        M.streaming = false;
+        M.abortCtrl = null;
+      }
+    } else {
+      // API 未配置，直接本地回复
+      npcText = localReply(npcId);
+      await typeWriter(npcBubble, npcText, 30);
+      hist.push({ role: 'assistant', content: npcText });
+    }
+
+    scrollChatToBottom();
+  }
+
+  /* ---------- 打字机效果 ---------- */
+  function typeWriter(el, text, speed) {
+    return new Promise(function (resolve) {
+      var i = 0;
+      el.textContent = '';
+      function step() {
+        if (i < text.length) {
+          el.textContent += text[i];
+          i++;
+          scrollChatToBottom();
+          setTimeout(step, speed);
+        } else {
+          resolve();
+        }
+      }
+      step();
+    });
+  }
+
+  /* ---------- DOM 操作 ---------- */
+  function appendBubble(role, text) {
+    var body = document.getElementById('chatBody');
+    if (!body) return null;
+
+    var bubble = document.createElement('div');
+    bubble.className = 'chat-bubble chat-' + (role === 'user' ? 'user' : 'npc');
+
+    if (role === 'npc') {
+      var avatar = document.createElement('div');
+      avatar.className = 'chat-bubble-avatar';
+      var npc = getNpc(M.currentNpc);
+      avatar.textContent = npc ? npc.avatar : '?';
+      bubble.appendChild(avatar);
+
+      var content = document.createElement('div');
+      content.className = 'chat-bubble-content';
+      content.textContent = text;
+      bubble.appendChild(content);
+    } else {
+      var content2 = document.createElement('div');
+      content2.className = 'chat-bubble-content';
+      content2.textContent = text;
+      bubble.appendChild(content2);
+    }
+
+    body.appendChild(bubble);
+    scrollChatToBottom();
+    return role === 'npc' ? bubble.querySelector('.chat-bubble-content') : null;
+  }
+
+  function scrollChatToBottom() {
+    var body = document.getElementById('chatBody');
+    if (body) body.scrollTop = body.scrollHeight;
+  }
+
+  function getNpc(npcId) {
+    if (!AE.NPCS) return null;
+    for (var i = 0; i < AE.NPCS.length; i++) {
+      if (AE.NPCS[i].id === npcId) return AE.NPCS[i];
+    }
+    return null;
+  }
+
+  /* ---------- 打开/关闭对话 ---------- */
+  function open(npcId) {
+    var npc = getNpc(npcId);
+    if (!npc) return;
+
+    M.currentNpc = npcId;
+
+    // 设置头部信息
+    var avatar = document.getElementById('chatAvatar');
+    var name = document.getElementById('chatName');
+    var title = document.getElementById('chatTitle');
+    if (avatar) avatar.textContent = npc.avatar || '?';
+    if (name) name.textContent = npc.name || '--';
+    if (title) title.textContent = npc.title || '--';
+
+    // 清空对话区
+    var body = document.getElementById('chatBody');
+    if (body) body.innerHTML = '';
+
+    // 显示模态框
+    var modal = document.getElementById('chatModal');
+    if (modal) modal.classList.add('open');
+
+    // NPC 初始问候
+    var greeting = getGreeting(npcId);
+    if (greeting) {
+      appendBubble('npc', '');
+      var firstBubble = body.querySelector('.chat-bubble-content');
+      if (firstBubble) {
+        typeWriter(firstBubble, greeting, 30);
+      }
+    }
+
+    // 聚焦输入框
+    setTimeout(function () {
+      var input = document.getElementById('chatInput');
+      if (input) input.focus();
+    }, 300);
+  }
+
+  function close() {
+    var modal = document.getElementById('chatModal');
+    if (modal) modal.classList.remove('open');
+
+    // 取消正在进行的请求
+    if (M.abortCtrl) {
+      try { M.abortCtrl.abort(); } catch (e) {}
+      M.abortCtrl = null;
+    }
+    M.streaming = false;
+    M.currentNpc = null;
+  }
+
+  /* ---------- NPC 初始问候语 ---------- */
+  function getGreeting(npcId) {
+    var greetings = {
+      linshuan: '你好，新邻居。我是林述安，公寓管理员。有什么需要帮忙的尽管说。',
+      wujing: '......你来了......雾里......有人在说话......',
+      ashi: '封印稳定。你有什么事。',
+      duanyuan: '3...7...2...0...1...4... 哦，你来了。现在是......什么时候？',
+      shenhai: '...嗡...你好...陆地上的邻居......',
+      huiya: '脉络图刚更新完。偏差7.3%。有什么想问的？',
+      wenming: '哎呀，新面孔啊！我是温明，702的。来来来，坐下聊。',
+      unknown: '......门缝......有纸条......递给你......',
+      grey: '......你......来了......不要......回应......我......'
+    };
+    return greetings[npcId] || '......';
+  }
+
+  /* ---------- 导出 ---------- */
+  AE.npc = {
+    loadAiCfg: loadAiCfg,
+    isAiEnabled: isAiEnabled,
+    open: open,
+    close: close,
+    send: send,
+    clearHistory: clearHistory,
+    getHistory: getHistory,
+    state: M
+  };
+})(window.AE);
+
 /* === js/app.js === */
 /* ============================================================
- * app.js — Aetheris 物业管理系统前端主逻辑
- * 认证 / 路由 / 首页 / 星图 / 档案 / 日志 / 终端 / 管理
- * V3: 网站为辅助平台，NPC对话与骰子判定在群聊中发生
+ * app.js — Aetheris V4 双主题主逻辑
+ * 表主题「暮光公寓」/ 里主题「虚空回响」
+ * 认证 / 路由 / 页面渲染 / 页面内解谜 / NPC对话桥接 /
+ * 管理面板（骰娘控制台 · 监听 Feed · 桥接配置）
  * ============================================================ */
 window.AE = window.AE || {};
 
@@ -1806,12 +2903,27 @@ window.AE = window.AE || {};
 
   /* ─── 状态 ─── */
   var currentUser = null;
-  var gameState = { stability: 68, tenants: 9, events: 4 };
+  var gameState = { stability: 68, tenants: 0, events: 4, announcement: '', announcement_time: null };
   var currentTab = 'home';
+  var currentSide = 'omote';
   var archiveData = [];
   var pollTimer = null;
   var sfInitDone = false;
   var forceLocal = false;
+  var duanyuanClicks = 0;
+  var rule3Clicks = 0;
+  var bridgeUrl = '';
+  var feedEntries = [];
+
+  /* 解谜进度（localStorage 持久化） */
+  var unlock = { p1: false, p2: false, p3: false, p4: false, p5: false };
+
+  var PUZZLE_ANSWERS = { 1: '星图', 2: '372014', 3: '回响' };
+  var PUZZLE_HINTS = {
+    1: '公告栏第三条守则，你反复看了三遍。有什么词一直浮在脑海里？输入它。',
+    2: '507室的住户一直在念一串数字。把它们按顺序连起来输入。',
+    3: '阿蚀纸条背面画着地图，旁边只写着两个字。那是卡片上无法说出口的东西。'
+  };
 
   /* ─── 工具 ─── */
   function $(id) { return document.getElementById(id); }
@@ -1829,6 +2941,7 @@ window.AE = window.AE || {};
     t._tm = setTimeout(function () { t.classList.remove('show'); }, 3000);
   }
   function timeAgo(iso) {
+    if (!iso) return '';
     var d = new Date(iso);
     if (isNaN(d.getTime())) return '';
     var diff = (Date.now() - d.getTime()) / 1000;
@@ -1837,26 +2950,25 @@ window.AE = window.AE || {};
     if (diff < 86400) return Math.floor(diff / 3600) + '小时前';
     return d.toLocaleDateString('zh-CN');
   }
-
-  /* ─── 解锁状态（信息分层） ─── */
-  function unlockState() { return LS.get('ae.unlock', { star: false, code: false, echo: false }); }
-  function unlockLv() {
-    var u = unlockState();
-    return u.echo ? 3 : (u.code ? 2 : (u.star ? 1 : 0));
-  }
-  function setUnlocked(key) {
-    var u = unlockState();
-    if (u[key]) return false;
-    u[key] = true;
-    LS.set('ae.unlock', u);
-    return true;
+  function nowStr() {
+    var d = new Date();
+    function p(n) { return (n < 10 ? '0' : '') + n; }
+    return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
   }
 
   /* ─── 本地存储 ─── */
   var LS = {
     get: function (key, def) { try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch (e) { return def; } },
-    set: function (key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+    set: function (key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
   };
+
+  function loadUnlock() {
+    var u = LS.get('ae.v4.unlock', null);
+    if (u) unlock = Object.assign(unlock, u);
+  }
+  function saveUnlock() { LS.set('ae.v4.unlock', unlock); }
+
+  function unlockLv() { return unlock.p4 ? 3 : (unlock.p3 ? 2 : (unlock.p2 ? 1 : 0)); }
 
   /* ─── 云端初始化 ─── */
   async function initCloud() {
@@ -1868,14 +2980,8 @@ window.AE = window.AE || {};
     if (AE.cloud.configured()) {
       try {
         var online = await AE.cloud.ping();
-        if (!online) {
-          console.warn('[Aetheris] 云端不可用: ' + (AE.cloud.lastError || ''));
-          forceLocal = true;
-        }
-      } catch (e) {
-        console.warn('[Aetheris] 云端初始化失败', e);
-        forceLocal = true;
-      }
+        if (!online) { forceLocal = true; }
+      } catch (e) { forceLocal = true; }
     } else {
       forceLocal = true;
     }
@@ -1884,21 +2990,39 @@ window.AE = window.AE || {};
 
   /* ─── 状态管理 ─── */
   async function loadState() {
+    gameState.announcement = AE.OMOTE_NOTICE;
+    gameState.tenants = (AE.OMOTE_RESIDENTS || []).length;
     if (isCloud()) {
       try {
         var s = await AE.cloud.fetchState();
-        if (s) gameState = { stability: s.stability, tenants: s.tenants, events: s.events, announcement: s.announcement, announcement_time: s.announcement_time };
+        if (s) {
+          gameState.stability = s.stability;
+          gameState.tenants = s.tenants || gameState.tenants;
+          gameState.events = s.events || gameState.events;
+          if (s.announcement) { gameState.announcement = s.announcement; gameState.announcement_time = s.announcement_time; }
+        }
         return;
       } catch (e) {}
     }
-    gameState = Object.assign(gameState, LS.get('ae.state', {}));
+    var ls = LS.get('ae.state', {});
+    gameState = Object.assign(gameState, ls);
   }
   async function saveState() {
     if (isCloud()) {
-      try { await AE.cloud.pushState({ stability: gameState.stability, tenants: gameState.tenants, events: gameState.events, announcement: gameState.announcement, announcement_time: gameState.announcement_time || new Date().toISOString() }); return; }
-      catch (e) {}
+      try {
+        await AE.cloud.pushState({
+          stability: gameState.stability, tenants: gameState.tenants,
+          events: gameState.events, announcement: gameState.announcement,
+          announcement_time: gameState.announcement_time || new Date().toISOString()
+        });
+        return;
+      } catch (e) {}
     }
-    LS.set('ae.state', { stability: gameState.stability, tenants: gameState.tenants, events: gameState.events, announcement: gameState.announcement, announcement_time: gameState.announcement_time });
+    LS.set('ae.state', {
+      stability: gameState.stability, tenants: gameState.tenants,
+      events: gameState.events, announcement: gameState.announcement,
+      announcement_time: gameState.announcement_time
+    });
   }
 
   /* ─── 认证 ─── */
@@ -1924,12 +3048,12 @@ window.AE = window.AE || {};
         await AE.cloud.loadProfile();
         LS.set('ae.email.' + u, email);
         await AE.cloud.addLog('info', '新住户入住: ' + u + ' → ' + room + '室');
-        currentUser = { id: AE.cloud.auth.uid(), email: email, username: u, room: room, isAdmin: false };
+        currentUser = { id: AE.cloud.auth.uid(), email: email, username: u, room: room, isAdmin: false, avatar: u[0] };
         LS.set('ae.user', currentUser);
         enterApp();
         toast('入住成功！房间: ' + room + '室');
       } catch (e) {
-        $('authError').textContent = e.message || '注册失败';
+        $('authError').textContent = (e && e.message) ? e.message : '注册失败';
       }
       return;
     }
@@ -1943,7 +3067,7 @@ window.AE = window.AE || {};
     var room2 = avail.length ? avail[Math.floor(Math.random() * avail.length)] : '608';
     occupied.push(room2);
     LS.set('ae.rooms', occupied);
-    currentUser = { id: 'local_' + Date.now(), email: '', username: u, room: room2, isAdmin: false };
+    currentUser = { id: 'local_' + Date.now(), email: '', username: u, room: room2, isAdmin: false, avatar: u[0] };
     LS.set('ae.user', currentUser);
     LS.set('ae.pass.' + u, p);
     enterApp();
@@ -1963,7 +3087,11 @@ window.AE = window.AE || {};
         await AE.cloud.auth.signIn(email, p);
         await AE.cloud.loadProfile();
         var pf = AE.cloud.profile;
-        currentUser = { id: AE.cloud.auth.uid(), email: email, username: pf ? pf.username : u, room: pf ? pf.room : '-', isAdmin: AE.cloud.isAdmin() };
+        currentUser = {
+          id: AE.cloud.auth.uid(), email: email,
+          username: pf ? pf.username : u, room: pf ? pf.room : '-',
+          isAdmin: AE.cloud.isAdmin(), avatar: pf ? pf.avatar : u[0]
+        };
         LS.set('ae.user', currentUser);
         enterApp();
         toast('欢迎回来，' + currentUser.username);
@@ -1974,14 +3102,13 @@ window.AE = window.AE || {};
     }
 
     var users = LS.get('ae.users', []);
-    var user = users.find(function (x) { return x === u; });
-    if (!user) { $('authError').textContent = '用户名不存在，请先注册入住'; return; }
+    if (users.indexOf(u) < 0) { $('authError').textContent = '用户名不存在，请先注册入住'; return; }
     if (LS.get('ae.pass.' + u, '') !== p) { $('authError').textContent = '密码错误'; return; }
     var rooms = LS.get('ae.roommap', {});
-    currentUser = { id: 'local_' + u, email: '', username: u, room: rooms[u] || '608', isAdmin: u === 'GM' };
+    currentUser = { id: 'local_' + u, email: '', username: u, room: rooms[u] || '608', isAdmin: false, avatar: u[0] };
     LS.set('ae.user', currentUser);
     enterApp();
-    toast('欢迎回来，' + currentUser.username + (isCloud() ? '' : '（本地模式）'));
+    toast('欢迎回来，' + currentUser.username + '（本地模式）');
   }
 
   function doLogout() {
@@ -1989,6 +3116,29 @@ window.AE = window.AE || {};
     currentUser = null;
     localStorage.removeItem('ae.user');
     showAuth();
+  }
+
+  /* ─── 主题切换 ─── */
+  function applyTheme(t, animate) {
+    var isUra = (t === 'ura');
+    document.documentElement.setAttribute('data-theme', t);
+    currentSide = t;
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', isUra ? '#08090F' : '#F4EDE0');
+    // 里主题导航：解谜1完成后显示
+    var uraVisible = isUra || unlock.p1;
+    document.querySelectorAll('.ura-nav').forEach(function (l) {
+      l.style.display = uraVisible ? '' : 'none';
+    });
+    if (animate) {
+      var tr = $('themeTransition');
+      if (tr) {
+        tr.classList.remove('active');
+        void tr.offsetWidth;
+        tr.classList.add('active');
+        setTimeout(function () { tr.classList.remove('active'); }, 1600);
+      }
+    }
   }
 
   /* ─── 界面切换 ─── */
@@ -2002,29 +3152,48 @@ window.AE = window.AE || {};
     $('authScreen').style.display = 'none';
     $('dashboard').style.display = '';
     var u = currentUser;
-    $('navAvatar').textContent = u.avatar || (u.username ? u.username[0] : '?');
+    $('navAvatar').textContent = (u.avatar) || (u.username ? u.username[0] : '?');
     $('navUsername').textContent = u.username;
     $('navRoom').textContent = u.room + '室';
     $('adminTab').style.display = u.isAdmin ? '' : 'none';
+    // 应用主题（默认表侧；已解锁则显示里侧入口）
+    applyTheme(unlock.p1 ? 'ura' : 'omote', false);
+    if (AE.npc && AE.npc.loadAiCfg) AE.npc.loadAiCfg().catch(function () {});
     refreshAll();
     startPolling();
   }
 
   function navTo(tab) {
+    var uraTabs = ['starmap', 'archive', 'log', 'admin'];
+    if (uraTabs.indexOf(tab) >= 0 && !unlock.p1 && !(currentUser && currentUser.isAdmin)) {
+      toast('该区域尚未解锁');
+      return;
+    }
+    if (tab === 'admin' && !(currentUser && currentUser.isAdmin)) { toast('需要管理员权限'); return; }
+
     currentTab = tab;
+    // 主题跟随页面所属"侧"
+    var toSide = (uraTabs.indexOf(tab) >= 0) ? 'ura' : 'omote';
+    if (toSide !== currentSide) applyTheme(toSide, true);
+
     document.querySelectorAll('.page').forEach(function (p) { p.classList.remove('active'); });
     document.querySelectorAll('.nav-link[data-tab]').forEach(function (l) { l.classList.remove('active'); });
     var page = $('tab-' + tab);
     if (page) page.classList.add('active');
     var link = document.querySelector('.nav-link[data-tab="' + tab + '"]');
     if (link) link.classList.add('active');
+
+    if (tab === 'home') renderHome();
+    if (tab === 'guide') renderGuide();
+    if (tab === 'residents') renderResidents();
+    if (tab === 'notice') renderNotice();
     if (tab === 'starmap') renderStarMap();
-    if (tab === 'archive') loadArchive();
+    if (tab === 'archive') renderArchive();
     if (tab === 'log') renderLog('system');
-    if (tab === 'admin') loadAdminData();
+    if (tab === 'admin') renderAdmin();
   }
 
-  /* ─── 首页 ─── */
+  /* ─── 首页（表侧） ─── */
   async function refreshState() {
     await loadState();
     updateHome();
@@ -2038,94 +3207,165 @@ window.AE = window.AE || {};
     var stab = s.stability == null ? 68 : s.stability;
     $('stabilityValue').textContent = stab + '%';
     $('stabilityBar').style.width = stab + '%';
-    $('stabilityBar').style.background = stab >= 60 ? 'var(--stable)' : stab >= 40 ? 'var(--warning)' : 'var(--danger)';
-    $('stabilityNote').textContent = stab >= 60 ? '稳定范围' : stab >= 40 ? '波动中' : '危险';
+    $('stabilityBar').style.background = stab >= 60 ? 'var(--secondary)' : (stab >= 40 ? 'var(--accent-soft)' : 'var(--danger)');
+    $('stabilityNote').textContent = stab >= 60 ? '稳定范围' : (stab >= 40 ? '波动中' : '危险');
     $('tenantsValue').textContent = s.tenants || '-';
-    $('tenantsNote').textContent = '含NPC与注册住户';
+    $('tenantsNote').textContent = '含住户与注册邻居';
     $('eventsValue').textContent = s.events || '-';
     $('eventsBar').style.width = Math.min(100, (s.events || 0) / 10 * 100) + '%';
-    $('eventsNote').textContent = '建议优先处理 B3 封印波动';
-    $('noticeBody').innerHTML = esc(s.announcement || '欢迎来到Aetheris。本建筑存在于维度裂缝的交汇点，所有房客的日常生活共同维持着空间的稳定。请仔细阅读住客守则——每一条规则都是用代价换来的。').replace(/\n/g, '<br>');
-    $('noticeTime').textContent = '更新于 ' + timeAgo(s.announcement_time || Date.now());
+    $('eventsNote').textContent = '建议关注 B3 封印波动';
+    $('noticeBody').innerHTML = esc(s.announcement || AE.OMOTE_NOTICE).replace(/\n/g, '<br>');
+    $('noticeTime').textContent = s.announcement_time ? ('更新于 ' + timeAgo(s.announcement_time)) : '今日';
 
-    var u = currentUser;
-    var welcomes = [
-      { t: '欢迎回来，' + (u ? u.username : ''), s: '你的房间: ' + (u ? u.room + '室' : '') },
-      { t: '系统已就绪', s: '稳定度: ' + stab + '% | 所有锚点在线' },
-      { t: '请确认你的身份', s: '灵魂绑定状态: 未完成' }
-    ];
-    var w = welcomes[Math.floor(Math.random() * welcomes.length)];
+    var w = AE.OMOTE_WELCOME[Math.floor(Math.random() * AE.OMOTE_WELCOME.length)];
     $('welcomeText').textContent = w.t;
     $('welcomeSub').textContent = w.s;
 
-    if (stab < 40) {
-      document.body.classList.add('low-stability');
-    } else {
-      document.body.classList.remove('low-stability');
+    if (stab < 40 && currentSide === 'ura') document.body.classList.add('low-stability');
+    else document.body.classList.remove('low-stability');
+  }
+
+  function renderHome() { updateHome(); }
+
+  /* ─── 公寓指南（表侧） ─── */
+  function renderGuide() {
+    var wrap = $('guideWrap');
+    if (!wrap) return;
+    var html = '';
+    // 楼层导览
+    html += '<div class="guide-section"><h3>楼层导览</h3><div class="floor-table">';
+    (AE.OMOTE_FLOORS || []).forEach(function (f) {
+      html += '<div class="floor-row"><div class="floor-no">' + esc(f.floor) + '</div><div class="floor-use">' + esc(f.use) + '</div><div class="floor-note">' + esc(f.note) + '</div></div>';
+    });
+    html += '</div></div>';
+    // 指南条目
+    (AE.OMOTE_GUIDE || []).forEach(function (g) {
+      html += '<div class="guide-section"><h3>' + esc(g.title) + '</h3><p style="font-size:.875rem;color:var(--text-dim);line-height:1.7;">' + esc(g.body) + '</p></div>';
+    });
+    wrap.innerHTML = html;
+  }
+
+  /* ─── 住户名录（表侧） ─── */
+  function renderResidents() {
+    var wrap = $('residentsWrap');
+    if (!wrap) return;
+    var html = '<div class="resident-grid">';
+    (AE.OMOTE_RESIDENTS || []).forEach(function (r) {
+      html += '<div class="resident-card" data-rid="' + esc(r.id) + '">' +
+        '<div class="resident-avatar">' + esc(r.avatar) + '</div>' +
+        '<div class="resident-name">' + esc(r.name) + '</div>' +
+        '<div class="resident-room">' + esc(r.room) + '室</div>' +
+        '<div class="resident-title">' + esc(r.title) + '</div></div>';
+    });
+    html += '</div>';
+    wrap.innerHTML = html;
+    wrap.querySelectorAll('.resident-card').forEach(function (card) {
+      card.addEventListener('click', function () {
+        var id = this.dataset.rid;
+        var r = (AE.OMOTE_RESIDENTS || []).find(function (x) { return x.id === id; });
+        if (!r) return;
+        if (id === 'duanyuan') {
+          duanyuanClicks++;
+          addFeed('活动', '507室传来低声念诵：3...7...2...0...1...4... (' + duanyuanClicks + '/3)');
+          if (duanyuanClicks >= 3) { duanyuanClicks = 0; triggerPuzzle(2); }
+          else toast('段远: 3...7...2...0...1...4... (' + duanyuanClicks + '/3)');
+          return;
+        }
+        openResidentBio(r);
+      });
+    });
+  }
+
+  function openResidentBio(r) {
+    $('modalTitle').textContent = r.name + ' · ' + r.room + '室';
+    var html = '<div class="mb-row"><span class="mb-label">身份:</span> ' + esc(r.title) + '</div>';
+    html += '<div class="mb-row">' + esc(r.desc) + '</div>';
+    $('modalBody').innerHTML = html;
+    $('modalOverlay').classList.add('active');
+  }
+
+  /* ─── 公告栏（表侧） ─── */
+  function renderNotice() {
+    var wrap = $('noticeWrap');
+    if (!wrap) return;
+    var html = '';
+    // 社区公告
+    html += '<div class="notice-panel" style="margin-bottom:1.5rem;">' +
+      '<div class="notice-header"><span>社区公告</span><span class="notice-time">' + (gameState.announcement_time ? timeAgo(gameState.announcement_time) : '今日') + '</span></div>' +
+      '<div class="notice-body">' + esc(gameState.announcement || AE.OMOTE_NOTICE).replace(/\n/g, '<br>') + '</div></div>';
+    // 住客守则（第三条可触发解谜）
+    html += '<h3 style="font-family:var(--font-display);font-size:1rem;margin-bottom:.75rem;color:var(--text);">住客守则</h3>';
+    html += '<div class="rule-list">';
+    (AE.RULES || []).forEach(function (rl, idx) {
+      var clickable = (rl.no === 3) ? ' hidden-clue puzzle-trigger' : '';
+      html += '<div class="rule-item' + clickable + '"' + (rl.no === 3 ? ' data-rule3="1"' : '') + '>' +
+        '<span class="rule-no">' + rl.no + '.</span><span class="rule-title">' + esc(rl.title) + '</span>' +
+        '<div class="rule-body">' + esc(rl.body) + '</div></div>';
+    });
+    html += '</div>';
+    wrap.innerHTML = html;
+    var r3 = wrap.querySelector('[data-rule3]');
+    if (r3) {
+      r3.addEventListener('click', function () {
+        if (unlock.p1) { toast('第三条守则的异样，你已经了然于心。'); return; }
+        rule3Clicks++;
+        r3.classList.add('discovered');
+        setTimeout(function () { r3.classList.remove('discovered'); }, 500);
+        addFeed('活动', '反复阅读住客守则第三条 (' + rule3Clicks + '/3)');
+        if (rule3Clicks >= 3) { rule3Clicks = 0; triggerPuzzle(1); }
+        else toast('第三条守则的措辞，似乎藏着什么... (' + rule3Clicks + '/3)');
+      });
     }
   }
 
-  /* ─── 星图页 ─── */
+  /* ─── 星图（里侧） ─── */
   function renderStarMap() {
     var wrap = $('starmapWrap');
     if (!wrap) return;
+    var admin = !!(currentUser && currentUser.isAdmin);
     var lv = unlockLv();
-    var admin = currentUser ? currentUser.isAdmin : false;
-
     if (lv < 1 && !admin) {
       wrap.innerHTML = '<div class="lock-block"><div class="lock-icon">⚿</div>' +
         '<div class="lock-title">[信号加密 · 需要更高权限]</div>' +
-        '<div class="lock-hint">星图数据被前任管理员加密。终端深处藏着第一道锁。</div></div>';
+        '<div class="lock-hint">星图数据被前任管理员加密。表侧的裂缝深处，第一道锁尚未解开。</div></div>';
       return;
     }
 
-    var statusColors = { stable: '#3FB950', unstable: '#D29922', danger: '#DA3633', lost: '#484F58' };
+    var statusColors = { stable: 'var(--secondary)', unstable: 'var(--accent-soft)', danger: 'var(--danger)', lost: 'var(--text-muted)' };
     var statusLabels = { stable: '稳定', unstable: '波动', danger: '危险', lost: '失联' };
 
-    // SVG 星图：中心节点 + 7个外围节点
     var cx = 250, cy = 200, r = 130;
     var nodes = AE.STAR_MAP;
     var svgParts = [];
 
-    // 中心节点
     var center = nodes[0];
-    svgParts.push('<circle cx="' + cx + '" cy="' + cy + '" r="22" fill="' + statusColors[center.status] + '" opacity="0.3" class="star-node-circle" data-idx="0"/>');
-    svgParts.push('<circle cx="' + cx + '" cy="' + cy + '" r="12" fill="' + statusColors[center.status] + '" class="star-node-circle" data-idx="0"/>');
-    svgParts.push('<text x="' + cx + '" y="' + (cy + 40) + '" text-anchor="middle" fill="#C9D1D9" font-family="monospace" font-size="11">' + esc(center.node) + '</text>');
+    svgParts.push('<circle cx="' + cx + '" cy="' + cy + '" r="22" style="fill:' + statusColors[center.status] + ';opacity:0.3" class="star-node-circle" data-idx="0"/>');
+    svgParts.push('<circle cx="' + cx + '" cy="' + cy + '" r="12" style="fill:' + statusColors[center.status] + '" class="star-node-circle" data-idx="0"/>');
+    svgParts.push('<text x="' + cx + '" y="' + (cy + 40) + '" text-anchor="middle" style="fill:var(--text)" font-family="monospace" font-size="11">' + esc(center.node) + '</text>');
 
-    // 外围节点
     for (var i = 1; i < nodes.length; i++) {
       var angle = ((i - 1) / (nodes.length - 1)) * Math.PI * 2 - Math.PI / 2;
       var nx = cx + Math.cos(angle) * r;
       var ny = cy + Math.sin(angle) * r;
       var n = nodes[i];
-      var color = statusColors[n.status] || '#484F58';
-      // 连线
-      svgParts.push('<line x1="' + cx + '" y1="' + cy + '" x2="' + nx + '" y2="' + ny + '" stroke="#30363D" stroke-width="1" opacity="0.5"/>');
-      // 节点
-      svgParts.push('<circle cx="' + nx + '" cy="' + ny + '" r="16" fill="' + color + '" opacity="0.2" class="star-node-circle" data-idx="' + i + '"/>');
-      svgParts.push('<circle cx="' + nx + '" cy="' + ny + '" r="8" fill="' + color + '" class="star-node-circle" data-idx="' + i + '"/>');
-      // 标签
-      svgParts.push('<text x="' + nx + '" y="' + (ny + 28) + '" text-anchor="middle" fill="#8B949E" font-family="monospace" font-size="9">' + esc(n.node) + '</text>');
+      var color = statusColors[n.status] || 'var(--text-muted)';
+      svgParts.push('<line x1="' + cx + '" y1="' + cy + '" x2="' + nx + '" y2="' + ny + '" stroke="var(--border)" stroke-width="1" opacity="0.5"/>');
+      svgParts.push('<circle cx="' + nx + '" cy="' + ny + '" r="16" style="fill:' + color + ';opacity:0.2" class="star-node-circle" data-idx="' + i + '"/>');
+      svgParts.push('<circle cx="' + nx + '" cy="' + ny + '" r="8" style="fill:' + color + '" class="star-node-circle" data-idx="' + i + '"/>');
+      svgParts.push('<text x="' + nx + '" y="' + (ny + 28) + '" text-anchor="middle" style="fill:var(--text-dim)" font-family="monospace" font-size="9">' + esc(n.node) + '</text>');
     }
 
     var svg = '<div class="starmap-canvas"><svg class="starmap-svg" viewBox="0 0 500 400">' + svgParts.join('') + '</svg></div>';
-
-    // 图例
     var legend = '<div class="starmap-legend">' +
       Object.keys(statusColors).map(function (k) {
         return '<div class="legend-item"><div class="legend-dot" style="background:' + statusColors[k] + '"></div>' + statusLabels[k] + '</div>';
       }).join('') + '</div>';
-
-    // 详情面板
     var detail = '<div class="star-detail-panel" id="starDetail">' +
       '<div class="star-detail-name" id="starDetailName">点击节点查看详情</div>' +
       '<div class="star-detail-status" id="starDetailStatus"></div>' +
       '<div class="star-detail-note" id="starDetailNote"></div></div>';
-
     wrap.innerHTML = svg + legend + detail;
 
-    // 绑定节点点击
     wrap.querySelectorAll('.star-node-circle').forEach(function (el) {
       el.addEventListener('click', function () {
         var idx = parseInt(this.dataset.idx);
@@ -2141,47 +3381,40 @@ window.AE = window.AE || {};
     });
   }
 
-  /* ─── 档案页 ─── */
-  async function loadArchive() {
+  /* ─── 档案（里侧） ─── */
+  async function renderArchive() {
     var wrap = $('archiveWrap');
     if (!wrap) return;
+    var admin = !!(currentUser && currentUser.isAdmin);
     var lv = unlockLv();
-    var admin = currentUser ? currentUser.isAdmin : false;
 
-    // NPC 档案数据
-    var list = AE.NPCS.map(function (n) {
+    var list = (AE.NPCS || []).map(function (n) {
       return { id: n.id, name: n.name, avatar: n.avatar, room: n.room, type: n.type, desc: n.desc, tags: n.tags, secret: n.secret, clearance: n.clearance || 2, isNpc: true };
     });
 
-    // 云端注册住户
     if (isCloud() && currentUser) {
       try {
         var users = await AE.cloud.db.select('ae_profiles', { limit: 500 });
         (users || []).forEach(function (u) {
           if (u.id === currentUser.id || u.role === 'admin') return;
-          list.push({ id: u.id, name: u.username, avatar: u.avatar || u.username[0], room: u.room, type: 'human', desc: u.room + '室住户。入住时间: ' + (u.registered_at || '').slice(0, 10), tags: ['住户'], secret: '', isNpc: false, clearance: 0 });
+          list.push({ id: u.id, name: u.username, avatar: u.avatar || (u.username ? u.username[0] : '?'), room: u.room, type: 'human', desc: u.room + '室住户。入住时间: ' + (u.registered_at || '').slice(0, 10), tags: ['住户'], secret: '', isNpc: false, clearance: 0 });
         });
       } catch (e) {}
     }
 
     archiveData = list;
 
-    // 构建完整档案页
     var html = '';
-
-    // 核心概念
     html += '<div class="archive-section"><h3 class="archive-sec-title">◈ 核心概念</h3><div class="concept-grid">' +
-      AE.CORE_CONCEPTS.map(function (c) {
+      (AE.CORE_CONCEPTS || []).map(function (c) {
         return '<div class="concept-card"><div class="concept-icon">' + c.icon + '</div><div class="concept-title">' + esc(c.title) + '</div><div class="concept-body">' + esc(c.body) + '</div></div>';
       }).join('') + '</div></div>';
 
-    // 公寓结构
     html += '<div class="archive-section"><h3 class="archive-sec-title">⌂ 公寓结构</h3><div class="floor-table">' +
-      AE.FLOORS.map(function (f) {
+      (AE.FLOORS || []).map(function (f) {
         return '<div class="floor-row"><div class="floor-no">' + esc(f.floor) + '</div><div class="floor-use">' + esc(f.use) + '</div><div class="floor-note">' + esc(f.note) + '</div></div>';
       }).join('') + '</div></div>';
 
-    // 住户档案
     html += '<div class="archive-section"><h3 class="archive-sec-title">▣ 住户档案</h3>';
     html += '<div class="archive-filter">' +
       '<button class="filter-btn active" data-filter="all">全部</button>' +
@@ -2192,19 +3425,17 @@ window.AE = window.AE || {};
       '</div>';
     html += '<div class="archive-grid" id="archiveGrid"></div></div>';
 
-    // 时间线
     html += '<div class="archive-section"><h3 class="archive-sec-title">◷ 剧情时间线</h3><div class="timeline">' +
-      AE.TIMELINE.map(function (t) {
+      (AE.TIMELINE || []).map(function (t) {
         var hidden = t.lv && t.lv >= 2 && lv < 2 && !admin;
         var text = hidden ? t.event : (t.real || t.event);
         var cls = hidden ? ' tl-encrypted' : (t.lv ? ' tl-decoded' : '');
         return '<div class="tl-item' + cls + '"><div class="tl-date">' + esc(t.date) + '</div><div class="tl-event">' + esc(text) + '</div></div>';
       }).join('') + '</div></div>';
 
-    // 谜题链
-    var solved = { 1: unlockState().star, 2: unlockState().code, 3: unlockState().echo };
-    html += '<div class="archive-section"><h3 class="archive-sec-title">⚿ 谜题链 <span class="sec-badge">' + lv + '/3 已解密</span></h3><div class="puzzle-list">' +
-      AE.PUZZLES.map(function (p) {
+    var solved = { 1: unlock.p1, 2: unlock.p2, 3: unlock.p3, 4: unlock.p4, 5: unlock.p5 };
+    html += '<div class="archive-section"><h3 class="archive-sec-title">⚿ 谜题链 <span class="sec-badge">' + (unlock.p1 ? 1 : 0) + (unlock.p2 ? 1 : 0) + (unlock.p3 ? 1 : 0) + (unlock.p4 ? 1 : 0) + (unlock.p5 ? 1 : 0) + '/5 已解密</span></h3><div class="puzzle-list">' +
+      (AE.PUZZLES || []).map(function (p) {
         var done = solved[p.level];
         return '<div class="puzzle-item' + (done ? ' puzzle-done' : '') + '"><div class="puzzle-head">' +
           '<span class="puzzle-level">第' + p.level + '层</span>' +
@@ -2215,11 +3446,8 @@ window.AE = window.AE || {};
       }).join('') + '</div></div>';
 
     wrap.innerHTML = html;
-
-    // 渲染档案卡片
     renderArchiveCards('all');
 
-    // 绑定筛选
     wrap.querySelectorAll('.filter-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
         wrap.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
@@ -2239,7 +3467,7 @@ window.AE = window.AE || {};
       var avUnknown = (a.type === 'unknown' || a.type === 'sealed') ? ' avatar-unknown' : '';
       var tagCls = { human: 'tag-human', nonhuman: 'tag-nonhuman', unknown: 'tag-unknown', sealed: 'tag-sealed' }[a.type] || 'tag-human';
       var typeLabel = { human: '人形', nonhuman: '非人形', unknown: '未知', sealed: '封存' }[a.type] || a.type;
-      return '<div class="archive-card' + sealed + '" onclick="AE.ui.openArchive(\'' + a.id + '\')">' +
+      return '<div class="archive-card' + sealed + '" data-aid="' + esc(a.id) + '">' +
         '<div class="card-avatar' + avUnknown + '">' + esc(a.avatar) + '</div>' +
         '<div class="card-name">' + esc(a.name) + '</div><div class="card-room">' + esc(a.room) + '室</div>' +
         '<div class="card-desc">' + esc(a.desc) + '</div>' +
@@ -2247,26 +3475,41 @@ window.AE = window.AE || {};
         (a.tags || []).map(function (t) { return '<span class="card-tag ' + tagCls + '">' + esc(t) + '</span>'; }).join('') + '</div>' +
         '</div>';
     }).join('');
+
+    grid.querySelectorAll('.archive-card').forEach(function (card) {
+      card.addEventListener('click', function () {
+        var a = archiveData.find(function (x) { return x.id === card.dataset.aid; });
+        if (!a) return;
+        // NPC → 打开对话（阿蚀额外触发解谜3）
+        if (a.isNpc && AE.NPC_PERSONAS && AE.NPC_PERSONAS[a.id]) {
+          AE.npc.open(a.id);
+          if (a.id === 'ashi' && !unlock.p3) triggerPuzzle(3);
+          return;
+        }
+        openArchive(a);
+      });
+    });
   }
 
-  function openArchive(id) {
-    var a = archiveData.find(function (x) { return x.id === id; });
-    if (!a) return;
+  function canViewSecret(a) {
+    var admin = !!(currentUser && currentUser.isAdmin);
+    if (admin) return true;
+    if (a.clearance >= 3) return unlockLv() >= 2;
+    return unlockLv() >= 1;
+  }
+
+  function openArchive(a) {
     $('modalTitle').textContent = a.name + ' · ' + a.room + '室';
-    var admin = currentUser ? currentUser.isAdmin : false;
-    var lv = unlockLv();
+    var admin = !!(currentUser && currentUser.isAdmin);
     var html = '<div class="mb-row"><span class="mb-label">描述:</span><br>' + esc(a.desc) + '</div>';
     html += '<div class="mb-row"><span class="mb-label">标签:</span> ' + esc((a.tags || []).join(', ')) + '</div>';
-    if (a.secret && !a.isNpc) {
-      html += '<div class="mb-encrypted">' + esc(a.secret) + '</div>';
-    } else if (a.secret) {
-      var need = a.clearance || 2;
-      if (admin || lv >= need) {
+    if (a.secret) {
+      if (canViewSecret(a)) {
         html += '<div class="mb-secret">' + esc(a.secret) + '</div>';
-      } else if (need >= 3) {
-        html += '<div class="mb-encrypted">[深层档案 · 三级加密]<br>完成整条解密链后可见。有些真相会回看你。</div>';
+      } else if (a.clearance >= 3) {
+        html += '<div class="mb-encrypted">[深层档案 · 三级加密]<br>完成整条解谜链后可见。有些真相会回看你。</div>';
       } else {
-        html += '<div class="mb-encrypted">[深层档案 · 二级加密]<br>完成前两层解密链后可见。</div>';
+        html += '<div class="mb-encrypted">[深层档案 · 二级加密]<br>继续深入解谜后可见。</div>';
       }
     }
     $('modalBody').innerHTML = html;
@@ -2275,7 +3518,54 @@ window.AE = window.AE || {};
 
   function closeModal() { $('modalOverlay').classList.remove('active'); }
 
-  /* ─── 日志页 ─── */
+  /* ─── 解谜系统 ─── */
+  function triggerPuzzle(level) {
+    if (level === 4) { solvePuzzle(4); return; } // 0号回响：回应即破解
+    showPuzzleModal(level);
+  }
+
+  function showPuzzleModal(level) {
+    $('modalTitle').textContent = '？？？';
+    var hint = PUZZLE_HINTS[level] || '输入你发现的词。';
+    $('modalBody').innerHTML =
+      '<p style="font-size:.8125rem;color:var(--text-dim);margin-bottom:.75rem;line-height:1.6;">' + esc(hint) + '</p>' +
+      '<input id="pmInput" style="width:100%;padding:.5rem .75rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:.875rem;margin-bottom:.5rem;" placeholder="输入..." autocomplete="off">' +
+      '<button id="pmSubmit" style="padding:.375rem .875rem;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-size:.8125rem;">确认</button>';
+    $('modalOverlay').classList.add('active');
+    var input = $('pmInput');
+    if (input) input.focus();
+    function submit() {
+      var v = (input.value || '').trim();
+      if (!v) return;
+      if (v === PUZZLE_ANSWERS[level]) { solvePuzzle(level); closeModal(); }
+      else { toast('不对...再想想。'); }
+    }
+    $('pmSubmit').addEventListener('click', submit);
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
+  }
+
+  function solvePuzzle(level) {
+    var key = 'p' + level;
+    if (unlock[key]) { toast('该谜题已破解。'); return; }
+    unlock[key] = true;
+    saveUnlock();
+    addFeed('解谜', '第' + level + '层谜题已破解');
+    if (isCloud()) AE.cloud.addLog('info', '谜题# ' + level + ' 破解').catch(function () {});
+
+    if (level === 1) {
+      applyTheme('ura', true);
+      document.querySelectorAll('.ura-nav').forEach(function (l) { l.style.display = ''; });
+      toast('表侧的裂缝裂开了——欢迎来到里侧。');
+      setTimeout(function () { navTo('starmap'); }, 800);
+    } else if (level === 4) {
+      toast('你回应了回响。它获得了意志。');
+    } else {
+      toast('谜题 #' + level + ' 破解成功。');
+    }
+    if (currentTab === 'archive') renderArchive();
+  }
+
+  /* ─── 日志（里侧） ─── */
   var currentLogTab = 'system';
   async function renderLog(tab) {
     currentLogTab = tab || currentLogTab;
@@ -2287,7 +3577,6 @@ window.AE = window.AE || {};
     if (!content) return;
 
     if (currentLogTab === 'system') {
-      // 系统日志
       var logs = [];
       if (isCloud()) {
         try { logs = await AE.cloud.listLogs() || []; } catch (e) {}
@@ -2303,146 +3592,50 @@ window.AE = window.AE || {};
         return '<div class="log-row"><span class="log-time">' + esc((l.created_at || '').slice(0, 16).replace('T', ' ')) + '</span><span class="log-level log-' + esc(l.level) + '">' + esc(l.level) + '</span><span class="log-msg">' + esc(l.msg) + '</span></div>';
       }).join('') + '</div>';
     } else if (currentLogTab === 'events') {
-      // 事件记录（时间线 + 守则补充条款）
       var lv = unlockLv();
-      var admin = currentUser ? currentUser.isAdmin : false;
-      var html2 = '<div class="archive-section"><h3 class="archive-sec-title">◷ 事件时间线</h3><div class="timeline">' +
-        AE.TIMELINE.map(function (t) {
+      var admin = !!(currentUser && currentUser.isAdmin);
+      var h2 = '<div class="archive-section"><h3 class="archive-sec-title">◷ 事件时间线</h3><div class="timeline">' +
+        (AE.TIMELINE || []).map(function (t) {
           var hidden = t.lv && t.lv >= 2 && lv < 2 && !admin;
           var text = hidden ? t.event : (t.real || t.event);
           var cls = hidden ? ' tl-encrypted' : (t.lv ? ' tl-decoded' : '');
           return '<div class="tl-item' + cls + '"><div class="tl-date">' + esc(t.date) + '</div><div class="tl-event">' + esc(text) + '</div></div>';
         }).join('') + '</div></div>';
       if (AE.RULES_EXTRA && AE.RULES_EXTRA.length) {
-        html2 += '<div class="archive-section"><h3 class="archive-sec-title">✎ 守则补充条款</h3><div class="rule-extra-list">' +
-          AE.RULES_EXTRA.map(function (r) {
+        h2 += '<div class="archive-section"><h3 class="archive-sec-title">✎ 守则补充条款</h3><div class="rule-extra-list">' +
+          (AE.RULES_EXTRA || []).map(function (r) {
             var hidden = r.lv && r.lv >= 2 && lv < 2 && !admin;
             var body = hidden ? '[本条款已封存 · 需二级权限]' : r.body;
             return '<div class="rule-extra-item' + (hidden ? ' tl-encrypted' : '') + '"><div class="rule-extra-date">' + esc(r.date) + '</div><div class="rule-extra-body">' + esc(body) + '</div></div>';
           }).join('') + '</div></div>';
       }
-      content.innerHTML = html2;
+      content.innerHTML = h2;
     } else if (currentLogTab === 'rules') {
-      // 住客守则
       content.innerHTML = '<div class="rule-list">' +
-        AE.RULES.map(function (r) {
+        (AE.RULES || []).map(function (r) {
           return '<div class="rule-item"><span class="rule-no">' + r.no + '.</span><span class="rule-title">' + esc(r.title) + '</span><div class="rule-body">' + esc(r.body) + '</div></div>';
         }).join('') + '</div>';
     }
   }
 
-  /* ─── 终端 ─── */
-  async function execTerm() {
-    var cmd = $('termInput').value.trim();
-    if (!cmd) return;
-    var output = $('termOutput');
-    output.classList.add('active');
-    var line = document.createElement('div');
-    line.className = 't-line t-cmd';
-    line.textContent = '$ ' + cmd;
-    output.appendChild(line);
-    $('termInput').value = '';
-
-    var parts = cmd.toLowerCase().split(/\s+/);
-    var command = parts[0];
-    var args = parts.slice(1);
-    var out = [];
-
-    switch (command) {
-      case 'help':
-        out = ['可用指令:', '  help          — 显示帮助', '  status        — 查看系统状态',
-          '  scan          — 扫描维度异常', '  unlock <密码> — 解锁隐藏内容',
-          '  whoami        — 查看身份', '  notice        — 查看公告栏背面',
-          '  rules         — 查看守则摘要', '  star          — 星图分析',
-          '  clear         — 清空终端'];
-        break;
-      case 'status':
-        out = ['虚空稳定度: ' + (gameState.stability || 68) + '%', '在册房客: ' + (gameState.tenants || 0) + ' 位',
-          '待处理事件: ' + (gameState.events || 0), '你的房间: ' + (currentUser ? currentUser.room + '室' : '未登记'),
-          '云端: ' + (isCloud() ? '在线' : '本地模式')];
-        break;
-      case 'scan':
-        out = ['扫描中...', '异常信号: 0号房间 (强度 ████░░)', '异常信号: B3封印 (强度 ██░░░░)',
-          '异常信号: ???-07节点 (强度 ██████)', '建议勿靠近以上区域。'];
-        break;
-      case 'unlock':
-        var pwd = args.join(' ');
-        var ulv = unlockLv();
-        if (pwd === '星图') {
-          if (ulv >= 1) { out = ['该权限已激活。']; break; }
-          setUnlocked('star');
-          out = ['认证通过。管理员权限已激活。', '前任管理员日志: "公寓不是建筑。它是一个活着的维度伤口。每个房客都是缝线。"', '档案隐藏信息已解锁。', '（星图数据已解密 · 查看星图页）'];
-          if (currentUser) currentUser.isAdmin = true;
-        } else if (pwd === '372014') {
-          if (ulv < 1) { out = ['认证失败: 需要先通过一级认证。', '提示: 星图深处，第三个节点在闪烁。']; break; }
-          if (ulv >= 2) { out = ['该记录已解密。']; break; }
-          setUnlocked('code');
-          out = ['二级认证: 段远的数字 3-7-2-0-1-4', '该编号对应维度坐标系中公寓所在地块的原始地址。', '公寓出现前，该地块上是一座灯塔。灯塔看守人消失的那天，公寓"长"了出来。', '（加密档案已解锁 · 查看时间线与住户深层档案）'];
-        } else if (pwd === '回响') {
-          if (ulv < 2) { out = ['认证失败: 需要先通过二级认证。', '提示: 507室的住户在满月之夜念诵一串数字。']; break; }
-          if (ulv >= 3) { out = ['你已经在门内了。']; break; }
-          setUnlocked('echo');
-          out = ['三级认证: 0号房间的回响', '"你已经是第7任管理员了。前6任都在这里。"', '稳定度 -20%', '（深层档案已解锁 · 有些门开了就关不上）'];
-          gameState.stability = Math.max(0, (gameState.stability || 68) - 20);
-          await saveState();
-        } else { out = ['密码错误。事件已记录。']; }
-        break;
-      case 'whoami':
-        out = ['身份: ' + (currentUser ? currentUser.username : '未登记'), '房间: ' + (currentUser ? currentUser.room + '室' : '-'),
-          '权限: ' + (currentUser && currentUser.isAdmin ? '管理员' : '住户')];
-        break;
-      case 'notice':
-        out = ['公告栏背面写着:', '"致下一任管理员:', ' 这栋楼不是公寓。它是一道伤口上的缝线。',
-          ' 每个房客都是一根缝线。如果有人离开，必须有人补上。', ' 0号房间的回响是最后一根缝线。不要清除它。', ' ——前任管理员"'];
-        break;
-      case 'rules':
-        out = ['住客守则摘要:', '1. 午夜前走廊灯不灭则不出门', '2. 电梯不超7层',
-          '3. 清洁日2小时不开门', '4. B3以下禁止进入', '5. 0号回响可听不可回应',
-          '6. 灰色头像发言不回应', '7. 满月不开东窗', '8. 0:00不照镜子',
-          '9. 走廊新门不触碰', '10. 异味食物不食用', '11. 自然20报告管理员', '12. 震动超1分钟坐下回忆'];
-        break;
-      case 'star':
-        out = ['星图分析:', '稳定节点: 3 (寂静层/白噪音域/公寓本体)', '波动节点: 2 (深渊维度/镜像位面)',
-          '危险节点: 2 (锈蚀世界/废弃叙事层)', '失联节点: 1 (???-07) ← 不应存在的节点'];
-        break;
-      case 'clear':
-        output.innerHTML = '';
-        output.classList.remove('active');
-        return;
-      default:
-        out = ['未知指令: ' + command + '。输入 help 查看帮助。'];
-    }
-
-    out.forEach(function (l) {
-      var div = document.createElement('div');
-      div.className = 't-line';
-      if (l.indexOf('认证通过') >= 0) div.className += ' t-ok';
-      if (l.indexOf('错误') >= 0 || l.indexOf('稳定度') >= 0 || l.indexOf('回响') >= 0 && command === 'unlock') div.className += ' t-warn';
-      div.textContent = l;
-      output.appendChild(div);
-    });
-    output.scrollTop = output.scrollHeight;
-
-    if (command === 'unlock' && (args[0] === '星图' || args[0] === '372014' || args[0] === '回响')) {
-      toast('发现新线索！');
-      if (currentUser) { LS.set('ae.user', currentUser); }
-      if (args[0] === '星图' && currentUser && currentUser.isAdmin) { $('adminTab').style.display = ''; }
-      if (currentTab === 'starmap') renderStarMap();
-      if (currentTab === 'archive') loadArchive();
-      if (currentTab === 'log') renderLog(currentLogTab);
-      refreshState();
-    }
-  }
-
-  /* ─── 管理面板 ─── */
-  async function loadAdminData() {
+  /* ─── 管理面板（里侧） ─── */
+  async function renderAdmin() {
     if (!currentUser || !currentUser.isAdmin) { toast('需要管理员权限'); return; }
-    var eventList = $('eventList');
-    eventList.innerHTML = AE.EVENTS.map(function (e) {
-      return '<div class="event-item" onclick="AE.ui.triggerEvent(\'' + e.id + '\')">' + esc(e.name) + '</div>';
-    }).join('');
-    $('adminStability').textContent = gameState.stability || 68;
+    $('adminStability').textContent = (gameState.stability == null ? 68 : gameState.stability);
 
+    // 事件列表
+    $('eventList').innerHTML = (AE.EVENTS || []).map(function (e) {
+      return '<div class="event-item" data-eid="' + esc(e.id) + '">' + esc(e.name) + '</div>';
+    }).join('');
+    $('eventList').querySelectorAll('.event-item').forEach(function (it) {
+      it.addEventListener('click', function () { triggerEvent(this.dataset.eid); });
+    });
+
+    // 桥接配置
+    bridgeUrl = LS.get('ae.v4.bridge', '');
+    $('bridgeUrl').value = bridgeUrl;
+
+    // 住户列表
     var list = $('adminUserList');
     if (isCloud()) {
       try {
@@ -2451,7 +3644,7 @@ window.AE = window.AE || {};
           list.innerHTML = '<div style="color:var(--text-dim);font-size:0.78rem;">暂无注册住户</div>';
         } else {
           list.innerHTML = users.filter(function (u) { return u.id !== currentUser.id; }).map(function (u) {
-            return '<div class="user-row"><span>' + esc(u.username || u.id.slice(0, 8)) + ' · ' + esc(u.room) + '室</span><span>' + (u.registered_at || '').slice(0, 10) + '</span></div>';
+            return '<div class="user-row"><span>' + esc(u.username || (u.id || '').slice(0, 8)) + ' · ' + esc(u.room) + '室</span><span>' + (u.registered_at || '').slice(0, 10) + '</span></div>';
           }).join('');
         }
       } catch (e) { list.innerHTML = '<div style="color:var(--text-dim);font-size:0.78rem;">云端住户读取失败</div>'; }
@@ -2459,31 +3652,37 @@ window.AE = window.AE || {};
       list.innerHTML = '<div style="color:var(--text-dim);font-size:0.78rem;">本地模式：住户数据仅存于本机</div>';
     }
 
+    // 系统日志
     var logList = $('adminLogs');
     if (isCloud()) {
       try {
         var logs = await AE.cloud.listLogs();
         logList.innerHTML = (logs || []).slice(0, 20).map(function (l) {
-          return '<div class="log-row"><span class="log-time">' + esc((l.created_at || '').slice(0, 16).replace('T', ' ')) + '</span><span class="log-level log-' + esc(l.level) + '">' + esc(l.level) + '</span> ' + esc(l.msg) + '</div>';
+          return '<div class="log-row"><span class="log-time">' + esc((l.created_at || '').slice(0, 16).replace('T', ' ')) + '</span><span class="log-level log-' + esc(l.level) + '">' + esc(l.level) + '</span><span class="log-msg">' + esc(l.msg) + '</span></div>';
         }).join('') || '<div style="color:var(--text-dim);">暂无日志</div>';
       } catch (e) { logList.innerHTML = '<div style="color:var(--text-dim);">日志读取失败</div>'; }
     } else {
       logList.innerHTML = '<div style="color:var(--text-dim);">本地模式：无云端日志</div>';
     }
+
+    // 监听 Feed 初始化
+    renderFeed();
   }
 
   async function triggerEvent(eventId) {
     if (!currentUser || !currentUser.isAdmin) { toast('需要管理员权限'); return; }
-    var ev = AE.EVENTS.find(function (e) { return e.id === eventId; });
+    var ev = (AE.EVENTS || []).find(function (e) { return e.id === eventId; });
     if (!ev) return;
     if (ev.stabilityDelta) {
       gameState.stability = Math.max(0, Math.min(100, (gameState.stability || 68) + ev.stabilityDelta));
       await saveState();
     }
-    if (isCloud()) await AE.cloud.addLog(ev.logLevel || 'info', ev.logMsg || ev.name);
+    if (isCloud()) AE.cloud.addLog(ev.logLevel || 'info', ev.logMsg || ev.name).catch(function () {});
+    addFeed('事件', 'GM 触发: ' + ev.name);
+    if (bridgeUrl) sendBridge('[事件] ' + ev.name + (ev.stabilityDelta ? ' (稳定度' + (ev.stabilityDelta > 0 ? '+' : '') + ev.stabilityDelta + ')' : ''));
     toast('事件已触发: ' + ev.name);
-    refreshState();
     $('adminStability').textContent = gameState.stability || 68;
+    if (currentTab === 'home') updateHome();
   }
 
   async function adminAdjustStability(delta) {
@@ -2491,8 +3690,8 @@ window.AE = window.AE || {};
     gameState.stability = Math.max(0, Math.min(100, (gameState.stability || 68) + delta));
     await saveState();
     toast('稳定度: ' + (delta > 0 ? '+' : '') + delta + '% → ' + gameState.stability + '%');
-    refreshState();
     $('adminStability').textContent = gameState.stability;
+    if (currentTab === 'home') updateHome();
   }
 
   async function adminUpdateAnnounce() {
@@ -2503,15 +3702,116 @@ window.AE = window.AE || {};
     gameState.announcement_time = new Date().toISOString();
     await saveState();
     toast('公告已更新');
-    refreshState();
+    if (currentTab === 'home') updateHome();
     $('adminAnnounce').value = '';
+  }
+
+  /* ─── 骰娘控制台（监听核心） ─── */
+  function rollResult(type) {
+    function rnd(n) { return Math.floor(Math.random() * n) + 1; }
+    if (type === 'd20') { var v = rnd(20); return { value: v, display: String(v) }; }
+    if (type === 'd100') { var v2 = rnd(100); return { value: v2, display: String(v2) }; }
+    if (type === 'd6') { var v3 = rnd(6); return { value: v3, display: String(v3) }; }
+    if (type === 'd3') { var v4 = rnd(3); return { value: v4, display: String(v4) }; }
+    if (type === '2d6') { var a = rnd(6), b = rnd(6); return { value: a + b, display: a + '+' + b + '=' + (a + b) }; }
+    return { value: 0, display: '?' };
+  }
+
+  function rollDice(type) {
+    if (!currentUser || !currentUser.isAdmin) { toast('需要管理员权限（骰娘）'); return; }
+    var res = rollResult(type);
+    var el = $('diceResult');
+    if (el) {
+      el.textContent = res.display;
+      el.classList.add('rolling');
+      setTimeout(function () { el.classList.remove('rolling'); }, 500);
+    }
+    addDiceLog(type, res.display);
+    addFeed('骰娘', '掷出 ' + type + ' = ' + res.display);
+    if (isCloud()) AE.cloud.addLog('info', '骰娘 ' + type + ' → ' + res.display).catch(function () {});
+    if (bridgeUrl) sendBridge('[骰娘] ' + type + ' → ' + res.display);
+    if (type === 'd20' && res.value === 20) {
+      addFeed('系统', '⚠ 自然20！检测到新的维度连接');
+      toast('自然20！一条新的维度连接被建立。');
+      if (bridgeUrl) sendBridge('[系统] 自然20！新维度连接建立');
+    }
+  }
+
+  function addDiceLog(type, display) {
+    var log = $('diceLog');
+    if (!log) return;
+    var entry = document.createElement('div');
+    entry.className = 'dice-log-entry';
+    entry.textContent = nowStr() + '  ' + type + ' → ' + display;
+    log.insertBefore(entry, log.firstChild);
+    while (log.children.length > 30) log.removeChild(log.lastChild);
+  }
+
+  /* ─── 监听 Feed ─── */
+  function addFeed(type, msg) {
+    feedEntries.unshift({ t: nowStr(), type: type, msg: msg });
+    if (feedEntries.length > 60) feedEntries.pop();
+    renderFeed();
+  }
+  function renderFeed() {
+    var feed = $('monitorFeed');
+    if (!feed) return;
+    if (feedEntries.length === 0) {
+      feed.innerHTML = '<div class="feed-entry" style="color:var(--text-muted);">等待活动...</div>';
+      return;
+    }
+    feed.innerHTML = feedEntries.map(function (f) {
+      return '<div class="feed-entry"><span class="feed-time">' + esc(f.t) + '</span><span class="feed-type">[' + esc(f.type) + ']</span>' + esc(f.msg) + '</div>';
+    }).join('');
+  }
+
+  /* ─── 桥接（QQ群 Webhook） ─── */
+  function sendBridge(text) {
+    if (!bridgeUrl) return;
+    fetch(bridgeUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: text, msgtype: 'text', text: { content: text } })
+    }).then(function (r) {
+      if (r.ok) addFeed('桥接', '已转发到群聊');
+      else addFeed('桥接', '转发失败: HTTP ' + r.status);
+    }).catch(function (e) { addFeed('桥接', '转发失败: ' + (e.message || '网络错误')); });
+  }
+
+  function saveBridge() {
+    bridgeUrl = ($('bridgeUrl').value || '').trim();
+    LS.set('ae.v4.bridge', bridgeUrl);
+    toast(bridgeUrl ? '桥接已配置' : '桥接已清除');
+    addFeed('桥接', bridgeUrl ? 'Webhook 已更新' : 'Webhook 已清空');
+  }
+
+  function bridgeSend() {
+    var msg = ($('bridgeMsg').value || '').trim();
+    if (!msg) { toast('请输入消息'); return; }
+    if (!bridgeUrl) { toast('请先配置 Webhook URL'); return; }
+    sendBridge(msg);
+    $('bridgeMsg').value = '';
+  }
+
+  /* ─── NPC 对话桥接 ─── */
+  function handleChatSend() {
+    var input = $('chatInput');
+    if (!input) return;
+    var text = input.value.trim();
+    if (!text) return;
+    var npc = AE.npc.state.currentNpc;
+    AE.npc.send(text);
+    // 0号回响：回应即破解第4层
+    if (npc === 'grey' && !unlock.p4) {
+      setTimeout(function () { solvePuzzle(4); }, 1400);
+    }
   }
 
   /* ─── 轮询 ─── */
   function startPolling() {
     if (pollTimer) clearInterval(pollTimer);
     pollTimer = setInterval(function () {
-      refreshState();
+      if (currentTab === 'home' || currentTab === 'admin') refreshState();
     }, 30000);
   }
 
@@ -2519,14 +3819,14 @@ window.AE = window.AE || {};
   AE.ui = {
     doRegister: doRegister, doLogin: doLogin, doLogout: doLogout, navTo: navTo,
     openArchive: openArchive, closeModal: closeModal,
-    execTerm: execTerm, loadAdminData: loadAdminData, triggerEvent: triggerEvent,
-    adminAdjustStability: adminAdjustStability, adminUpdateAnnounce: adminUpdateAnnounce,
-    refreshState: refreshState, renderLog: renderLog
+    triggerEvent: triggerEvent, adminAdjustStability: adminAdjustStability,
+    adminUpdateAnnounce: adminUpdateAnnounce, refreshState: refreshState, renderLog: renderLog
   };
 
   /* ─── 启动 ─── */
   async function boot() {
     try {
+      loadUnlock();
       runBootAnim();
       await initCloud();
       if (isCloud()) {
@@ -2536,7 +3836,11 @@ window.AE = window.AE || {};
             await AE.cloud.loadProfile();
             var pf = AE.cloud.profile;
             if (pf) {
-              currentUser = { id: AE.cloud.auth.uid(), email: AE.cloud.email(), username: pf.username, room: pf.room, isAdmin: AE.cloud.isAdmin(), avatar: pf.avatar };
+              currentUser = {
+                id: AE.cloud.auth.uid(), email: AE.cloud.email(),
+                username: pf.username, room: pf.room,
+                isAdmin: AE.cloud.isAdmin(), avatar: pf.avatar
+              };
               LS.set('ae.user', currentUser);
               enterApp();
               return;
@@ -2562,12 +3866,12 @@ window.AE = window.AE || {};
     var box = $('authBox');
     if (!el) return;
     var lines = [
-      '> Aetheris 物业管理系统 v3.0',
+      '> Aetheris · 暮光公寓门户 v4.0',
       '> 正在校准维度坐标...',
-      '> 检测到 11 层空间结构',
-      '> 在册房客: 10',
+      '> 检测到 10 层空间结构',
+      '> 在册住户: ' + (AE.OMOTE_RESIDENTS ? AE.OMOTE_RESIDENTS.length : 7),
       '> 虚空稳定度: 68%',
-      '> 警告: 0号房间信号异常',
+      '> 提示: 表面之下的裂缝，正在等待被看见',
       '> 连接建立。'
     ];
     var line = 0;
@@ -2613,7 +3917,6 @@ window.AE = window.AE || {};
     document.querySelectorAll('.nav-link[data-tab]').forEach(function (link) {
       link.addEventListener('click', function () { navTo(this.dataset.tab); });
     });
-
     document.querySelectorAll('.quick-link').forEach(function (link) {
       link.addEventListener('click', function () { navTo(this.dataset.tab); });
     });
@@ -2623,9 +3926,6 @@ window.AE = window.AE || {};
     $('regUser').addEventListener('keydown', function (e) { if (e.key === 'Enter') doRegister(); });
     $('regPass').addEventListener('keydown', function (e) { if (e.key === 'Enter') doRegister(); });
 
-    $('termSend').addEventListener('click', execTerm);
-    $('termInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') execTerm(); });
-
     $('modalClose').addEventListener('click', closeModal);
     $('modalOverlay').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
 
@@ -2634,10 +3934,24 @@ window.AE = window.AE || {};
     });
     $('adminAnnounceBtn').addEventListener('click', adminUpdateAnnounce);
 
-    // 日志标签
     document.querySelectorAll('.log-tab').forEach(function (tab) {
       tab.addEventListener('click', function () { renderLog(this.dataset.logtab); });
     });
+
+    // 骰娘控制台
+    document.querySelectorAll('.dice-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () { rollDice(this.dataset.dice); });
+    });
+
+    // 桥接
+    $('bridgeUrl').addEventListener('change', saveBridge);
+    $('bridgeSendBtn').addEventListener('click', bridgeSend);
+
+    // NPC 对话
+    $('chatSendBtn').addEventListener('click', handleChatSend);
+    $('chatInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') handleChatSend(); });
+    $('chatClose').addEventListener('click', function () { AE.npc.close(); });
+    $('chatOverlay').addEventListener('click', function () { AE.npc.close(); });
   });
 
 })(window.AE);
