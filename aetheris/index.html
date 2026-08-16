@@ -368,6 +368,44 @@ body {
   margin-top: 0.5rem;
 }
 
+/* GM 管理员入口（低调，表/里主题下都弱显） */
+.auth-admin-entry {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+}
+.auth-admin-toggle {
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-decoration: none;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.2s;
+}
+.auth-admin-toggle:hover { opacity: 1; }
+.auth-admin-row {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 18rem;
+}
+.auth-admin-row input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.5rem;
+  background: var(--bg-elev);
+  color: var(--text);
+  font-size: 0.8125rem;
+}
+.auth-admin-row input:focus { outline: 1px solid var(--accent-soft); }
+.admin-enter { padding: 0.5rem 1rem; font-size: 0.8125rem; }
+
 .boot-text {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
@@ -1882,6 +1920,13 @@ body {
         <p class="auth-hint">入住后系统将自动分配房间</p>
       </div>
       <div class="auth-error" id="authError"></div>
+      <div class="auth-admin-entry">
+        <a class="auth-admin-toggle" id="adminToggle">管理员入口</a>
+        <div class="auth-admin-row" id="adminRow" style="display:none;">
+          <input type="password" id="adminCode" placeholder="管理密钥" autocomplete="off">
+          <button class="auth-btn admin-enter" id="adminEnterBtn">进入</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -2112,6 +2157,8 @@ window.AE_AI_DEFAULT = {
   apiKey: '',
   enabled: false
 };
+/* GM 管理密钥 —— 本地管理员登录入口（可自行修改；默认 372014 呼应世界观编码） */
+window.AE_ADMIN_CODE = '372014';
 </script>
 <script>
 
@@ -3362,6 +3409,18 @@ window.AE = window.AE || {};
     showAuth();
   }
 
+  /* ─── GM 本地管理员登录（离线可用，不依赖 Supabase） ─── */
+  function doAdminLogin() {
+    var code = $('adminCode') ? $('adminCode').value.trim() : '';
+    if (!code) { $('authError').textContent = '请输入管理密钥'; return; }
+    var expected = window.AE_ADMIN_CODE || '372014';
+    if (code !== expected) { $('authError').textContent = '管理密钥错误'; return; }
+    currentUser = { id: 'admin_local', email: '', username: '暮光公寓·管理员', room: '101 管理处', isAdmin: true, avatar: '管' };
+    LS.set('ae.user', currentUser);
+    enterApp();
+    toast('管理员模式已启用 · 监听与桥接可用');
+  }
+
   /* ─── 主题切换 ─── */
   function applyTheme(t, animate) {
     var isUra = (t === 'ura');
@@ -4134,6 +4193,9 @@ window.AE = window.AE || {};
   async function boot() {
     try {
       loadUnlock();
+      // GM 本地管理员会话优先恢复（跨刷新保留，不依赖云端）
+      var savedAdmin = LS.get('ae.user', null);
+      if (savedAdmin && savedAdmin.isAdmin) { currentUser = savedAdmin; hideSplash(function () { enterApp(); }); return; }
       showSplash();
       await initCloud();
       if (isCloud()) {
@@ -4231,6 +4293,17 @@ window.AE = window.AE || {};
     $('loginBtn').addEventListener('click', doLogin);
     $('regBtn').addEventListener('click', doRegister);
     $('logoutBtn').addEventListener('click', doLogout);
+
+    // GM 管理员入口
+    var adminToggle = $('adminToggle');
+    if (adminToggle) adminToggle.addEventListener('click', function () {
+      var row = $('adminRow');
+      if (row) row.style.display = (row.style.display === 'none' ? '' : 'none');
+    });
+    var adminEnterBtn = $('adminEnterBtn');
+    if (adminEnterBtn) adminEnterBtn.addEventListener('click', doAdminLogin);
+    var adminCodeInput = $('adminCode');
+    if (adminCodeInput) adminCodeInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') doAdminLogin(); });
 
     document.querySelectorAll('.atab').forEach(function (btn) {
       btn.addEventListener('click', function () {
