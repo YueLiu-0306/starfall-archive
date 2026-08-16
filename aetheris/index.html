@@ -2624,7 +2624,10 @@ window.AE = window.AE || {};
     },
     async insert(table, row, opt) {
       await ensureFresh();
-      return req('/rest/v1/' + table + qs((opt && opt.params) || {}), {
+      const params = Object.assign({}, (opt && opt.params) || {});
+      // upsert 必须带 on_conflict，否则对已存在的行（触发器预建 / id=1 全局行）会 409
+      if (opt && opt.upsert) params.on_conflict = (opt.onConflict || 'id');
+      return req('/rest/v1/' + table + qs(params), {
         method: 'POST', body: row,
         headers: { 'Prefer': 'return=representation' + ((opt && opt.upsert) ? ',resolution=merge-duplicates' : '') }
       });
@@ -3321,6 +3324,16 @@ window.AE = window.AE || {};
   /* ─── 认证 ─── */
   var ADMIN_USER = (window.AE_ADMIN_USER || '林述安');
   function isAdminUsername(name) { return !!name && String(name).trim() === ADMIN_USER; }
+  // 由用户名确定性派生云端邮箱（无需本地存储映射，支持跨设备登录）
+  function userEmail(name) {
+    var s = String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!s) {
+      var h = 0, n = String(name || '');
+      for (var i = 0; i < n.length; i++) { h = (h * 31 + n.charCodeAt(i)) | 0; }
+      s = 'u' + (h >>> 0).toString(36);
+    }
+    return s + '@aetheris.local';
+  }
 
   async function doRegister() {
     var u = $('regUser') ? $('regUser').value.trim() : '';
@@ -3331,25 +3344,24 @@ window.AE = window.AE || {};
 
     if (isCloud()) {
       try {
-        var emailBase = u.toLowerCase().replace(/[^a-z0-9]/g, '');
-        if (!emailBase) emailBase = 'user';
-        var email = emailBase + '_' + Date.now().toString(36) + '@aetheris.local';
+        var email = userEmail(u);
         var meta = { username: u };
         var r = await AE.cloud.auth.signUp(email, p, meta);
-        if (r.needConfirm) { $('authError').textContent = '需要邮箱验证。请查看邮箱后重新登录。'; return; }
+        if (r.needConfirm) { $('authError').textContent = '需要邮箱验证。请在 Supabase 关闭「Confirm email」后重试（当前为内部测试账号，无需验证）。'; return; }
         var room;
         try { room = await AE.cloud.assignRoom(); }
         catch (e2) { room = AE.ROOMS[Math.floor(Math.random() * AE.ROOMS.length)] || '608'; }
         await AE.cloud.upsertProfile({ username: u, room: room, role: 'member', discovered_clues: [], avatar: u[0] });
         await AE.cloud.loadProfile();
-        LS.set('ae.email.' + u, email);
         await AE.cloud.addLog('info', '新住户入住: ' + u + ' → ' + room + '室');
         currentUser = { id: AE.cloud.auth.uid(), email: email, username: u, room: room, isAdmin: isAdminUsername(u), avatar: u[0] };
         LS.set('ae.user', currentUser);
         enterApp();
         toast('入住成功！房间: ' + room + '室');
       } catch (e) {
-        $('authError').textContent = (e && e.message) ? e.message : '注册失败';
+        var em = (e && e.message) ? e.message : '注册失败';
+        if (/already registered|unique|duplicate|already exists|taken/i.test(em)) em = '用户名已被占用，请换一个';
+        $('authError').textContent = em;
       }
       return;
     }
@@ -3378,8 +3390,7 @@ window.AE = window.AE || {};
 
     if (isCloud()) {
       try {
-        var email = LS.get('ae.email.' + u, '');
-        if (!email) { $('authError').textContent = '未找到该用户名对应的云端账号，请注册入住。'; return; }
+        var email = userEmail(u);
         await AE.cloud.auth.signIn(email, p);
         await AE.cloud.loadProfile();
         var pf = AE.cloud.profile;
